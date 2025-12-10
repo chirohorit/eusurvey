@@ -16,7 +16,8 @@ import com.ec.survey.model.survey.*;
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.exception.DataException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -82,7 +83,7 @@ import com.ec.survey.tools.WeakAuthenticationException;
 @Controller
 public class BasicController implements BeanFactoryAware {
 
-	protected static final Logger logger = Logger.getLogger(BasicController.class);
+	protected static final Logger logger = LogManager.getLogger(BasicController.class);
 
 	@Autowired
 	protected MessageSource resources;

@@ -9,7 +9,8 @@ import com.ec.survey.tools.DepartmentUpdater;
 import com.ec.survey.tools.DomainUpdater;
 import com.ec.survey.tools.EcasUserUpdater;
 import com.ec.survey.tools.Tools;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +45,7 @@ public class LdapService extends BasicService {
 	@Qualifier("ecasWorker")
 	private EcasUserUpdater ecasWorker;
     
-    private static final Logger logger = Logger.getLogger(LdapService.class);
+    private static final Logger logger = LogManager.getLogger(LdapService.class);
     
     private @Value("${LdapUrl}") String url;
     private @Value("${LdapContextFactory}") String contextFactory;

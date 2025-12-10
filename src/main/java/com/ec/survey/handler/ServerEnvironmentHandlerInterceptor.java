@@ -7,7 +7,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mobile.device.Device;
 import org.springframework.mobile.device.DeviceUtils;
@@ -23,7 +24,7 @@ import com.ec.survey.service.SurveyService;
  */
 public class ServerEnvironmentHandlerInterceptor extends HandlerInterceptorAdapter {
 
-    protected static final Logger logger = Logger.getLogger(ServerEnvironmentHandlerInterceptor.class);
+    protected static final Logger logger = LogManager.getLogger(ServerEnvironmentHandlerInterceptor.class);
 
     public @Value("${ui.enableresponsive}") String enableresponsive;
 

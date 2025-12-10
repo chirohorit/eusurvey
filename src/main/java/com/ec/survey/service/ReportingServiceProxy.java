@@ -7,7 +7,8 @@ import java.util.Set;
 
 import javax.annotation.Resource;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.ec.survey.model.ResultFilter;
@@ -19,7 +20,7 @@ import com.ec.survey.service.ReportingService.ToDoItem;
 @Service("reportingServiceProxy")
 public class ReportingServiceProxy {
 	
-	protected static final Logger logger = Logger.getLogger(ReportingServiceProxy.class);
+	protected static final Logger logger = LogManager.getLogger(ReportingServiceProxy.class);
 
 	@Resource(name = "reportingService")
 	protected ReportingService reportingService;

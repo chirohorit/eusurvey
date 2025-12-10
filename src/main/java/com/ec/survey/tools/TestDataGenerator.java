@@ -4,7 +4,8 @@ import java.util.Locale;
 
 import javax.annotation.Resource;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.beans.factory.BeanFactory;
@@ -25,7 +26,7 @@ import com.ec.survey.service.SurveyService;
 @Service("testDataGenerator")
 public class TestDataGenerator implements Runnable {
 
-	protected static final Logger logger = Logger.getLogger(TestDataGenerator.class);
+	protected static final Logger logger = LogManager.getLogger(TestDataGenerator.class);
 
 	@Resource(name = "surveyService")
 	protected SurveyService surveyService;	

@@ -15,7 +15,8 @@ import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.utils.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -50,7 +51,7 @@ import com.itextpdf.text.pdf.PdfReader;
 @Scope("prototype")
 public class ResultsCreator implements Runnable, BeanFactoryAware {
 
-	protected static final Logger logger = Logger.getLogger(ResultsCreator.class);
+	protected static final Logger logger = LogManager.getLogger(ResultsCreator.class);
 
 	@Resource(name = "fileService")
 	protected FileService fileService;

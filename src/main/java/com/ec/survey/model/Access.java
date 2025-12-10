@@ -3,7 +3,8 @@ package com.ec.survey.model;
 import com.ec.survey.model.administration.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Survey;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -29,7 +30,7 @@ public class Access {
 	private Map<LocalPrivilege, Integer> localPrivileges;
 	private boolean readonly;
 
-	protected static final Logger logger = Logger.getLogger(Access.class);
+	protected static final Logger logger = LogManager.getLogger(Access.class);
 
 	public Access() {
 		localPrivileges = new HashMap<>();

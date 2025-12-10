@@ -1,6 +1,7 @@
 package com.ec.survey.model;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import java.text.MessageFormat;
@@ -9,7 +10,7 @@ import java.text.ParseException;
 public class FtpEndPoint {
 	private static final String INVALID_FTP_URI = "Invalid ftp uri  ";
 
-	protected static final Logger logger = Logger.getLogger(FtpEndPoint.class);
+	protected static final Logger logger = LogManager.getLogger(FtpEndPoint.class);
 	
 	public static FtpEndPoint createFromCamel(String ftpUri) {
 		MessageFormat messageFormat = new MessageFormat(CAMEL_FTP_PATTERN);

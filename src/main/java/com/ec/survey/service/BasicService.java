@@ -5,7 +5,8 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -124,7 +125,7 @@ public class BasicService implements BeanFactoryAware {
 	private ExecutorService mailPool;
 	private ExecutorService tokenPool;
 	
-	protected static final Logger logger = Logger.getLogger(BasicService.class);
+	protected static final Logger logger = LogManager.getLogger(BasicService.class);
 	
 	protected BeanFactory context;
 	@Override

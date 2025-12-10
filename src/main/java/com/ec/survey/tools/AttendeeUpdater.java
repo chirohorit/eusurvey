@@ -8,7 +8,8 @@ import com.ec.survey.model.attendees.AttributeName;
 import com.ec.survey.service.AttendeeService;
 import com.ec.survey.service.SystemService;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Scope;
@@ -26,7 +27,7 @@ import javax.annotation.Resource;
 @Scope("prototype")
 public class AttendeeUpdater implements Runnable {
 
-    protected static final Logger logger = Logger.getLogger(AttendeeUpdater.class);
+    protected static final Logger logger = LogManager.getLogger(AttendeeUpdater.class);
 
     @Resource(name = "attendeeService")
     private AttendeeService attendeeService;

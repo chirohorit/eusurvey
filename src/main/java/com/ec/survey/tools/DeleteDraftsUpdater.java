@@ -2,7 +2,8 @@ package com.ec.survey.tools;
 
 import com.ec.survey.service.AnswerService;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.context.annotation.Scope;
@@ -17,7 +18,7 @@ import javax.annotation.Resource;
 @Scope("singleton")
 public class DeleteDraftsUpdater implements Runnable {
 
-	protected static final Logger logger = Logger.getLogger(DeleteDraftsUpdater.class);
+	protected static final Logger logger = LogManager.getLogger(DeleteDraftsUpdater.class);
 	
 	@Resource(name="answerService")
 	private AnswerService answerService;

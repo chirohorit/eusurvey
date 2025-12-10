@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration xmlns="https://logging.apache.org/xml/ns"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                   https://logging.apache.org/xml/ns
+                   https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <Appenders>
+        <!--<Console name="CONSOLE">
+            <PatternLayout pattern="%p - %m%n"/>
+        </Console>
+        <File name="MAIN" fileName="logs/main.log">
+            <JsonTemplateLayout/>
+        </File>
+        <File name="DEBUG_LOG" fileName="logs/debug.log">
+            <PatternLayout pattern="%d [%t] %p %c - %m%n"/>
+        </File>-->
+        <Console name="console">
+            <PatternLayout pattern="%-5p: %c - %m%n"/>
+        </Console>
+        <File name="info" fileName="${catalina.base}/logs/eusurvey-info.log" append="true">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss}-%-4r [%t] (%F:%L) %-5p %c %x - %m%n"/>
+        </File>
+        <File name="debug" fileName="${catalina.base}/logs/eusurvey-debug.log" append="true">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss}-%-4r [%t] (%F:%L) %-5p %c %x - %m%n"/>
+        </File>
+        <File name="error" fileName="${catalina.base}/logs/eusurvey-error.log" append="true">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss}-%-4r [%t] (%F:%L) %-5p %c %x - %m%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="console" level="WARN"/>
+            <AppenderRef ref="info"/>
+        </Root>
+        <Logger name="com.ec.survey" level="INFO">
+            <AppenderRef ref="error" />
+            <AppenderRef ref="info" />
+        </Logger>
+        <Logger name="org.hibernate" level="INFO">
+            <AppenderRef ref="error" />
+            <AppenderRef ref="info" />
+        </Logger>
+        <Logger name="org.springframework" level="WARN">
+            <AppenderRef ref="error" />
+            <AppenderRef ref="info" />
+        </Logger>
+    </Loggers>
+</Configuration>

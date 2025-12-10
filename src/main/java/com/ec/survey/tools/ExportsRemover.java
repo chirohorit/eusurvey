@@ -3,7 +3,8 @@ package com.ec.survey.tools;
 import com.ec.survey.model.WebserviceTask;
 import com.ec.survey.service.ExportService;
 import com.ec.survey.service.WebserviceService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.context.annotation.Scope;
@@ -15,7 +16,7 @@ import javax.annotation.Resource;
 @Scope("prototype")
 public class ExportsRemover implements Runnable {
 
-	protected static final Logger logger = Logger.getLogger(ExportsRemover.class);
+	protected static final Logger logger = LogManager.getLogger(ExportsRemover.class);
 
 	@Resource(name = "exportService")
 	protected ExportService exportService;

@@ -16,7 +16,8 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.hibernate.Session;
 import org.w3c.dom.Document;
@@ -38,7 +39,7 @@ import java.util.zip.ZipException;
 
 public class SurveyExportHelper {
 
-	private static final Logger logger = Logger.getLogger(SurveyExportHelper.class);
+	private static final Logger logger = LogManager.getLogger(SurveyExportHelper.class);
 	
 	private static void addSurveyData(Survey survey, ArchiveOutputStream os, Session session, FileService fileService, SessionService sessionService, String fileDir, List<String> writtenFiles) throws Exception {
 		 //create logo / download files

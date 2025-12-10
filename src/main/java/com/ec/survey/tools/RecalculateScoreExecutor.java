@@ -6,7 +6,8 @@ import javax.annotation.Resource;
 
 import com.ec.survey.model.Form;
 import com.ec.survey.service.*;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -48,7 +49,7 @@ public class RecalculateScoreExecutor implements Runnable {
 	
 	private int surveyid;
 	
-	private static final Logger logger = Logger.getLogger(RecalculateScoreExecutor.class);
+	private static final Logger logger = LogManager.getLogger(RecalculateScoreExecutor.class);
 	
 	public void init(int surveyid)
 	{

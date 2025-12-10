@@ -2,7 +2,8 @@ package com.ec.survey.tools;
 
 import com.ec.survey.model.administration.User;
 import com.ec.survey.service.LdapService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import javax.naming.NamingException;
@@ -17,7 +18,7 @@ import java.net.URL;
 
 public class EcasHelper {
 	
-	protected static final Logger logger = Logger.getLogger(EcasHelper.class);
+	protected static final Logger logger = LogManager.getLogger(EcasHelper.class);
 	
 	public static String getXmlTagValue(String xml, String tag) {
 	    int begin = xml.indexOf("<" + tag + ">") + tag.length() + 2;

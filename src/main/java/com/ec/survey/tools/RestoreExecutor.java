@@ -2,7 +2,8 @@ package com.ec.survey.tools;
 
 import javax.annotation.Resource;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.context.annotation.Scope;
@@ -36,7 +37,7 @@ public class RestoreExecutor implements Runnable {
 	private String alias;
 	private User user;
 	
-	private static final Logger logger = Logger.getLogger(RestoreExecutor.class);
+	private static final Logger logger = LogManager.getLogger(RestoreExecutor.class);
 	
 	public void init(Archive archive, String alias, User user)
 	{

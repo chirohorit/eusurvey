@@ -10,7 +10,8 @@ import java.util.Date;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ import com.ec.survey.service.MailService;
 @Scope("prototype")
 public class MailSender implements Runnable {
 
-	protected static final Logger logger = Logger.getLogger(MailSender.class);
+	protected static final Logger logger = LogManager.getLogger(MailSender.class);
 	
 	private @Value("${server.prefix}") String host;
 	private @Value("${sender}") String sender;

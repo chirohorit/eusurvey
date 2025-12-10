@@ -17,7 +17,8 @@ import com.ec.survey.service.SurveyService;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
 import com.ec.survey.tools.QuizHelper;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.*;
 import org.hibernate.query.NativeQuery;
 import org.springframework.context.annotation.Scope;
@@ -50,7 +51,7 @@ public class StatisticsCreator implements Runnable {
 	@Resource(name = "selfassessmentService")
 	protected SelfAssessmentService selfassessmentService;
 
-	protected static final Logger logger = Logger.getLogger(StatisticsCreator.class);
+	protected static final Logger logger = LogManager.getLogger(StatisticsCreator.class);
 
 	private Survey survey;
 	private ResultFilter filter;

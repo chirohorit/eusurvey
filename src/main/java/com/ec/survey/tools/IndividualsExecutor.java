@@ -7,7 +7,8 @@ import com.ec.survey.service.FileService;
 import com.ec.survey.service.MailService;
 import com.ec.survey.service.PDFService;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.context.annotation.Scope;
@@ -29,7 +30,7 @@ public class IndividualsExecutor implements Runnable {
 	@Resource(name="mailService")
 	private MailService mailService;
 	
-	protected static final Logger logger = Logger.getLogger(IndividualsExecutor.class);
+	protected static final Logger logger = LogManager.getLogger(IndividualsExecutor.class);
 	
 	private Survey survey;
 	private ResultFilter filter;

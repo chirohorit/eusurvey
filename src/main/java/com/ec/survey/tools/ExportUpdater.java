@@ -1,7 +1,8 @@
 package com.ec.survey.tools;
 
 import com.ec.survey.service.ExportService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.context.annotation.Scope;
@@ -13,7 +14,7 @@ import javax.annotation.Resource;
 @Scope("singleton")
 public class ExportUpdater implements Runnable {
 
-	protected static final Logger logger = Logger.getLogger(ExportUpdater.class);
+	protected static final Logger logger = LogManager.getLogger(ExportUpdater.class);
 	
 	@Resource(name="exportService")
 	private ExportService exportService;

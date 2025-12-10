@@ -6,7 +6,8 @@ import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ import java.io.IOException;
 
 @Service("ftpClient")
 public class FtpClient {
-    protected static final Logger logger = Logger.getLogger(FtpClient.class);
+    protected static final Logger logger = LogManager.getLogger(FtpClient.class);
     private final ProducerTemplate producerTemplate;
     private final ConsumerTemplate consumerTemplate;
     private @Value("${mt.fileDir}") String fileDir;

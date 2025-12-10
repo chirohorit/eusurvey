@@ -10,7 +10,8 @@ import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
@@ -36,7 +37,7 @@ public class ECFProfile implements Serializable, Comparable<ECFProfile> {
     private List<ECFExpectedScore> expectedScores = new ArrayList<>();
     private Integer orderNumber;
 
-    protected static final Logger logger = Logger.getLogger(ECFProfile.class);
+    protected static final Logger logger = LogManager.getLogger(ECFProfile.class);
 
     public ECFProfile() {
 

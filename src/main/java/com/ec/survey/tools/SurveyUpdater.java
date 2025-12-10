@@ -10,7 +10,8 @@ import com.ec.survey.service.SurveyService;
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ import java.util.List;
 @Scope("singleton")
 public class SurveyUpdater implements Runnable {
 
-	protected static final Logger logger = Logger.getLogger(SurveyUpdater.class);
+	protected static final Logger logger = LogManager.getLogger(SurveyUpdater.class);
 
 	@Resource(name = "surveyService")
 	private SurveyService surveyService;

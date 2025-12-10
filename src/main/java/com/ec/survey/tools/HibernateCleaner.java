@@ -1,7 +1,8 @@
 package com.ec.survey.tools;
 
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -16,7 +17,7 @@ import java.sql.Blob;
 import java.util.*;
 
 public class HibernateCleaner {
-    private static final Logger logger = Logger.getLogger(HibernateCleaner.class);
+    private static final Logger logger = LogManager.getLogger(HibernateCleaner.class);
 
 	public static Object clean(Session session, Object obj) throws Exception {
         return (clean(session, obj, new HashMap<>()));

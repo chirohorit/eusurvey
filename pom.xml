@@ -52,8 +52,8 @@
       <org.springframework.security-version>5.7.5</org.springframework.security-version>
       <org.aspectj-version>1.8.8</org.aspectj-version>
       <org.slf4j-version>1.6.1</org.slf4j-version>
-      <version.number>444</version.number>
-      <svnName>1.1.9</svnName>
+      <!--<version.number>444</version.number>
+      <svnName>1.1.9</svnName>-->
       <camel.version>2.22.3</camel.version>
       <svn.buildNumber.doUpdate>false</svn.buildNumber.doUpdate>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -531,28 +531,11 @@
       <version>${org.slf4j-version}</version>
     </dependency>
 
+      <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
       <dependency>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-          <version>1.2.17</version>
-          <exclusions>
-              <exclusion>
-                  <groupId>javax.mail</groupId>
-                  <artifactId>mail</artifactId>
-              </exclusion>
-              <exclusion>
-                  <groupId>javax.jms</groupId>
-                  <artifactId>jms</artifactId>
-              </exclusion>
-              <exclusion>
-                  <groupId>com.sun.jdmk</groupId>
-                  <artifactId>jmxtools</artifactId>
-              </exclusion>
-              <exclusion>
-                  <groupId>com.sun.jmx</groupId>
-                  <artifactId>jmxri</artifactId>
-              </exclusion>
-          </exclusions>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-core</artifactId>
+          <version>2.25.2</version>
       </dependency>
 
     <!-- Logback implementation -->
@@ -946,37 +929,6 @@
       </resource>
     </resources>
 
-    <pluginManagement>
-      <plugins>
-        <!-- Keep m2e lifecycle mapping if needed -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <versionRange>[2.5.1,)</versionRange>
-                    <goals>
-                      <goal>compile</goal>
-                      <goal>testCompile</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-
     <plugins>
       <!-- buildnumber plugin used in original. keep as plugin (not dependency) -->
       <plugin>
@@ -1074,10 +1026,7 @@
             </execution>
         </executions>
       </plugin>
-      <!--<plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>-->
+
       <!-- War plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -1110,7 +1059,7 @@
               <directory>src/main/resources</directory>
               <targetPath>WEB-INF/classes</targetPath>
               <includes>
-                <include>log4j.xml</include>
+                <include>log4j2.xml</include>
               </includes>
             </resource>
           </webResources>
@@ -1205,11 +1154,10 @@
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
-        <!--<version>7.4.4</version>-->
         <version>12.1.9</version>
         <configuration>
           <nvdApiKeyEnvironmentVariable>myNvdApiKey</nvdApiKeyEnvironmentVariable>
-          <ossIndexServerId>ossindex</ossIndexServerId>
+          <ossIndexServerId>ossIndex</ossIndexServerId>
         </configuration>
         <executions>
           <execution>
@@ -1227,37 +1175,6 @@
         <version>${sonar.version}</version>
       </plugin>
 
-      <!-- Tomcat plugin (as plugin, not dependency) -->
-      <plugin>
-        <groupId>org.apache.tomcat.maven</groupId>
-        <artifactId>tomcat-maven-plugin</artifactId>
-        <version>2.2</version>
-        <configuration>
-          <username>${tomcat.admin}</username>
-          <password>${tomcat.admin.password}</password>
-          <warFile>${project.build.directory}/eusurvey.war</warFile>
-          <url>${tomcat.deploy.url}</url>
-          <path>/eusurvey</path>
-          <update>true</update>
-          <fork>true</fork>
-        </configuration>
-      </plugin>
-
-      <!-- maven-dependency-plugin to install sources (kept as in original) -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <!--<version>3.9.0</version>-->
-        <executions>
-          <execution>
-            <id>install</id>
-            <phase>install</phase>
-            <goals>
-              <goal>resolve-sources</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 </project>

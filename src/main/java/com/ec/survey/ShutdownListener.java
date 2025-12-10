@@ -4,7 +4,8 @@ import com.ec.survey.service.ExportService;
 import com.ec.survey.service.ParticipationService;
 import com.ec.survey.service.WebserviceService;
 import com.mysql.cj.jdbc.AbandonedConnectionCleanupThread;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -20,7 +21,7 @@ import java.util.Enumeration;
 import java.util.Set;
 
 public class ShutdownListener implements ServletContextListener {
-    private static final Logger logger = Logger.getLogger(ShutdownListener.class);
+    private static final Logger logger = LogManager.getLogger(ShutdownListener.class);
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {

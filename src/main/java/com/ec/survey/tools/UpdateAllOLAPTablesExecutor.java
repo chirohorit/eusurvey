@@ -4,7 +4,8 @@ import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import com.ec.survey.service.ReportingService;
@@ -21,7 +22,7 @@ public class UpdateAllOLAPTablesExecutor implements Runnable {
 	@Resource(name="reportingServiceProxy")
 	private ReportingServiceProxy reportingService;	
 
-	private static final Logger logger = Logger.getLogger(UpdateAllOLAPTablesExecutor.class);
+	private static final Logger logger = LogManager.getLogger(UpdateAllOLAPTablesExecutor.class);
 	
 	public void run()
 	{

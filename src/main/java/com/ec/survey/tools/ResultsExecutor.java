@@ -17,7 +17,8 @@ import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.beans.factory.BeanFactory;
@@ -82,7 +83,7 @@ public class ResultsExecutor implements Runnable, BeanFactoryAware{
 	
 	private String question;
 	
-	private static final Logger logger = Logger.getLogger(ResultsExecutor.class);
+	private static final Logger logger = LogManager.getLogger(ResultsExecutor.class);
 	
 	public void init(Survey survey, ResultFilter filter, String email, String from, String host, String fileDir, String type, MessageSource resources, Locale locale, String question)
 	{

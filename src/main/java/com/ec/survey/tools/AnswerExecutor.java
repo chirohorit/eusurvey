@@ -6,7 +6,8 @@ import javax.annotation.Resource;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,7 @@ public class AnswerExecutor implements Runnable {
 	private String host;
 	private boolean pwAuthenticated;
 	
-	private static final Logger logger = Logger.getLogger(AnswerExecutor.class);
+	private static final Logger logger = LogManager.getLogger(AnswerExecutor.class);
 	
 	public void init(AnswerSet answerSet, String email, String from, String host, boolean pwAuthenticated)
 	{

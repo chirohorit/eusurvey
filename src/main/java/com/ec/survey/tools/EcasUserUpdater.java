@@ -6,7 +6,8 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.context.annotation.Scope;
@@ -23,7 +24,7 @@ import com.ec.survey.service.SchemaService;
 @Scope("singleton")
 public class EcasUserUpdater implements Runnable {
 
-	protected static final Logger logger = Logger.getLogger(EcasUserUpdater.class);
+	protected static final Logger logger = LogManager.getLogger(EcasUserUpdater.class);
 
 	@Resource(name = "ldapService")
 	private LdapService ldapService;

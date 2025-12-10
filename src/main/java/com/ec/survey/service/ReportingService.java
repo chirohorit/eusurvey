@@ -7,7 +7,8 @@ import javax.annotation.Resource;
 import javax.persistence.PersistenceException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.query.Query;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
@@ -61,7 +62,7 @@ public class ReportingService extends BasicService {
 
 	protected static final int MAX_COLUMN_NUMBER_IN_OLAP_TABLE = 1000;
 	
-	protected static final Logger logger = Logger.getLogger(ReportingService.class);
+	protected static final Logger logger = LogManager.getLogger(ReportingService.class);
 
 	@Resource(name="sessionFactoryReporting")
 	protected SessionFactory sessionFactoryReporting;

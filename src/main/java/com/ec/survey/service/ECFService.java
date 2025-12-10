@@ -21,7 +21,8 @@ import java.awt.geom.Rectangle2D;
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -70,7 +71,7 @@ import com.google.common.primitives.Ints;
 @Configurable
 public class ECFService extends BasicService {
 
-    private static final Logger logger = Logger.getLogger(ECFService.class);
+    private static final Logger logger = LogManager.getLogger(ECFService.class);
 
     @Resource(name = "sessionFactory")
     private SessionFactory sessionFactory;

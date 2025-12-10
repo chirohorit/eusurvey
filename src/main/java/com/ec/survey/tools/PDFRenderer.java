@@ -6,7 +6,8 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -19,7 +20,7 @@ import com.itextpdf.text.pdf.BaseFont;
 public class PDFRenderer {
 	
 	private ITextRenderer renderer;
-	protected static final Logger logger = Logger.getLogger(PDFRenderer.class);
+	protected static final Logger logger = LogManager.getLogger(PDFRenderer.class);
 	private SessionService sessionService;
 	
 	public PDFRenderer(SessionService sessionService) {

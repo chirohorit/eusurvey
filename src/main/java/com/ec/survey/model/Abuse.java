@@ -1,6 +1,7 @@
 package com.ec.survey.model;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,7 +29,7 @@ public class Abuse {
 	private String email;
 	private Date created;
 	
-	protected static final Logger logger = Logger.getLogger(Abuse.class);
+	protected static final Logger logger = LogManager.getLogger(Abuse.class);
 	
 	public Abuse(String surveyUid, String type, String text, String email)
 	{

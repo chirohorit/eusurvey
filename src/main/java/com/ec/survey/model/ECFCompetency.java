@@ -11,7 +11,8 @@ import javax.persistence.*;
 import com.ec.survey.model.survey.Question;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
@@ -39,7 +40,7 @@ public class ECFCompetency implements Serializable, Comparable<ECFCompetency>{
     private ECFCluster ecfCluster;
     private Integer orderNumber;
 
-    protected static final Logger logger = Logger.getLogger(ECFCompetency.class);
+    protected static final Logger logger = LogManager.getLogger(ECFCompetency.class);
 
     public ECFCompetency() {
 

@@ -2,7 +2,8 @@ package com.ec.survey.tools;
 
 import com.ec.survey.service.SurveyService;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.context.annotation.Scope;
@@ -14,7 +15,7 @@ import javax.annotation.Resource;
 @Scope("singleton")
 public class SendReportedSurveysWorker implements Runnable {
 
-	protected static final Logger logger = Logger.getLogger(SendReportedSurveysWorker.class);
+	protected static final Logger logger = LogManager.getLogger(SendReportedSurveysWorker.class);
 	
 	@Resource(name="surveyService")
 	private SurveyService surveyService;

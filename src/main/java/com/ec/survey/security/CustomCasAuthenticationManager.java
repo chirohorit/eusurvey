@@ -4,7 +4,8 @@ import com.ec.survey.model.administration.GlobalPrivilege;
 import com.ec.survey.model.administration.Role;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.service.AdministrationService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.security.core.GrantedAuthority;
@@ -19,7 +20,7 @@ import java.util.List;
 
 public class CustomCasAuthenticationManager implements UserDetailsService {
 
-	protected static Logger logger = Logger.getLogger("com.ec.survey");
+	protected static Logger logger = LogManager.getLogger("com.ec.survey");
 	
 	@Resource(name="administrationService")
 	private AdministrationService administrationService;

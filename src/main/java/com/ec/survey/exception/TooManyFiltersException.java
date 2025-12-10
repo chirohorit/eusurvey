@@ -1,10 +1,11 @@
 package com.ec.survey.exception;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class TooManyFiltersException extends Exception {
 	
-	protected static Logger logger = Logger.getLogger(TooManyFiltersException.class);
+	protected static Logger logger = LogManager.getLogger(TooManyFiltersException.class);
 	
 	public TooManyFiltersException(String message) {		
 		super(message);

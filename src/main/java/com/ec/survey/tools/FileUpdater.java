@@ -5,7 +5,8 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ import com.ec.survey.service.FileService;
 @Scope("singleton")
 public class FileUpdater implements Runnable {
 
-    protected static final Logger logger = Logger.getLogger(FileUpdater.class);
+    protected static final Logger logger = LogManager.getLogger(FileUpdater.class);
 
     @Resource(name = "fileService")
     private FileService fileService;

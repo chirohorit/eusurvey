@@ -5,7 +5,8 @@ import com.ec.survey.service.AdministrationService;
 import com.ec.survey.service.LdapDBService;
 import com.ec.survey.service.LdapService;
 import com.ec.survey.service.SchemaService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import org.springframework.context.annotation.Scope;
@@ -19,7 +20,7 @@ import java.util.Map.Entry;
 @Service("ecasDeactivator")
 @Scope("singleton")
 public class EcasUserDeactivator implements Runnable {
-	protected static final Logger logger = Logger.getLogger(EcasUserDeactivator.class);
+	protected static final Logger logger = LogManager.getLogger(EcasUserDeactivator.class);
 
 	@Resource(name = "ldapService")
 	private LdapService ldapService;

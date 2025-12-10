@@ -2,7 +2,8 @@ package com.ec.survey.tools;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 
 import com.ec.survey.model.administration.Role;
@@ -10,7 +11,7 @@ import com.ec.survey.model.administration.User;
 import com.ec.survey.service.AdministrationService;
 
 public class UsersCreator {
-	private static final Logger logger = Logger.getLogger(UsersCreator.class);
+	private static final Logger logger = LogManager.getLogger(UsersCreator.class);
 
 	public static void createDefaultUsers(AdministrationService administrationService, boolean createStressTestData,
 			String sender) throws LoginAlreadyExistsException {

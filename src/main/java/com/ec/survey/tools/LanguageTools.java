@@ -2,7 +2,8 @@ package com.ec.survey.tools;
 
 import com.ec.survey.model.Language;
 import com.ec.survey.service.SurveyService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -16,7 +17,7 @@ import java.util.List;
 
 public class LanguageTools {
 	
-	private static final Logger logger = Logger.getLogger(LanguageTools.class);
+	private static final Logger logger = LogManager.getLogger(LanguageTools.class);
 	
 	private LanguageTools() {
 	    throw new IllegalStateException("Utility class");

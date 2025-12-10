@@ -6,7 +6,8 @@ import javax.annotation.Resource;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class QuizExecutor implements Runnable {
     private String from;
     private String host;
 
-    private static final Logger logger = Logger.getLogger(QuizExecutor.class);
+    private static final Logger logger = LogManager.getLogger(QuizExecutor.class);
 
     public void init(AnswerSet answerSet, String email, String from, String host)
     {

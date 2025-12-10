@@ -64,13 +64,6 @@
       <maven.war.plugin.version>3.3.1</maven.war.plugin.version>
   </properties>
 
-  <repositories>
-    <repository>
-        <id>local-project-repo</id>
-        <url>file://${project.basedir}/repo</url>
-    </repository>
-  </repositories>
-
   <scm>
     <connection>scm:git:https://github.com/chirohorit/eusurvey.git</connection>
     <tag>HEAD</tag>
@@ -204,7 +197,7 @@
     </dependency>
 
     <!-- ESAPI: note — ESAPI historically had security issues if old; keep only if used -->
-    <!--<dependency>
+    <dependency>
       <groupId>org.owasp.esapi</groupId>
       <artifactId>esapi</artifactId>
       <version>2.7.0.0</version>
@@ -217,13 +210,23 @@
                 <groupId>commons-configuration</groupId>
                 <artifactId>commons-configuration</artifactId>
             </exclusion>
+            <exclusion>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+            </exclusion>
         </exclusions>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
+    <!--<dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.12.2</version>
     </dependency>-->
-    <dependency>
+    <!--<dependency>
       <groupId>org.owasp.esapi</groupId>
       <artifactId>esapi</artifactId>
       <version>2.1.0.1</version>
-    </dependency>
+    </dependency>-->
 
     <!-- BouncyCastle: standardize on a single modern provider -->
     <dependency>
@@ -643,13 +646,13 @@
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi</artifactId>
-      <version>3.17</version>
+      <version>5.4.1</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
-      <version>3.17</version>   <!--5.5.1-->
+      <version>5.4.1</version>   <!--5.5.1-->
     </dependency>
 
     <!-- Other utilities -->
@@ -728,17 +731,27 @@
 
 
     <!-- ODF Toolkit -->
+    <!-- https://mvnrepository.com/artifact/org.odftoolkit/odftoolkit -->
     <dependency>
       <groupId>org.odftoolkit</groupId>
       <artifactId>simple-odf</artifactId>
       <version>0.9.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-          </exclusion>
-        </exclusions>
     </dependency>
+
+    <!-- https://mvnrepository.com/artifact/apache-xerces/xercesImpl -->
+    <!--<dependency>
+      <groupId>apache-xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.9.1</version>
+      <scope>test</scope>
+    </dependency>-->
+
+    <!-- https://mvnrepository.com/artifact/org.mule.apache/xercesImpl -->
+    <!--<dependency>
+      <groupId>org.mule.apache</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.12.2-MULE-001</version>
+    </dependency>-->
 
     <!-- CSV -->
     <dependency>
@@ -830,6 +843,19 @@
       <groupId>io.lettuce</groupId>
       <artifactId>lettuce-core</artifactId>
       <version>7.1.0.RELEASE</version>
+        <exclusions>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>*</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.2.7.Final</version>
     </dependency>
 
     <!--<dependency>

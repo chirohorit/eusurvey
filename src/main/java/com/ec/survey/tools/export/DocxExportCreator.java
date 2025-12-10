@@ -16,7 +16,8 @@ import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
-import org.openxmlformats.schemas.drawingml.x2006.wordprocessingDrawing.CTInline;
+import org.openxmlformats.schemas.drawingml.x2006.wordprocessingDrawing.*;
+//org.docx4j.sharedtypes
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -418,9 +419,9 @@ public class DocxExportCreator extends ExportCreator {
 					row.getCell(0).setText("No Answer");
 					row.getCell(1).setText(df.format(statistics.getRequestedRecordsPercent().get(ranking.getId().toString())) + "%");
 					CTHMerge hMerge = CTHMerge.Factory.newInstance();
-					hMerge.setVal(STMerge.RESTART);
+					hMerge.setVal(STMerge.Enum.forString("RESTART"));
 					CTHMerge hMerge1 = CTHMerge.Factory.newInstance();
-					hMerge1.setVal(STMerge.CONTINUE);
+					hMerge1.setVal(STMerge.Enum.forString("CONTINUE"));
 					CTTcPr pr = row.getCell(1).getCTTc().getTcPr();
 					if (pr == null) {
 						pr = row.getCell(1).getCTTc().addNewTcPr();
@@ -583,8 +584,9 @@ public class DocxExportCreator extends ExportCreator {
 	private XWPFTable createTableForAnswer(String title) {	
 		XWPFParagraph paragraph = document.createParagraph();
 		
-		if (paragraph.getCTP().getPPr() == null) paragraph.getCTP().addNewPPr();
-		paragraph.getCTP().getPPr().addNewKeepNext().setVal(STOnOff.ON);
+		if (paragraph.getCTP().getPPr() == null)
+            paragraph.getCTP().addNewPPr();
+		paragraph.getCTP().getPPr().addNewKeepNext().setVal("on");
 		
 		XWPFRun run = paragraph.createRun();
 		run.setText(ConversionTools.removeHTMLNoEscape(title));	
@@ -607,7 +609,7 @@ public class DocxExportCreator extends ExportCreator {
 		XWPFParagraph paragraph = document.createParagraph();
 		
 		if (paragraph.getCTP().getPPr() == null) paragraph.getCTP().addNewPPr();
-		paragraph.getCTP().getPPr().addNewKeepNext().setVal(STOnOff.ON);
+		paragraph.getCTP().getPPr().addNewKeepNext().setVal("on");
 		
 		XWPFRun run = paragraph.createRun();
 		run.setText(ConversionTools.removeHTMLNoEscape(title));	

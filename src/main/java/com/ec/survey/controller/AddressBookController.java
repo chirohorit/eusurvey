@@ -16,12 +16,13 @@ import com.ec.survey.tools.*;
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.odftoolkit.simple.SpreadsheetDocument;
 import org.odftoolkit.simple.table.Row;
@@ -854,11 +855,11 @@ public class AddressBookController extends BasicController {
 		
 		try {
 		
-			if (sheet.getRow(row).getCell(cell).getCellType() == 0){
+			if (sheet.getRow(row).getCell(cell).getCellType() == CellType.NUMERIC){
 				double d = sheet.getRow(row).getCell(cell).getNumericCellValue();
 				// test if a date!
-				if (HSSFDateUtil.isCellDateFormatted(sheet.getRow(row).getCell(cell))) {
-					Date date = HSSFDateUtil.getJavaDate(d);
+				if (DateUtil.isCellDateFormatted(sheet.getRow(row).getCell(cell))) {
+					Date date = DateUtil.getJavaDate(d);
 					result = Tools.formatDate(date, ConversionTools.DateFormat);
 				} else {
 					result = "" + ((int)d);

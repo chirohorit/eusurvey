@@ -1511,7 +1511,7 @@ public class TranslationsHelper {
 	private static void addTextCell(Row row, int col, String text) {
 		Cell cell = row.createCell(col);
 		cell.setCellValue(text);
-		cell.setCellType(Cell.CELL_TYPE_STRING);
+		cell.setCellType(CellType.STRING);
 	}
 
 	private static void addTextCell(org.odftoolkit.simple.table.Row row, int col, String text) {
@@ -2041,7 +2041,7 @@ public class TranslationsHelper {
 			var sRow = sheet.getRow(0);
 			var sCell = sRow.getCell(0);
 
-			if (sCell.getCellTypeEnum() == CellType.NUMERIC) {
+			if (sCell.getCellType() == CellType.NUMERIC) {
 				result = "" + ((int) sheet.getRow(row).getCell(cell).getNumericCellValue());
 			} else {
 				result = Tools.filterHTML(sheet.getRow(row).getCell(cell).getStringCellValue().trim());

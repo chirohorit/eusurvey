@@ -142,25 +142,30 @@ public class XlsxExportCreator extends CommonExcelExportCreator {
 		redPercentStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
 		redPercentStyle.setFont(redFont);
 
-		yellowBackgroundStyle = (XSSFCellStyle) createCellStyle(workbook);
-		XSSFColor colorYellow = new XSSFColor(new Color(0xFFC000));
-		yellowBackgroundStyle.setFillForegroundColor(colorYellow);
+		/*yellowBackgroundStyle = (XSSFCellStyle) createCellStyle(workbook);
+        Color customColor = new Color(255, 255, 0); // Example light blue
+        XSSFColor xssfColor = new XSSFColor(customColor);
+		//XSSFColor colorYellow = new XSSFColor(0xFFFF00);
+		yellowBackgroundStyle.setFillForegroundColor(xssfColor);
 		yellowBackgroundStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		greenBackgroundStyle = (XSSFCellStyle) createCellStyle(workbook);
-		XSSFColor colorGreen = new XSSFColor(new Color(0x00E266));
-		greenBackgroundStyle.setFillForegroundColor(colorGreen);
+        customColor = new Color(0, 255, 0); // Example light blue
+        xssfColor = new XSSFColor(customColor);
+		greenBackgroundStyle.setFillForegroundColor(xssfColor);
 		greenBackgroundStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		purpleBackgroundStyle = (XSSFCellStyle) createCellStyle(workbook);
-		XSSFColor colorPurple = new XSSFColor(new Color(0xE064E3));
-		purpleBackgroundStyle.setFillForegroundColor(colorPurple);
+        customColor = new Color(128, 0, 128);
+        xssfColor = new XSSFColor(customColor);
+		purpleBackgroundStyle.setFillForegroundColor(xssfColor);
 		purpleBackgroundStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		redBackgroundStyle = (XSSFCellStyle) createCellStyle(workbook);
-		XSSFColor colorRed = new XSSFColor(new Color(0xFFABAB));
-		redBackgroundStyle.setFillForegroundColor(colorRed);
-		redBackgroundStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        customColor = new Color(255, 0, 0);
+        xssfColor = new XSSFColor(customColor);
+		redBackgroundStyle.setFillForegroundColor(xssfColor);
+		redBackgroundStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);*/
 
 		borderStyle = createCellStyle(workbook);
 
@@ -694,14 +699,14 @@ public class XlsxExportCreator extends CommonExcelExportCreator {
 
 	private static void addNumberCell(Row row, int column, double content, boolean bold) {
 		Cell cell = row.createCell(column);
-		cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+		cell.setCellType(CellType.NUMERIC);
 		cell.setCellStyle(bold ? boldStyle : borderStyle);
 		cell.setCellValue(content);
 	}
 	
 	private static void addPercentCell(Row row, int column, double content, boolean bold) {
 		Cell cell = row.createCell(column);
-		cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+		cell.setCellType(CellType.NUMERIC);
 		cell.setCellStyle(bold ? boldPercentStyle : percentStyle);
 		cell.setCellValue(content / 100);
 	}

@@ -31,8 +31,11 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.*;
+//import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.util.Units;
 import org.hibernate.*;
@@ -85,7 +88,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 		dateStyle.setAlignment(HorizontalAlignment.LEFT);
 
 		questionTitleStyle = wb.createCellStyle();
-		questionTitleStyle.setFillForegroundColor(HSSFColor.LIGHT_BLUE.index);
+		//questionTitleStyle.setFillForegroundColor(0xFFADD8E6);
 		Font f = wb.createFont();
 		f.setBold(true);
 		questionTitleStyle.setFont(f);
@@ -1187,7 +1190,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 
 					if (likes != Integer.MAX_VALUE) {
 						cell2.setCellValue((double) likes);
-						cell2.setCellType(Cell.CELL_TYPE_NUMERIC);
+						cell2.setCellType(org.apache.poi.ss.usermodel.CellType.NUMERIC);
 
 						DataFormat format = sheet.getWorkbook().createDataFormat();
 						CellStyle style = sheet.getWorkbook().createCellStyle();
@@ -2441,22 +2444,22 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 		columnIndex = 0;
 
 		String competenceLabel = resources.getMessage("label.ECF.Competence", null, "Competence", locale);
-		Cell firstCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell firstCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		firstCellFirstRow.setCellValue(competenceLabel);
 
 		String targetLabel = resources.getMessage("label.ECF.Target", null, "Target", locale);
-		Cell secondCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell secondCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		secondCellFirstRow.setCellValue(targetLabel);
 		boolean displayGap = (globalResult.getTotalResults().getTotalGaps() != null && globalResult.getTotalResults()
 				.getTotalScores().size() == globalResult.getTotalResults().getTotalGaps().size());
 
 		for (String participantName : globalResult.getIndividualResults().get(0).getParticipantsNames()) {
-			Cell participantCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+			Cell participantCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 			participantCell.setCellValue("Score for " + participantName);
 
 			if (displayGap) {
 				Cell participantGapCell = row.createCell(columnIndex++,
-						org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+						org.apache.poi.ss.usermodel.CellType.STRING);
 				participantGapCell.setCellValue("Gap for " + participantName);
 			}
 		}
@@ -2465,24 +2468,24 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 		columnIndex = 0;
 
 		String totalLabel = resources.getMessage("label.TotalUpperCase", null, "TOTAL", locale);
-		Cell firstCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell firstCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		firstCellSecondRow.setCellValue(totalLabel);
 
-		Cell secondCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+		Cell secondCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.NUMERIC);
 		if (globalResult.getTotalResults() != null && globalResult.getTotalResults().getTotalTargetScore() != null) {
 			secondCellSecondRow.setCellValue(globalResult.getTotalResults().getTotalTargetScore());
 		} else {
-			secondCellSecondRow.setCellType(org.apache.poi.ss.usermodel.Cell.CELL_TYPE_BLANK);
+			secondCellSecondRow.setCellType(org.apache.poi.ss.usermodel.CellType.BLANK);
 		}
 
 		for (int i = 0; i < globalResult.getTotalResults().getTotalScores().size(); i++) {
 			Integer totalScore = globalResult.getTotalResults().getTotalScores().get(i);
-			Cell totalScoreCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+			Cell totalScoreCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.NUMERIC);
 			totalScoreCell.setCellValue(totalScore);
 
 			if (displayGap) {
 				Integer totalGap = globalResult.getTotalResults().getTotalGaps().get(i);
-				Cell totalGapCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+				Cell totalGapCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.NUMERIC);
 				totalGapCell.setCellValue(totalGap);
 			}
 		}
@@ -2491,25 +2494,25 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 			row = sheet.createRow(rowIndex++);
 			columnIndex = 0;
 
-			Cell competencyCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+			Cell competencyCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 			competencyCell.setCellValue(competencyResult.getCompetencyName());
 
-			Cell targetScoreCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+			Cell targetScoreCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.NUMERIC);
 			if (competencyResult.getCompetencyTargetScore() != null) {
 				targetScoreCell.setCellValue(competencyResult.getCompetencyTargetScore());
 			} else {
-				targetScoreCell.setCellType(org.apache.poi.ss.usermodel.Cell.CELL_TYPE_BLANK);
+				targetScoreCell.setCellType(org.apache.poi.ss.usermodel.CellType.STRING);
 			}
 
 			displayGap = displayGap && (competencyResult.getCompetencyScoreGaps() != null && competencyResult
 					.getCompetencyScoreGaps().size() == competencyResult.getCompetencyScores().size());
 			for (int i = 0; i < competencyResult.getCompetencyScores().size(); i++) {
 				Integer score = competencyResult.getCompetencyScores().get(i);
-				Cell scoreCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+				Cell scoreCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.NUMERIC);
 				scoreCell.setCellValue(score);
 
 				if (displayGap) {
-					Cell gapCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+					Cell gapCell = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.NUMERIC);
 					Integer gap = competencyResult.getCompetencyScoreGaps().get(i);
 					gapCell.setCellValue(gap);
 				}
@@ -2536,51 +2539,51 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 		columnIndex = 0;
 
 		String competenciesLabel = resources.getMessage("label.ECF.Competencies", null, "Competencies", locale);
-		Cell firstCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell firstCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		firstCellFirstRow.setCellValue(competenciesLabel);
 
 		String targetLabel = resources.getMessage("label.ECF.Target", null, "Target", locale);
-		Cell secondCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell secondCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		secondCellFirstRow.setCellValue(targetLabel);
 
 		String averageLabel = resources.getMessage("label.ECF.Average", null, "Average score", locale);
-		Cell thirdCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell thirdCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		thirdCellFirstRow.setCellValue(averageLabel);
 
 		String maxLabel = resources.getMessage("label.ECF.Max", null, "Max", locale);
-		Cell fourthCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell fourthCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		fourthCellFirstRow.setCellValue(maxLabel);
 
 		for (ECFProfileCompetencyResult competencyResult : ecfProfileResult.getCompetencyResults()) {
 			row = sheet.createRow(rowIndex++);
 			columnIndex = 0;
 
-			Cell firstCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+			Cell firstCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 			firstCellSecondRow.setCellValue(competencyResult.getCompetencyName());
 
 			Cell secondCellSecondRow = row.createCell(columnIndex++,
-					org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+					org.apache.poi.ss.usermodel.CellType.NUMERIC);
 			if (competencyResult.getCompetencyTargetScore() != null
 					&& competencyResult.getCompetencyTargetScore() != 0) {
 				secondCellSecondRow.setCellValue(competencyResult.getCompetencyTargetScore());
 			} else {
-				secondCellSecondRow.setCellType(org.apache.poi.ss.usermodel.Cell.CELL_TYPE_BLANK);
+				secondCellSecondRow.setCellType(org.apache.poi.ss.usermodel.CellType.BLANK);
 			}
 
-			Cell thirdCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+			Cell thirdCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.NUMERIC);
 			thirdCellSecondRow.setCellValue(competencyResult.getCompetencyAverageScore());
 
 			boolean displayGap = competencyResult.getCompetencyScoreGap() != null;
 
 			if (displayGap) {
 				Cell fourthCellSecondRow = row.createCell(columnIndex++,
-						org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+						org.apache.poi.ss.usermodel.CellType.STRING);
 				String plusOrMinus = competencyResult.getCompetencyScoreGap() > 0 ? "+" : "";
 				fourthCellSecondRow.setCellValue(competencyResult.getCompetencyMaxScore() + " (" + plusOrMinus
 						+ competencyResult.getCompetencyScoreGap() + ")");
 			} else {
 				Cell fourthCellSecondRow = row.createCell(columnIndex++,
-						org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+						org.apache.poi.ss.usermodel.CellType.NUMERIC);
 				fourthCellSecondRow.setCellValue(competencyResult.getCompetencyMaxScore());
 			}
 		}
@@ -2614,44 +2617,44 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 		columnIndex = 0;
 
 		String competenciesLabel = resources.getMessage("label.ECF.Competencies", null, "Competencies", locale);
-		Cell firstCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell firstCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		firstCellFirstRow.setCellValue(competenciesLabel);
 
 		String averageTargetLabel = resources.getMessage("label.ECF.AverageTarget", null, "Average target", locale);
-		Cell secondCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell secondCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		secondCellFirstRow.setCellValue(averageTargetLabel);
 
 		String averageScoreLabel = resources.getMessage("label.ECF.Average", null, "Average score", locale);
-		Cell thirdCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell thirdCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		thirdCellFirstRow.setCellValue(averageScoreLabel);
 
 		String maxTargetLabel = resources.getMessage("label.ECF.MaxTarget", null, "Max target", locale);
-		Cell fourthCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell fourthCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		fourthCellFirstRow.setCellValue(maxTargetLabel);
 
 		String maxLabel = resources.getMessage("label.ECF.Max", null, "Max", locale);
-		Cell fifthCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+		Cell fifthCellFirstRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 		fifthCellFirstRow.setCellValue(maxLabel);
 
 		for (ECFOrganizationalCompetencyResult competencyResult : organizationalResult.getCompetencyResults()) {
 			row = sheet.createRow(rowIndex++);
 			columnIndex = 0;
 
-			Cell firstCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+			Cell firstCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 			firstCellSecondRow.setCellValue(competencyResult.getCompetencyName());
 
 			Cell secondCellSecondRow = row.createCell(columnIndex++,
-					org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+					org.apache.poi.ss.usermodel.CellType.NUMERIC);
 			secondCellSecondRow.setCellValue(competencyResult.getCompetencyAverageTarget());
 
-			Cell thirdCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+			Cell thirdCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.NUMERIC);
 			thirdCellSecondRow.setCellValue(competencyResult.getCompetencyAverageScore());
 
 			Cell fourthCellSecondRow = row.createCell(columnIndex++,
-					org.apache.poi.ss.usermodel.Cell.CELL_TYPE_NUMERIC);
+					org.apache.poi.ss.usermodel.CellType.NUMERIC);
 			fourthCellSecondRow.setCellValue(competencyResult.getCompetencyMaxTarget());
 
-			Cell fifthCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING);
+			Cell fifthCellSecondRow = row.createCell(columnIndex++, org.apache.poi.ss.usermodel.CellType.STRING);
 			fifthCellSecondRow.setCellValue(competencyResult.getCompetencyMaxScore());
 		}
 

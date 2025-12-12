@@ -402,7 +402,7 @@ public class ActivityRegistry {
         if (objectsMap.containsKey(object)){
             return objectsMap.get(object);
         }
-        return Range.between(0, 0);
+        return Range.of(0, 0);
     }
 
     public static String[] getAllObjects(){
@@ -460,7 +460,7 @@ public class ActivityRegistry {
     }
 
     private static void registerObject(String name, int lowerBound, int upperBound){
-        objectsMap.put(name, Range.between(lowerBound, upperBound));
+        objectsMap.put(name, Range.of(lowerBound, upperBound));
     }
 
 

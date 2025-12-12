@@ -10,7 +10,7 @@
 	<link href="${contextpath}/resources/css/vis.min.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css" />
 	<link href="${contextpath}/resources/css/form.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css" />
 	<link href="${contextpath}/resources/css/dashboard.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css" />
-	<script type="text/javascript" src="${contextpath}/resources/js/moment.js?version=<%@include file="../version.txt" %>"></script>
+	<script type="text/javascript" src="${contextpath}/resources/js/moment.js?version=<%@include file="version.txt" %>"></script>
 	<script type="text/javascript" src="${contextpath}/resources/js/Chart.min.js?version=<%@include file="version.txt" %>"></script>
 	<script type="text/javascript" src="${contextpath}/resources/js/vis.min.js?version=<%@include file="version.txt" %>"></script>
 	<script type="text/javascript" src="${contextpath}/resources/js/dashboard.js?version=<%@include file="version.txt" %>"></script>

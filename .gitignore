@@ -68,3 +68,4 @@ helm/clean.sh
 /repo/
 pom_bu.xml
 settings.xml
+/Migration Plan.md

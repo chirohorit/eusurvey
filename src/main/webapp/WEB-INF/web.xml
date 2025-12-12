@@ -134,7 +134,7 @@
   <jsp-config>
     <taglib>
       <taglib-uri>http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API</taglib-uri>
-      <taglib-location>/WEB-INF/Content/esapi.tld</taglib-location>
+      <taglib-location>/WEB-INF/classes/esapi.tld</taglib-location>
     </taglib>
 	<jsp-property-group>
 	    <url-pattern>*.jsp</url-pattern>

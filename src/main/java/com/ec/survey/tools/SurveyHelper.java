@@ -14,8 +14,8 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.mysql.cj.util.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +29,7 @@ import java.util.Map.Entry;
 
 public class SurveyHelper {
 
-	private static final Logger logger = LogManager.getLogger(SurveyHelper.class);
+	private static final Logger logger = LoggerFactory.getLogger(SurveyHelper.class);
 
 	private static void gatherExplanationUploadsForQuestion(Survey survey, Question question, String uniqueCode, AnswerSet answerSet, AnswerSet.ExplanationData explanationData, FileService fileService) {
 		// find temporary directory

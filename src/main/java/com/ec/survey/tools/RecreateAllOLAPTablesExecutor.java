@@ -3,8 +3,8 @@ package com.ec.survey.tools;
 import java.util.List;
 
 import javax.annotation.Resource;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import com.ec.survey.service.ReportingService;
@@ -21,7 +21,7 @@ public class RecreateAllOLAPTablesExecutor implements Runnable {
 	@Resource(name="reportingServiceProxy")
 	private ReportingServiceProxy reportingService;	
 
-	private static final Logger logger = LogManager.getLogger(RecreateAllOLAPTablesExecutor.class);
+	private static final Logger logger = LoggerFactory.getLogger(RecreateAllOLAPTablesExecutor.class);
 	
 	public void run()
 	{

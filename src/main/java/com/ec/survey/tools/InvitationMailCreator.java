@@ -12,8 +12,8 @@ import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.*;
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 @Scope("prototype")
 public class InvitationMailCreator implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(InvitationMailCreator.class);
+	protected static final Logger logger = LoggerFactory.getLogger(InvitationMailCreator.class);
 
 	@Resource(name = "participationService")
 	protected ParticipationService participationService;

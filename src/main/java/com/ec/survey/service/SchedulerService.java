@@ -615,7 +615,7 @@ public class SchedulerService extends BasicService {
 		try {
 			 ipAddresses=NetworkInterface.getNetworkInterfaces();
 		} catch (SocketException e1) {
-			logger.error(e1);
+			logger.error(e1.getLocalizedMessage());
 		}
 		
 		for(NetworkInterface netint : Collections.list(ipAddresses)){						

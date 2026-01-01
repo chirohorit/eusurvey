@@ -1,7 +1,7 @@
 package com.ec.survey.tools;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.security.authentication.BadCredentialsException;
@@ -9,7 +9,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 
 public class FrozenCredentialsException extends BadCredentialsException {
 	
-	protected static final Logger logger = LogManager.getLogger(BadCredentialsException.class);
+	protected static final Logger logger = LoggerFactory.getLogger(BadCredentialsException.class);
 	
 	public FrozenCredentialsException(String message) {		
 		super(message);

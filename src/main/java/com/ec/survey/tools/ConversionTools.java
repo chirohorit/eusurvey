@@ -151,7 +151,7 @@ public class ConversionTools {
 	
 	public static Integer getInt(String input, Integer defaultValue) {
 	    try {
-		    return new Integer(input);
+		    return Integer.parseInt(input);
 	    } catch (NumberFormatException e) {
 		    return defaultValue;
 	    }
@@ -159,7 +159,7 @@ public class ConversionTools {
 	
 	public static Double getDouble(String input) {
 	    try {
-		    return new Double(input);
+		    return Double.parseDouble(input);
 	    } catch (NumberFormatException e) {
 		    return null;
 	    }

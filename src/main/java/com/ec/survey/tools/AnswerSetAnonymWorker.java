@@ -15,8 +15,8 @@ import com.ec.survey.service.SettingsService;
 import com.ec.survey.service.SurveyService;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.SessionFactory;
 import org.springframework.context.annotation.Scope;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Scope("singleton")
 public class AnswerSetAnonymWorker implements Runnable {
 
-    protected static final Logger logger = LogManager.getLogger(AnswerSetAnonymWorker.class);
+    protected static final Logger logger = LoggerFactory.getLogger(AnswerSetAnonymWorker.class);
     protected static final int maxNumberPerRun = 100000;
 
     @Resource(name = "answerService")

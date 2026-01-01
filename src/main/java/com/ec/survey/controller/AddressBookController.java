@@ -406,7 +406,7 @@ public class AddressBookController extends BasicController {
         try {
             writer = response.getWriter();
         } catch (IOException ex) {
-            logger.error(ex);
+            logger.error(ex.getLocalizedMessage());
         }
 		if (writer != null) {
 			String filename;

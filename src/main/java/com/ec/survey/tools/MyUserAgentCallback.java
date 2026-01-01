@@ -4,8 +4,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.xhtmlrenderer.pdf.ITextOutputDevice;
 import org.xhtmlrenderer.pdf.ITextUserAgent;
@@ -15,7 +15,7 @@ import com.ec.survey.service.SessionService;
 public class MyUserAgentCallback extends ITextUserAgent
 {
 	private SessionService sessionService;
-	protected static final Logger logger = LogManager.getLogger(MyUserAgentCallback.class);
+	protected static final Logger logger = LoggerFactory.getLogger(MyUserAgentCallback.class);
 	
     public MyUserAgentCallback(ITextOutputDevice outputDevice, SessionService sessionService)
     {

@@ -2,8 +2,8 @@ package com.ec.survey.tools;
 
 import javax.annotation.Resource;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.context.annotation.Scope;
@@ -22,7 +22,7 @@ public class SurveyExecutor implements Runnable {
 	private Survey survey;
 	private String lang;
 	
-	private static final Logger logger = LogManager.getLogger(SurveyExecutor.class);
+	private static final Logger logger = LoggerFactory.getLogger(SurveyExecutor.class);
 	
 	public void init(Survey survey, String lang)
 	{

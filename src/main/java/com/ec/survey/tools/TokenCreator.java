@@ -7,8 +7,8 @@ import com.ec.survey.service.AttendeeService;
 import com.ec.survey.service.FileService;
 import com.ec.survey.service.ParticipationService;
 import com.ec.survey.service.WebserviceService;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.context.annotation.Scope;
@@ -25,7 +25,7 @@ import java.util.UUID;
 @Scope("prototype")
 public class TokenCreator implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(TokenCreator.class);
+	protected static final Logger logger = LoggerFactory.getLogger(TokenCreator.class);
 
 	@Resource(name = "participationService")
 	protected ParticipationService participationService;

@@ -4,8 +4,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.Resource;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Scope;
@@ -32,7 +32,7 @@ public class ArchiveFlagExecutor implements Runnable {
 	@Autowired
 	protected MessageSource resources;	
 
-	private static final Logger logger = LogManager.getLogger(ArchiveFlagExecutor.class);
+	private static final Logger logger = LoggerFactory.getLogger(ArchiveFlagExecutor.class);
 		
 	public void run()
 	{		

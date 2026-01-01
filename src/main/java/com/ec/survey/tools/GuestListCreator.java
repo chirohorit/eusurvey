@@ -7,8 +7,8 @@ import com.ec.survey.model.attendees.Invitation;
 import com.ec.survey.service.AttendeeService;
 import com.ec.survey.service.ParticipationService;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -26,7 +26,7 @@ import java.util.List;
 @Scope("prototype")
 public class GuestListCreator implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(GuestListCreator.class);
+	protected static final Logger logger = LoggerFactory.getLogger(GuestListCreator.class);
 
 	@Resource(name = "participationService")
 	protected ParticipationService participationService;	

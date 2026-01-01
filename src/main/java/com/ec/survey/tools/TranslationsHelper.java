@@ -10,8 +10,8 @@ import com.ec.survey.model.survey.Table;
 import com.ec.survey.service.BasicService;
 import com.ec.survey.service.FileService;
 import com.ec.survey.service.SurveyService;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -41,7 +41,7 @@ import java.util.Map.Entry;
 
 public class TranslationsHelper {
 
-	private static final Logger logger = LogManager.getLogger(TranslationsHelper.class);
+	private static final Logger logger = LoggerFactory.getLogger(TranslationsHelper.class);
 
 	private static final int maxEmptyOdsLines = 20;
 

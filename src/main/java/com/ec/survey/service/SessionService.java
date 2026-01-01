@@ -114,7 +114,7 @@ public class SessionService extends BasicService {
 		try {
 			return getForm(request, shortname, loadReplies, false);
 		} catch (Exception ex) {
-			logger.debug(ex);
+			logger.debug(ex.getLocalizedMessage());
 		}
 		return null;
 	}

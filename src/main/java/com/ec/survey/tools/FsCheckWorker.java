@@ -5,8 +5,8 @@ import com.ec.survey.model.Status;
 import com.ec.survey.service.MailService;
 import com.ec.survey.service.SchemaService;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ import java.util.Enumeration;
 @Scope("singleton")
 public class FsCheckWorker implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(FsCheckWorker.class);
+	protected static final Logger logger = LoggerFactory.getLogger(FsCheckWorker.class);
 
 	private @Value("${filesystem.surveys}") String surveysDir;
 	private @Value("${monitoring.recipient}") String monitoringEmail;

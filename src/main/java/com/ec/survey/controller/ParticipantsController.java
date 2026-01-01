@@ -729,7 +729,7 @@ public class ParticipantsController extends BasicController {
 		try {
 			form = sessionService.getForm(request, shortname, false, false);
 		} catch (NoFormLoadedException ne) {
-			logger.error(ne);
+			logger.error(ne.getLocalizedMessage());
 			ModelAndView model = new ModelAndView(Constants.VIEW_ERROR_GENERIC);
 			String message = resources.getMessage("error.NoFormLoadedNew", null,
 					"You have to load a survey before using this page!", locale);
@@ -1134,7 +1134,7 @@ public class ParticipantsController extends BasicController {
 		try {
 			form = sessionService.getForm(request, shortname, false, false);
 		} catch (NoFormLoadedException ne) {
-			logger.error(ne);
+			logger.error(ne.getLocalizedMessage());
 			ModelAndView model = new ModelAndView(Constants.VIEW_ERROR_GENERIC);
 			String message = resources.getMessage("error.NoFormLoadedNew", null,
 					"You have to load a survey before using this page!", locale);

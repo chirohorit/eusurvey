@@ -3,8 +3,8 @@ package com.ec.survey.tools;
 import com.ec.survey.model.*;
 import com.ec.survey.model.attendees.Share;
 import com.ec.survey.service.*;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.context.annotation.Scope;
@@ -18,7 +18,7 @@ import javax.annotation.Resource;
 @Scope("singleton")
 public class DeleteUserAccountsWorker implements Runnable {
 
-    protected static final Logger logger = LogManager.getLogger(DeleteUserAccountsWorker.class);
+    protected static final Logger logger = LoggerFactory.getLogger(DeleteUserAccountsWorker.class);
 
     @Resource(name = "administrationService")
     private AdministrationService administrationService;

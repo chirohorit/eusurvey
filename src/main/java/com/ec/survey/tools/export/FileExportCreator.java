@@ -21,8 +21,8 @@ import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.utils.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Scope("prototype")
 public class FileExportCreator implements Runnable {
 
-    protected static final Logger logger = LogManager.getLogger(FileExportCreator.class);
+    protected static final Logger logger = LoggerFactory.getLogger(FileExportCreator.class);
 
     @Resource(name = "fileService")
     private FileService fileService;

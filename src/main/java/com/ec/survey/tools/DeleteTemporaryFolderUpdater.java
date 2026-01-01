@@ -2,8 +2,8 @@ package com.ec.survey.tools;
 
 import com.ec.survey.service.FileService;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.context.annotation.Scope;
@@ -16,7 +16,7 @@ import javax.annotation.Resource;
 @Scope("singleton")
 public class DeleteTemporaryFolderUpdater implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(DeleteTemporaryFolderUpdater.class);
+	protected static final Logger logger = LoggerFactory.getLogger(DeleteTemporaryFolderUpdater.class);
 	
 	@Resource(name="fileService")
 	private FileService fileService;

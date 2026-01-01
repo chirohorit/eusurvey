@@ -5,8 +5,8 @@ import com.ec.survey.service.FileService;
 import com.ec.survey.service.MailService;
 import com.ec.survey.service.SurveyService;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ import java.util.Date;
 @Scope("prototype")
 public class CleanupWorker implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(CleanupWorker.class);
+	protected static final Logger logger = LoggerFactory.getLogger(CleanupWorker.class);
 
 	@Resource(name = "surveyService")
 	protected SurveyService surveyService;	

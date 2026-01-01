@@ -4,8 +4,8 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.context.annotation.Scope;
@@ -17,7 +17,7 @@ import com.ec.survey.service.LdapService;
 @Scope("singleton")
 public class DomainUpdater implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(DomainUpdater.class);
+	protected static final Logger logger = LoggerFactory.getLogger(DomainUpdater.class);
 
 	@Resource(name = "ldapDBService")
 	private LdapDBService ldapDBService;

@@ -126,7 +126,7 @@ public class FileController extends BasicController {
 
 				return new ModelAndView("filewithcomment", "file", file);
 			} catch (Exception e1) {
-				logger.error(e1);
+				logger.error(e1.getLocalizedMessage());
 			}
 		}
 

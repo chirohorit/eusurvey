@@ -2422,7 +2422,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 			wb.write(outputStream);
 			outputStream.close();
 		} catch (IOException e) {
-			logger.error(e.getCause());
+			logger.error(e.getLocalizedMessage());
 		} finally {
 			wb.close();
 			outputStream.close();
@@ -2592,7 +2592,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 			wb.write(outputStream);
 			outputStream.close();
 		} catch (IOException e) {
-			logger.error(e.getCause());
+			logger.error(e.getLocalizedMessage());
 		} finally {
 			wb.close();
 			outputStream.close();
@@ -2662,7 +2662,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 			wb.write(outputStream);
 			outputStream.close();
 		} catch (IOException e) {
-			logger.error(e.getCause());
+			logger.error(e.getLocalizedMessage());
 		} finally {
 			wb.close();
 			outputStream.close();

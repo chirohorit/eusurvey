@@ -2,8 +2,8 @@ package com.ec.survey.model;
 
 import com.ec.survey.tools.ConversionTools;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -37,7 +37,7 @@ public class ResultAccess {
 	private String filter;
 	private String readonlyFilterQuestions;
 	
-	protected static final Logger logger = LogManager.getLogger(ResultAccess.class);
+	protected static final Logger logger = LoggerFactory.getLogger(ResultAccess.class);
 
 	@Id
 	@Column(name = "RESACC_ID")

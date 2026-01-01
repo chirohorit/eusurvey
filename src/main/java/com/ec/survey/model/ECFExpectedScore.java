@@ -1,7 +1,7 @@
 package com.ec.survey.model;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -30,7 +30,7 @@ public class ECFExpectedScore implements Serializable {
     @Column(name = "SCORE")
     private int score;
 
-    protected static final Logger logger = LogManager.getLogger(ECFExpectedScore.class);
+    protected static final Logger logger = LoggerFactory.getLogger(ECFExpectedScore.class);
 
     public ECFExpectedScore() {
 

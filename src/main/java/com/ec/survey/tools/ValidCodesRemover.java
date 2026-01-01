@@ -2,8 +2,8 @@ package com.ec.survey.tools;
 
 import com.ec.survey.service.ValidCodesService;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.context.annotation.Scope;
@@ -15,7 +15,7 @@ import javax.annotation.Resource;
 @Scope("singleton")
 public class ValidCodesRemover implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(ValidCodesRemover.class);
+	protected static final Logger logger = LoggerFactory.getLogger(ValidCodesRemover.class);
 	
 	@Resource(name="validCodesService")
 	private ValidCodesService validCodesService;

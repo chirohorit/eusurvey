@@ -6,8 +6,8 @@ import com.ec.survey.model.administration.Role;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.*;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -22,7 +22,7 @@ import java.util.*;
 
 public class ApplicationListenerBean implements ApplicationListener<ContextRefreshedEvent> {
 	
-	private static final Logger logger = LogManager.getLogger(ApplicationListenerBean.class);
+	private static final Logger logger = LoggerFactory.getLogger(ApplicationListenerBean.class);
 
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -63,7 +63,7 @@ public class ApplicationListenerBean implements ApplicationListener<ContextRefre
 			try {
 				UsersCreator.createDefaultUsers(administrationService, createStressTestData || createNewStressTestData, sender);
 			} catch (Exception e1) {
-				logger.error(e1);
+				logger.error(e1.getLocalizedMessage());
 			}
 			
 			List<Language> langs = surveyService.getLanguages();

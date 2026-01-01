@@ -4,8 +4,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.Resource;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -38,7 +38,7 @@ public class ArchiveExecutor implements Runnable {
 	@Resource(name="sessionFactory")
 	private SessionFactory sessionFactory;	
 
-	private static final Logger logger = LogManager.getLogger(ArchiveExecutor.class);
+	private static final Logger logger = LoggerFactory.getLogger(ArchiveExecutor.class);
 	
 	public void handleException(Exception e, Archive archive, Survey survey)
 	{

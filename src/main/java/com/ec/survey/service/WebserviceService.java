@@ -259,7 +259,7 @@ public class WebserviceService extends BasicService {
 			logger.info(String.format("Task %s started successfully", task.getId()));
 			return true;
 		} catch (Exception ex) {
-			logger.error(ex);
+			logger.error(ex.getLocalizedMessage());
 			logger.error(String.format("Task %s could not be started.", task.getId()));
 			return false;
 		}
@@ -325,7 +325,7 @@ public class WebserviceService extends BasicService {
 			logger.info(String.format("Task %s started successfully", task.getId()));
 			return true;
 		} catch (Exception ex) {
-			logger.error(ex);
+			logger.error(ex.getLocalizedMessage());
 			logger.error(String.format("Task %s could not be started.", task.getId()));
 			return false;
 		}
@@ -334,7 +334,7 @@ public class WebserviceService extends BasicService {
 	@Transactional
 	public List<WebserviceTask> getTasksToRestart() {
 		Session session = sessionFactory.getCurrentSession();
-		Query<WebserviceTask> query = session.createQuery("FROM WebserviceTask WHERE done = 0", WebserviceTask.class);
+		Query<WebserviceTask> query = session.createQuery("FROM WebserviceTask WHERE done = false", WebserviceTask.class);
 		return query.list();
 	}
 

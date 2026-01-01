@@ -18,8 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.MessageSource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -87,7 +87,7 @@ public class Form implements java.io.Serializable {
 	private Date currentDate = new Date();
 	private Boolean codaEnabled;
 
-	protected static final Logger logger = LogManager.getLogger(Form.class);
+	protected static final Logger logger = LoggerFactory.getLogger(Form.class);
 
 	public Form() {
 	}

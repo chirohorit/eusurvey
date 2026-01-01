@@ -8,8 +8,8 @@ import com.ec.survey.service.MailService;
 import com.ec.survey.service.SurveyService;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ import javax.servlet.ServletContext;
 @Scope("prototype")
 public class RecreateWorker implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(RecreateWorker.class);
+	protected static final Logger logger = LoggerFactory.getLogger(RecreateWorker.class);
 	
 	@Autowired
 	protected MessageSource resources;	

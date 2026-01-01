@@ -4,8 +4,8 @@ import com.ec.survey.controller.ManagementController;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.tools.Constants;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.security.core.Authentication;
@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class SavedRequestAwareAuthenticationSuccessHandlerExtended extends SimpleUrlAuthenticationSuccessHandler {
-	protected static final Logger logger = LogManager.getLogger(ManagementController.class);
+	protected static final Logger logger = LoggerFactory.getLogger(ManagementController.class);
 
 	private RequestCache requestCache = new HttpSessionRequestCache();
 

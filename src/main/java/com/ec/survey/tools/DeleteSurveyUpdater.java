@@ -7,8 +7,8 @@ import com.ec.survey.service.SettingsService;
 import com.ec.survey.service.SurveyService;
 import com.ec.survey.service.SystemService;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -28,7 +28,7 @@ import javax.annotation.Resource;
 @Scope("singleton")
 public class DeleteSurveyUpdater implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(DeleteSurveyUpdater.class);
+	protected static final Logger logger = LoggerFactory.getLogger(DeleteSurveyUpdater.class);
 	
 	@Resource(name="surveyService")
 	private SurveyService surveyService;

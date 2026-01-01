@@ -1,7 +1,7 @@
 package com.ec.survey.tools;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
@@ -18,7 +18,7 @@ import java.io.StringReader;
 
 public class XHTMLValidator {
 	
-	private static final Logger logger = LogManager.getLogger(XHTMLValidator.class);
+	private static final Logger logger = LoggerFactory.getLogger(XHTMLValidator.class);
 	private static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		
 	public static DocumentBuilder getBuilder()

@@ -1971,7 +1971,7 @@ public class FileService extends BasicService {
 			FileUtils.deleteDirectory(directory);
 		} catch (IOException e) {
 			logger.error("The directory with its content could not be deleted: " + directory.getAbsolutePath());
-			logger.error(e);
+			logger.error(e.getLocalizedMessage());
 		}
 	}
 

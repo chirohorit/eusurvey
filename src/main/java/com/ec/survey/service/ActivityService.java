@@ -24,7 +24,7 @@ import java.util.Map.Entry;
 public class ActivityService extends BasicService {
 	
 	@Autowired
-	private SqlQueryService sqlQueryService;	
+	private SqlQueryService sqlQueryService;
 	
 	@Transactional
 	public void deleteLogsForSurvey(String uniqueId) {

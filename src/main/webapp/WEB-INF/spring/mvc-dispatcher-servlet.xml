@@ -29,7 +29,7 @@
         <camel:template id="camelTemplate"/>
     </camel:camelContext>
 
-    <bean id="tryFiveTimes" class="org.apache.camel.impl.LimitedPollingConsumerPollStrategy">
+    <bean id="tryFiveTimes" class="org.apache.camel.impl.engine.LimitedPollingConsumerPollStrategy">
         <property name="limit" value="5"/>
     </bean>
 
@@ -37,8 +37,7 @@
         <property name="location" value="/WEB-INF/spring.properties"/>
     </bean>
 
-    <bean id="systemPrereqs"
-          class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+    <bean id="systemPrereqs" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
         <property name="targetObject" value="#{@systemProperties}"/>
         <property name="targetMethod" value="putAll"/>
         <property name="arguments">
@@ -81,7 +80,7 @@
             <property name="cacheSeconds" value="0"/>
         </bean>
 
-        <bean class="com.ec.survey.handler.ServerEnvironmentHandlerInterceptor" autowire="constructor"/>
+        <bean class="com.ec.survey.handler.ServerEnvironmentHandlerInterceptor"/>
 
         <bean class="org.springframework.mobile.device.DeviceResolverHandlerInterceptor"/>
     </mvc:interceptors>
@@ -100,7 +99,7 @@
     </bean>
 
     <bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver">
-        <property name="defaultLocale" value="en_UK"/>
+        <property name="defaultLocale" value="en"/>
     </bean>
 
     <bean id="localeChangeInterceptor"
@@ -115,9 +114,7 @@
 
     <bean id="handlerMapping"
           class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
-        <property name="interceptors">
-            <ref bean="localeChangeInterceptor"/>
-        </property>
+        <property name="interceptors" ref="localeChangeInterceptor"/>
     </bean>
 
     <bean id="myLogoutSuccessHandler" class="com.ec.survey.security.MyLogoutSuccessHandler">

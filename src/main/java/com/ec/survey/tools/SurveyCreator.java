@@ -6,8 +6,8 @@ import com.ec.survey.model.survey.*;
 import com.ec.survey.service.FileService;
 import com.ec.survey.service.SurveyService;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import javax.servlet.ServletContext;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class SurveyCreator {
 
 	static int SurveyCounter = 1;
-	private static final Logger logger = LogManager.getLogger(SurveyCreator.class);
+	private static final Logger logger = LoggerFactory.getLogger(SurveyCreator.class);
 
 	public static Survey createNewECFSurvey(User owner, Language language,
 	 Set<ECFCompetency> competencies, Set<ECFProfile> profiles,

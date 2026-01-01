@@ -233,7 +233,7 @@ public class PDFService extends BasicService {
     }
 
     public java.io.File createAnswerPDF(Integer answerSetId, String uniqueCode, String surveyUid, boolean isDraft) throws IOException {
-        logger.info("Starting PDF creation for answer set " + answerSetId != null ? answerSetId : uniqueCode);
+        logger.info("Starting PDF creation for answer set {}", ((answerSetId != null) ? answerSetId : uniqueCode).toString());
         FileOutputStream os = null;
         PDFRenderer renderer = null;
         try {

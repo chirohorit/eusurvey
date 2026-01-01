@@ -2,8 +2,8 @@ package com.ec.survey.tools;
 
 import com.ec.survey.service.AnswerService;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.context.annotation.Scope;
@@ -15,7 +15,7 @@ import javax.annotation.Resource;
 @Scope("singleton")
 public class DeleteInvalidStatisticsWorker implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(DeleteInvalidStatisticsWorker.class);
+	protected static final Logger logger = LoggerFactory.getLogger(DeleteInvalidStatisticsWorker.class);
 	
 	@Resource(name="answerService")
 	private AnswerService answerService;

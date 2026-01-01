@@ -9,8 +9,8 @@ import javax.annotation.Resource;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +62,7 @@ public class StatisticsExecutor implements Runnable {
 	private Locale locale;
 	private ResultFilter resultFilter;
 	
-	private static final Logger logger = LogManager.getLogger(StatisticsExecutor.class);
+	private static final Logger logger = LoggerFactory.getLogger(StatisticsExecutor.class);
 	
 	public void init(Survey survey, String type, String format, String hash, String email, String from, String host, Locale locale, ResultFilter resultFilter)
 	{

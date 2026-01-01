@@ -10,8 +10,8 @@ import com.ec.survey.tools.FileUtils;
 
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.exception.GenericJDBCException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ import java.util.Locale;
 
 public abstract class ExportCreator implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(ExportCreator.class);
+	protected static final Logger logger = LoggerFactory.getLogger(ExportCreator.class);
 
 	@Resource(name = "attendeeService")
 	protected AttendeeService attendeeService;	

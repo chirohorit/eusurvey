@@ -18,8 +18,8 @@ import com.ec.survey.tools.BadSurveyCredentialsException;
 import com.ec.survey.tools.EcasHelper;
 import com.ec.survey.tools.FrozenCredentialsException;
 import com.ec.survey.tools.Tools;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +42,7 @@ import java.util.Objects;
 
 public class CustomAuthenticationManager implements AuthenticationManager {
 
-	protected static Logger logger = LogManager.getLogger("com.ec.survey");
+	protected static Logger logger = LoggerFactory.getLogger("com.ec.survey");
 
 	@Resource(name="administrationService")
 	private AdministrationService administrationService;

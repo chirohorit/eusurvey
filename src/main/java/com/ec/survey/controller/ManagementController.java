@@ -451,7 +451,7 @@ public class ManagementController extends BasicController {
 			}
 
 		} catch (Exception ex) {
-			logger.error(ex.getMessage(), ex);
+			logger.error(ex.getLocalizedMessage(), ex);
 			response.setStatus(HttpServletResponse.SC_OK);
 			String message = resources.getMessage("message.FileCouldNotBeImported", null,
 					"The file could not be imported.", locale);
@@ -461,7 +461,7 @@ public class ManagementController extends BasicController {
 				fos.close();
 				is.close();
 			} catch (IOException ex2) {
-				logger.error(ex2.getMessage(), ex2);
+				logger.error(ex2.getLocalizedMessage(), ex2);
 			}
 		}
 
@@ -771,7 +771,7 @@ public class ManagementController extends BasicController {
 			HttpServletRequest request, Locale locale) throws Exception {
 		if (bindingresult.hasErrors()) {
 			for (ObjectError error : bindingresult.getAllErrors()) {
-				logger.error(error);
+				logger.error(error.getDefaultMessage());
 			}
 		}
 

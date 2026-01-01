@@ -2670,11 +2670,11 @@ public class SchemaService extends BasicService {
 			query.executeUpdate();
 		} catch (SQLGrammarException e) {
 			// Hibernate 4
-			logger.error(e);
+			logger.error(e.getLocalizedMessage());
 			// can happen if constraint already exists
 		} catch (PersistenceException e) {
 			// Hibernate 5
-			logger.error(e);
+			logger.error(e.getLocalizedMessage());
 			// can happen if constraint already exists
 		}
 

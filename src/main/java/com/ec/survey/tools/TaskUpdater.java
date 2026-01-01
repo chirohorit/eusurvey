@@ -5,8 +5,8 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import com.ec.survey.service.*;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import org.springframework.context.annotation.Scope;
@@ -19,7 +19,7 @@ import com.ec.survey.model.WebserviceTask;
 @Scope("singleton")
 public class TaskUpdater implements Runnable {
 
-	protected static final Logger logger = LogManager.getLogger(TaskUpdater.class);
+	protected static final Logger logger = LoggerFactory.getLogger(TaskUpdater.class);
 
 	@Resource(name = "webserviceService")
 	private WebserviceService webserviceService;

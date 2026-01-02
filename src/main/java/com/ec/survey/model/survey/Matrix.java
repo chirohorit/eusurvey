@@ -16,8 +16,8 @@ import java.util.*;
  */
 @Entity
 @DiscriminatorValue("MATRIX")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Matrix extends MatrixOrTable {
 	
 	private static final long serialVersionUID = 1L;
@@ -54,7 +54,7 @@ public class Matrix extends MatrixOrTable {
 			joinColumns = @JoinColumn(name = "ELEMENTS_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@javax.persistence.OrderColumn(name="MATDEP_ID")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<DependencyItem> getDependentElements() {
 		return dependentElements;
 	}

@@ -11,8 +11,8 @@ import javax.persistence.*;
  */
 @Entity
 @DiscriminatorValue("IMAGE")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Image extends Question {
 	
 	/**

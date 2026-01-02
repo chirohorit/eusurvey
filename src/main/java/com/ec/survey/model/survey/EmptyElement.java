@@ -17,8 +17,8 @@ import com.ec.survey.tools.Tools;
  */
 @Entity
 @DiscriminatorValue("EMPTY")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class EmptyElement extends Element {
 	
 	/**

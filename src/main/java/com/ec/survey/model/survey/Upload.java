@@ -16,8 +16,8 @@ import javax.persistence.Entity;
  */
 @Entity
 @DiscriminatorValue("UPLOAD")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Upload extends Question {
 	
 	private static final long serialVersionUID = 1L;

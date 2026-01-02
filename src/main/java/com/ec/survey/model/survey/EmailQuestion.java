@@ -14,8 +14,8 @@ import javax.persistence.Transient;
  */
 @Entity
 @DiscriminatorValue("EMAIL")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class EmailQuestion extends Question {
 	
 	private static final long serialVersionUID = 1L;

@@ -11,6 +11,7 @@ import com.ec.survey.tools.DomainUpdater;
 import com.ec.survey.tools.SkinCreator;
 import com.ec.survey.tools.SurveyCreator;
 import com.ec.survey.tools.activity.ActivityRegistry;
+import com.mysql.cj.xdevapi.Result;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.query.Query;
 import org.hibernate.query.NativeQuery;
@@ -23,10 +24,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.persistence.PersistenceException;
+import javax.persistence.SqlResultSetMapping;
 import javax.servlet.ServletContext;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.ResultSet;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -624,7 +627,7 @@ public class SchemaService extends BasicService {
 				"SURVEYUID varchar(255) NOT NULL," +
 				"PUBLISHEDANSWERS bigint(21) NOT NULL DEFAULT 0," + 
 				"LASTANSWER datetime DEFAULT NULL," + 
-				"MW_TIMESTAMP datetime NOT NULL DEFAULT NULL," +
+				"MW_TIMESTAMP datetime NOT NULL DEFAULT CURRENT_TIMESTAMP," +
 				"KEY MV_SURVEYS_IND (SURVEYUID,PUBLISHEDANSWERS)" + 
 			  ") ENGINE=InnoDB CHARSET=utf8;";
 			session.doWork(con -> con.createStatement().execute(event));
@@ -1791,15 +1794,16 @@ public class SchemaService extends BasicService {
 
 	@Transactional
 	public void step42() {
-		Session session = sessionFactory.getCurrentSession();
-		Status status = getStatus();
-
 		final String checkIndexExists = "show index from ANSWERS where Key_name = 'v_ft_idx'";
-		final String createIndex = "ALTER TABLE ANSWERS ADD FULLTEXT INDEX v_ft_idx (VALUE);";
-
+		Status status = getStatus();
+		Session session = sessionFactory.getCurrentSession();
 		NativeQuery<?> query = session.createNativeQuery(checkIndexExists);
+
 		if (query.list().isEmpty()) {
+			logger.debug("STEP 42 - STARTING UPDATE FULL TEXT INDEX FOR ANSWER");
+			final String createIndex = "ALTER TABLE ANSWERS ADD FULLTEXT INDEX v_ft_idx (VALUE);";
 			session.createNativeQuery(createIndex).executeUpdate();
+			logger.debug("STEP 42 - DONE");
 		}
 
 		status.setDbversion(42);
@@ -2770,18 +2774,20 @@ public class SchemaService extends BasicService {
 	public void createAnswerFullTextForOss() {
 
 		if (!showecas.equalsIgnoreCase("true")) {
-			logger.error("STARTING UPDATE FULL TEXT INDEX FOR ANSWER");
-			Session session = sessionFactory.getCurrentSession();
-
 			final String checkIndexExists = "show index from ANSWERS where Key_name = 'v_ft_idx'";
-			final String createIndex = "ALTER TABLE ANSWERS ADD FULLTEXT INDEX v_ft_idx (VALUE);";
 
-			NativeQuery query = session.createNativeQuery(checkIndexExists);
+			Session session = sessionFactory.getCurrentSession();
+			NativeQuery<?> query = session.createNativeQuery(checkIndexExists);
+
 			if (query.list().isEmpty()) {
-				logger.error("Special update full text not existing create them");
-				session.createNativeQuery(createIndex).executeUpdate();
-			}
+				final String createIndex = "ALTER TABLE ANSWERS ADD FULLTEXT INDEX v_ft_idx (VALUE);";
+				logger.error("STARTING UPDATE FULL TEXT INDEX FOR ANSWER");
 
+				session.createNativeQuery(createIndex).executeUpdate();
+				logger.error("Special update full text not existing create them");
+				logger.error("By the above message, I think the dev meant to say - 'Since FULLTEXT INDEX was inexistent, we just have created them");
+				logger.error("I still have no idea why we need FULLTEXT Indexing for OSS and not for OSSDocker");
+			}
 		}
 	}
 

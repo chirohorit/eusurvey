@@ -18,8 +18,6 @@ import java.util.*;
  */
 @Entity
 @DiscriminatorValue("CHOICE")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public abstract class ChoiceQuestion extends Question {
 
 	private static final long serialVersionUID = 1L;
@@ -48,7 +46,7 @@ public abstract class ChoiceQuestion extends Question {
 			joinColumns = @JoinColumn(name = "ELEMENTS_ID"),
 			inverseJoinColumns = @JoinColumn(name = "possibleAnswers_ID"))
 	@Fetch(value = FetchMode.SELECT)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	@OrderBy(value = "position asc")
 	public List<PossibleAnswer> getPossibleAnswers() {
 		return possibleAnswers;

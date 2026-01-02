@@ -15,8 +15,8 @@ import java.util.List;
  * Represents an answer option inside a (single or multiple) choice question.
  */
 @Entity
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class PossibleAnswer extends Element {
 	
 	private static final long serialVersionUID = 1L;

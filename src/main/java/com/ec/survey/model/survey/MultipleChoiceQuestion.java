@@ -15,8 +15,8 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("MULTIPLECHOICE")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class MultipleChoiceQuestion extends ChoiceQuestion {
 
 	/**

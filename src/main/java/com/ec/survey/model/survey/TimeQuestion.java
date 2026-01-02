@@ -11,8 +11,8 @@ import javax.persistence.*;
  */
 @Entity
 @DiscriminatorValue("TIMEQUESTION")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class TimeQuestion extends Question {
 	
 	/**

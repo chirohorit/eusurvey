@@ -12,8 +12,8 @@ import javax.persistence.*;
  */
 @Entity
 @DiscriminatorValue("FREETEXT")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class FreeTextQuestion extends Question {
 	
 	/**

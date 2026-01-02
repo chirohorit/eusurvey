@@ -8,9 +8,7 @@
    		http://www.springframework.org/schema/security/spring-security.xsd">
 
 	<!-- This is where we configure Spring-Security -->
-	<security:http auto-config="false" request-matcher="ant"
-		entry-point-ref="authenticationEntryPoint" disable-url-rewriting="true">
-		
+	<security:http auto-config="false" request-matcher="ant" entry-point-ref="authenticationEntryPoint" disable-url-rewriting="true">
 		<security:access-denied-handler error-page="/auth/login?securityerror=true"/>
 		
 		<!-- <security:form-login login-page="/auth/login"
@@ -91,15 +89,12 @@
 		<security:intercept-url pattern="/settings/**" access="hasRole('ROLE_USER')" />
 		<security:intercept-url pattern="/utils/**" access="permitAll" />
 
-		<security:logout invalidate-session="false" success-handler-ref="myLogoutSuccessHandler"
-			logout-url="/j_spring_security_logout" />
+		<security:logout invalidate-session="false" success-handler-ref="myLogoutSuccessHandler" logout-url="/j_spring_security_logout" />
 
-		<security:custom-filter ref="blacklistFilter"
-			before="FILTER_SECURITY_INTERCEPTOR" />
+		<security:custom-filter ref="blacklistFilter" before="FILTER_SECURITY_INTERCEPTOR" />
 		
 		<!-- INITIAL FILTER -->
- 		<security:custom-filter ref="authenticationFilter"
-			position="FORM_LOGIN_FILTER" /> 
+ 		<security:custom-filter ref="authenticationFilter" position="FORM_LOGIN_FILTER" />
 		
 	</security:http>
 
@@ -108,8 +103,7 @@
 
 	<!-- Custom filter for username and password. The real customization is 
 		done in the customAthenticationManager -->
-	<bean id="authenticationFilter"
-		class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter"
+	<bean id="authenticationFilter" class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter"
 		p:postOnly="false"
 		p:authenticationManager-ref="customAuthenticationManager"
 		p:authenticationFailureHandler-ref="customAuthenticationFailureHandler"
@@ -126,12 +120,10 @@
 
 	<!-- END JASIG CAS FILTER -->
 
-	<!-- Custom authentication manager. In order to authenticate, username and 
-		password must not be the same -->
+	<!-- Custom authentication manager. In order to authenticate, username and password must not be the same -->
 	<bean id="customAuthenticationManager" class="com.ec.survey.security.CustomAuthenticationManager" />
 		
-	<bean id="customAuthenticationFailureHandler" 
-	    class="org.springframework.security.web.authentication.ExceptionMappingAuthenticationFailureHandler">
+	<bean id="customAuthenticationFailureHandler" class="org.springframework.security.web.authentication.ExceptionMappingAuthenticationFailureHandler">
 	    <property name="exceptionMappings">
 	        <props>
 	            <prop key="com.ec.survey.tools.BadSurveyCredentialsException">
@@ -154,9 +146,7 @@
 	</bean>
 
 	<!-- We just actually need to set the default target url here -->
-	<bean id="customAuthenticationSuccessHandler"
-		class="com.ec.survey.security.CustomAuthenticationSuccessHandler"
-		p:defaultTargetUrl="/forms" />
+	<bean id="customAuthenticationSuccessHandler" class="com.ec.survey.security.CustomAuthenticationSuccessHandler" p:defaultTargetUrl="/forms" />
 
 	<!-- The AuthenticationEntryPoint is responsible for redirecting the user 
 		to a particular page, like a login page, whenever the server sends back a 

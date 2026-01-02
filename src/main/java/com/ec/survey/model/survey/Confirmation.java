@@ -16,8 +16,8 @@ import java.util.List;
  */
 @Entity
 @DiscriminatorValue("CONFIRMATION")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Confirmation extends Question {
 	
 	private static final long serialVersionUID = 1L;
@@ -82,7 +82,7 @@ public class Confirmation extends Question {
 	@org.hibernate.annotations.ForeignKey(name = "none")
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<File> getFiles() {
 		return files;
 	}

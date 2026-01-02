@@ -9,8 +9,8 @@ import javax.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("PROPERTY")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class PropertiesElement extends Element {
 	
 	private boolean orderChanged = false;

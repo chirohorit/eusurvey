@@ -25,8 +25,8 @@ import java.util.List;
  */
 @Entity
 @DiscriminatorValue("RATING")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class RatingQuestion extends Question {
 	
 	private static final long serialVersionUID = 1L;
@@ -64,7 +64,7 @@ public class RatingQuestion extends Question {
 	@OrderBy(value = "position asc")
 	@JoinColumn(nullable=true, foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT))
 	@org.hibernate.annotations.ForeignKey(name = "none")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<Element> getChildElements() {
 		return childElements;
 	}

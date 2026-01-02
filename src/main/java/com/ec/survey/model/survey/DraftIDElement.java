@@ -10,8 +10,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 @Entity
 @DiscriminatorValue("DRAFTID")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class DraftIDElement extends Element {
 	
 	/**

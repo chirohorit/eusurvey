@@ -16,8 +16,8 @@ import java.util.List;
  */
 @Entity
 @DiscriminatorValue("DOWNLOAD")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Download extends Question {
 	
 	private static final long serialVersionUID = 1L;
@@ -38,7 +38,7 @@ public class Download extends Question {
 			joinColumns = @JoinColumn(name = "ELEMENTS_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<File> getFiles() {
 		return files;
 	}

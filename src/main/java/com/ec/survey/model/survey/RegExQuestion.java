@@ -12,8 +12,8 @@ import javax.persistence.*;
  */
 @Entity
 @DiscriminatorValue("REGEX")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class RegExQuestion extends Question {
 	
 	/**

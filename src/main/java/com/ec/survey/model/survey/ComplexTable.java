@@ -15,8 +15,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @Entity
 @DiscriminatorValue("COMPLEXTABLE")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ComplexTable extends Question {
 	
 	public enum SizeType {
@@ -46,7 +44,7 @@ public class ComplexTable extends Question {
 	@OneToMany(targetEntity=ComplexTableItem.class, cascade = CascadeType.ALL)
 	@Fetch(value = FetchMode.SELECT)
 	@JoinColumn(nullable=true, foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT))
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<ComplexTableItem> getChildElements() {
 		return childElements;
 	}

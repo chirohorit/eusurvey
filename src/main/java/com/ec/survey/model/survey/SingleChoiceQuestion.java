@@ -21,8 +21,8 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("SINGLECHOICE")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class SingleChoiceQuestion extends ChoiceQuestion {
 
 	/**

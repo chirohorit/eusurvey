@@ -25,6 +25,8 @@
 	  	<property name="location" value="/WEB-INF/appversion.properties" />
 	</bean>
  -->
+    <context:property-placeholder location="/WEB-INF/spring.properties"/>
+
     <camel:camelContext id="camelContext">
         <camel:template id="camelTemplate"/>
     </camel:camelContext>
@@ -33,9 +35,9 @@
         <property name="limit" value="5"/>
     </bean>
 
-    <bean id="propertyPlaceholderConfigurer" class="com.ec.survey.replacements.DecryptingPropertyPlaceholderConfigurer">
+    <!--<bean id="propertyPlaceholderConfigurer" class="com.ec.survey.replacements.DecryptingPropertyPlaceholderConfigurer">
         <property name="location" value="/WEB-INF/spring.properties"/>
-    </bean>
+    </bean>-->
 
     <bean id="systemPrereqs" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
         <property name="targetObject" value="#{@systemProperties}"/>
@@ -68,7 +70,7 @@
 
     <mvc:annotation-driven>
         <mvc:argument-resolvers>
-            <bean class="org.springframework.mobile.device.DeviceWebArgumentResolver"/>
+            <bean class="org.springframework.mobile.device.DeviceWebArgumentResolver" />
         </mvc:argument-resolvers>
     </mvc:annotation-driven>
 
@@ -82,13 +84,12 @@
 
         <bean class="com.ec.survey.handler.ServerEnvironmentHandlerInterceptor"/>
 
-        <bean class="org.springframework.mobile.device.DeviceResolverHandlerInterceptor"/>
+        <bean class="org.springframework.mobile.device.DeviceResolverHandlerInterceptor" />
     </mvc:interceptors>
 
     <mvc:default-servlet-handler/>
 
-    <bean id="messageSource"
-          class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
         <property name="basenames">
             <list>
                 <value>classpath:messages</value>

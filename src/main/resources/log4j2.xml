@@ -29,7 +29,7 @@
     </Appenders>
     <Loggers>
 
-        <Logger name="com.ec.survey" level="WARN">
+        <Logger name="com.ec.survey" level="ALL">
             <AppenderRef ref="appLog" />
             <AppenderRef ref="ConsoleErr" />
         </Logger>

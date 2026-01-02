@@ -16,8 +16,8 @@ import java.util.List;
  */
 @Entity
 @DiscriminatorValue("FORMULA")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class FormulaQuestion extends Question {
 	
 	/**

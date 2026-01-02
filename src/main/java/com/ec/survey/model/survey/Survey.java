@@ -53,7 +53,7 @@ import org.springframework.web.util.HtmlUtils;
 		@Index(name = "DRA_IDX", columnList = "ISDRAFT") })
 @Cacheable("com.ec.survey.model.survey.Survey")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-final public class Survey implements java.io.Serializable {
+public class Survey implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 	public static final String TITLE = "TITLE";
@@ -590,7 +590,7 @@ final public class Survey implements java.io.Serializable {
 			inverseJoinColumns = @JoinColumn(name = "elements_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<Element> getElements() {
 		return elements;
 	}
@@ -1768,7 +1768,7 @@ final public class Survey implements java.io.Serializable {
 	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
 			joinColumns = @JoinColumn(name = "SURVEY_SURVEY_ID"),
 			inverseJoinColumns = @JoinColumn(name = "tags_TAG_ID"))
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<Tag> getTags() {
 		return tags;
 	}

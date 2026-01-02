@@ -14,8 +14,8 @@ import com.ec.survey.tools.Tools;
  */
 @Entity
 @DiscriminatorValue("RANKINGITEM")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class RankingItem extends Element {
 	
 	private static final long serialVersionUID = 1L;

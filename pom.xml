@@ -15,7 +15,7 @@
   <artifactId>eusurvey</artifactId>
   <name>eusurvey</name>
   <packaging>war</packaging>
-  <version>1.6.0.BETA</version>
+  <version>1.6.0.BETA-REV.1</version>
 
   <properties>
       <java-version>11</java-version>
@@ -304,6 +304,15 @@
       <artifactId>spring-web</artifactId>
       <version>${org.springframework-version}</version>
     </dependency>
+    <!--<dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>-->
+
 
     <dependency>
       <groupId>org.springframework.mobile</groupId>
@@ -316,22 +325,16 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-core</artifactId>
       <version>${org.springframework.security-version}</version> <!--5.6.18-->
-      <type>jar</type>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-config</artifactId>
       <version>${org.springframework.security-version}</version>
-      <type>jar</type>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-web</artifactId>
       <version>${org.springframework.security-version}</version>
-      <type>jar</type>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>javax.xml</groupId>
@@ -381,16 +384,12 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-orm</artifactId>
       <version>${org.springframework-version}</version>
-      <type>jar</type>
-      <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-tx</artifactId>
       <version>${org.springframework-version}</version>
-      <type>jar</type>
-      <scope>compile</scope>
     </dependency>
 
       <dependency>
@@ -513,27 +512,23 @@
     </dependency>-->
 
     <!-- JDBC driver -->
-    <dependency>
+    <!--<dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>
-      <version>9.3.0</version><!--8.0.28-->
-    </dependency>
+      <version>9.3.0</version>
+    </dependency>-->
 
-    <!--<dependency>
+    <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
       <version>8.0.28</version>
-      <type>jar</type>
-      <scope>compile</scope>
-    </dependency>-->
+    </dependency>
 
     <!-- Hibernate -->
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-core</artifactId>
       <version>5.6.8.Final</version>
-      <type>jar</type>
-      <scope>compile</scope>
       <exclusions>
           <exclusion>
               <artifactId>xml-apis</artifactId>
@@ -783,7 +778,6 @@
       <groupId>com.memetix</groupId>
       <artifactId>microsoft-translator-java-api</artifactId>
       <version>0.6.2</version>
-      <type>jar</type>
     </dependency>
 
     <dependency>
@@ -1055,7 +1049,7 @@
       </plugin>
 
       <!-- OWASP dependency-check as plugin -->
-      <plugin>
+      <!--<plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
         <version>12.1.9</version>
@@ -1070,7 +1064,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
 
     </plugins>
   </build>

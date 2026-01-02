@@ -18,8 +18,8 @@ import java.util.Objects;
 
 @Entity
 @Inheritance (strategy=InheritanceType.SINGLE_TABLE)
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public abstract class Question extends Element {
 	
 	public static final String FEEDBACK = "FEEDBACK";
@@ -206,7 +206,7 @@ public abstract class Question extends Element {
 			joinColumns = @JoinColumn(name = "ELEMENTS_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<ScoringItem> getScoringItems() {
 		return scoringItems;
 	}

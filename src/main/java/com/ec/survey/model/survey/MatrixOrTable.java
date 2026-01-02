@@ -19,8 +19,8 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("MATORTAB")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public abstract class MatrixOrTable extends Question {
 
 	private static final long serialVersionUID = 1L;
@@ -58,7 +58,7 @@ public abstract class MatrixOrTable extends Question {
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
 	@JoinColumn(nullable=true)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
 	public List<Element> getChildElements() {
 		return childElements;
 	}

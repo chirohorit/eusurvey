@@ -13,8 +13,8 @@ import javax.persistence.Entity;
  */
 @Entity
 @DiscriminatorValue("TEXT")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Text extends Question {	
 	
 	private static final long serialVersionUID = 1L;

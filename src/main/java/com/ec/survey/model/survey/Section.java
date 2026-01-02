@@ -13,8 +13,8 @@ import javax.persistence.Entity;
  */
 @Entity
 @DiscriminatorValue("SECTION")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Section extends Element {
 	
 	public static final String TABTITLE = "TABTITLE";

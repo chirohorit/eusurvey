@@ -11,8 +11,8 @@ import javax.persistence.*;
  */
 @Entity
 @DiscriminatorValue("RULER")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Ruler extends Question {
 	
 	private static final long serialVersionUID = 1L;

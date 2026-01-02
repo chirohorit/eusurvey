@@ -18,8 +18,8 @@ import java.util.Date;
  */
 @Entity
 @DiscriminatorValue("DATEQUESTION")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class DateQuestion extends Question {
 	
 	/**

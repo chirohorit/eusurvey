@@ -23,8 +23,8 @@ import com.mysql.cj.util.StringUtils;
  */
 @Entity
 @DiscriminatorValue("COMPLEXTABLEITEM")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class ComplexTableItem extends Question {
 
     public enum CellType {
@@ -171,7 +171,7 @@ public class ComplexTableItem extends Question {
             joinColumns = @JoinColumn(name = "ELEMENTS_ID"),
             inverseJoinColumns = @JoinColumn(name = "possibleAnswers_ID"))
     @Fetch(value = FetchMode.SELECT)
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
     @OrderBy(value = "position asc")
     public List<PossibleAnswer> getPossibleAnswers() {
         return possibleAnswers;

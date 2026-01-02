@@ -17,8 +17,8 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("TABLE")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+
+
 public class Table extends MatrixOrTable {
 	
 	/**

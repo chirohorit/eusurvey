@@ -1,22 +1,15 @@
-# Spring Security Redirection issues
- - Disable Security and try to reach a .html file
- - Enable and use basic config
- - Expand
-
-Hibernate Issues for all request
-Also work on Setter Injection
-
-
-# EUSurvey (2.0.0.Alpha)
+# EUSurvey (4.0.0.BETA)
 Based on the original EUSurvey (1.5.3)
 
 EUSurvey is the official online survey management tool of the European Commission. Its development was started in 2013 under the supervision of [DIGIT](https://ec.europa.eu/dgs/informatics/index_en.htm) and is published as open source software under the terms of the EUPL public license. EUSurvey is a servlet based application and can be installed on any servlet container.
 
 ## Installation requirements
-1. Tomcat 9
-1. Java 11
-1. MySQL 8.0
+1. Tomcat 10.1
+1. Java 17
+1. MySQL 8.0.44
 1. Maven
+1. Spring 6.2.15, Security 6.4.13
+1. Hibernate 6.6.41.Final 
 
 Make sure to create a JRE_HOME environment variable that points to the Java installation folder.
 Make sure to create a CATALINA_HOME environment variable that points to Tomcat's installation folder.

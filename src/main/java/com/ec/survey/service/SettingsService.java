@@ -48,7 +48,7 @@ public class SettingsService extends BasicService {
 		setting.setKey(key);
 		setting.setValue(value);
 		setting.setFormat(format);
-		session.save(setting);
+		session.persist(setting);
 	}
 
 	@Transactional(readOnly = false)

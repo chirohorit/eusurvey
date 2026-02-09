@@ -5,7 +5,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.owasp.esapi.errors.ValidationException;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -16,14 +16,14 @@ import java.util.List;
  */
 @Entity
 @DiscriminatorValue("FORMULA")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class FormulaQuestion extends Question {
 	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 
 	public FormulaQuestion() {}
 	

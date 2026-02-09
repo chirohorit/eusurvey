@@ -3,7 +3,6 @@ package com.ec.survey.tools;
 import com.ec.survey.model.Skin;
 import com.ec.survey.model.survey.base.File;
 import org.passay.*;
-import org.passay.CharacterData.*;
 //import edu.vt.middleware.password.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -13,8 +12,6 @@ import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.nodes.Entities.EscapeMode;
 import org.jsoup.safety.Safelist;
 import org.owasp.esapi.ESAPI;
-import org.owasp.esapi.errors.IntrusionException;
-import org.owasp.esapi.errors.ValidationException;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;

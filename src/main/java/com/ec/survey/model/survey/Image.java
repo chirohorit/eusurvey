@@ -4,21 +4,17 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.owasp.esapi.errors.ValidationException;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Represents an image element in a survey
  */
 @Entity
 @DiscriminatorValue("IMAGE")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Image extends Question {
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+
 	private Integer scale;
 	private String align;
 	private String url;

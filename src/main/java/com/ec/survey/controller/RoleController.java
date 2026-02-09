@@ -3,7 +3,7 @@ package com.ec.survey.controller;
 import java.util.List;
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.Role;
 import com.ec.survey.tools.Constants;
 

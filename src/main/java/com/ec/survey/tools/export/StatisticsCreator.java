@@ -16,18 +16,17 @@ import com.ec.survey.service.SelfAssessmentService;
 import com.ec.survey.service.SurveyService;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.QuizHelper;
+import com.ec.survey.handler.QuizHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.*;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -48,8 +47,8 @@ public class StatisticsCreator implements Runnable {
 	@Resource(name = "reportingServiceProxy")
 	protected ReportingServiceProxy reportingService;
 	
-	@Resource(name = "selfassessmentService")
-	protected SelfAssessmentService selfassessmentService;
+	@Resource(name = "selfAssessmentService")
+	protected SelfAssessmentService selfAssessmentService;
 
 	protected static final Logger logger = LoggerFactory.getLogger(StatisticsCreator.class);
 
@@ -381,7 +380,7 @@ public class StatisticsCreator implements Runnable {
 				SingleChoiceQuestion scq = (SingleChoiceQuestion) q;
 				if (scq.getIsTargetDatasetQuestion()) {
 					mapTargetDatasetQuestion.put(scq.getUniqueId(), new HashMap<Integer, Integer>());
-					List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+					List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 					for (SATargetDataset dataset : datasets) {
 						int count = reportingService.getCount(survey, choice.getUniqueId(), dataset.getId().toString(), false, false, false, where, values);
 						mapTargetDatasetQuestion.get(scq.getUniqueId()).put(dataset.getId(), count);
@@ -565,7 +564,7 @@ public class StatisticsCreator implements Runnable {
 			if (q instanceof SingleChoiceQuestion) {
 				SingleChoiceQuestion scq = (SingleChoiceQuestion)q;
 				if (scq.getIsTargetDatasetQuestion()) {
-					List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+					List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 					mapTargetDatasetQuestion.put(scq.getUniqueId(), new HashMap<Integer, Integer>());
 					for (SATargetDataset dataset : datasets) {
 						mapTargetDatasetQuestion.get(scq.getUniqueId()).put(dataset.getId(), countsUID.get(scq.getUniqueId() + "-" + dataset.getId()));
@@ -850,7 +849,7 @@ public class StatisticsCreator implements Runnable {
 			String sql = "SELECT a.VALUE FROM ANSWERS_SET ans LEFT OUTER JOIN ANSWERS a ON a.AS_ID = ans.ANSWER_SET_ID where a.QUESTION_UID";
 			sql += " = :questionuid AND ans.ANSWER_SET_ID IN (" + where + ")";
 
-			NativeQuery query = session.createNativeQuery(sql);
+			Query query = session.createQuery(sql);
 			query.setReadOnly(true);
 
 			for (Entry<String, Object> entry : values.entrySet()) {
@@ -901,7 +900,7 @@ public class StatisticsCreator implements Runnable {
 			sql += " = :questionuid AND ans.ANSWER_SET_ID IN (" + where + ")";
 			values.put("questionuid", question.getUniqueId());
 
-			NativeQuery query = session.createNativeQuery(sql);
+			Query query = session.createQuery(sql);
 			query.setReadOnly(true);
 
 			for (Entry<String, Object> entry : values.entrySet()) {
@@ -1012,7 +1011,7 @@ public class StatisticsCreator implements Runnable {
 			values.put("questionuid", question.getUniqueId());
 		}	
 	
-		NativeQuery query = session.createNativeQuery(sql);
+		Query query = session.createQuery(sql);
 		query.setReadOnly(true);
 
 		for (Entry<String, Object> entry : values.entrySet()) {
@@ -1120,7 +1119,7 @@ public class StatisticsCreator implements Runnable {
 		String sql = "select a.PA_UID, a.QUESTION_UID, a.VALUE, ans.ANSWER_SET_ID FROM ANSWERS_SET ans LEFT OUTER JOIN ANSWERS a ON a.AS_ID = ans.ANSWER_SET_ID where ans.ANSWER_SET_ID IN ("
 				+ where + ")";
 
-		NativeQuery query = session.createNativeQuery(sql);
+		Query query = session.createQuery(sql);
 		query.setReadOnly(true);
 
 		for (Entry<String, Object> entry : values.entrySet()) {
@@ -1263,7 +1262,7 @@ public class StatisticsCreator implements Runnable {
 		if (survey.getIsSelfAssessment() && question instanceof SingleChoiceQuestion) {
 			SingleChoiceQuestion scq = (SingleChoiceQuestion)question;
 			if (scq.getIsTargetDatasetQuestion()) {
-				List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+				List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 				for (SATargetDataset dataset: datasets) {
 					int numberOfAnswers = 0;
 					

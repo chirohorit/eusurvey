@@ -1,8 +1,8 @@
 package com.ec.survey.model.survey;
 
-import javax.persistence.Cacheable;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.owasp.esapi.errors.ValidationException;
@@ -14,11 +14,11 @@ import com.ec.survey.tools.Tools;
  */
 @Entity
 @DiscriminatorValue("RANKINGITEM")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class RankingItem extends Element {
 	
-	private static final long serialVersionUID = 1L;
+	
 
 	public RankingItem(String title, String originaltitle, String shortname, String uid) {
 		setTitle(title);

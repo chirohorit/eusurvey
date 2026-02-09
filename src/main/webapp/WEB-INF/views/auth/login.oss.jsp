@@ -1,7 +1,7 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -53,7 +53,7 @@
 
 			 	<form:form id="loginForm" action="../j_spring_security_check" method="post" >
 			 		<fieldset>		
-			 			<img src="${contextpath}/resources/images/folder-eusurvey.png" style="float:right; margin-right:75px; width:136px;" alt="login logo">	 				 	
+			 			<img src="${contextpath}/resources/images/folder-eusurvey.png" style="float:right; margin-right:75px; width:136px;" alt="login logo">
 			 			<p>
 							<label for="username"><spring:message code="label.UserName" /></label>
 							<div class="controls">

@@ -2,22 +2,23 @@ package com.ec.survey.controller;
 
 import com.ec.survey.exception.ForbiddenURLException;
 import com.ec.survey.model.*;
-import com.ec.survey.model.Export.ExportFormat;
-import com.ec.survey.model.Export.ExportState;
-import com.ec.survey.model.Export.ExportType;
-import com.ec.survey.model.administration.GlobalPrivilege;
-import com.ec.survey.model.administration.LocalPrivilege;
+import com.ec.survey.enumerator.ExportFormat;
+import com.ec.survey.enumerator.ExportState;
+import com.ec.survey.enumerator.ExportType;
+import com.ec.survey.enumerator.GlobalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.MailService;
 import com.ec.survey.tools.Constants;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
 import com.ec.survey.tools.Tools;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.exception.WeakAuthenticationException;
 
 import com.ec.survey.tools.activity.ActivityRegistry;
-import org.apache.maven.shared.utils.StringUtils;
+//import org.apache.maven.surefire.shade.org.apache.maven.shared.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.util.IOUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,9 +28,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,11 +45,11 @@ public class ExportsController extends BasicController {
 
 	@PostMapping(value = "/start/{type}/{format}")
 	public @ResponseBody String startExport(@RequestParam("exportName") String exportName,
-			@RequestParam("allAnswers") String allAnswers, @RequestParam("showShortnames") String showShortnames,
-			@RequestParam(value = "splitMCQ", required = false, defaultValue = "false") Boolean splitMCQ,
-			@PathVariable("type") String type, @PathVariable("format") String format,
-			@RequestParam("group") String group, HttpServletRequest request, HttpServletResponse response,
-			Locale locale) {
+                                            @RequestParam("allAnswers") String allAnswers, @RequestParam("showShortnames") String showShortnames,
+                                            @RequestParam(value = "splitMCQ", required = false, defaultValue = "false") Boolean splitMCQ,
+                                            @PathVariable String type, @PathVariable String format,
+                                            @RequestParam("group") String group, HttpServletRequest request, HttpServletResponse response,
+                                            Locale locale) {
 		try {
 			final Form form = sessionService.getFormOrNull(request, null, true);
 			String uid = "";
@@ -148,7 +149,7 @@ public class ExportsController extends BasicController {
 						return "notallowed";
 					}
 
-					Survey survey = null;
+					Survey survey;
 
 					String shortname = request.getParameter(Constants.SHORTNAME);
 					if (shortname != null && shortname.length() > 0) {
@@ -277,7 +278,7 @@ public class ExportsController extends BasicController {
 	public @ResponseBody String checkNew(@RequestParam("uid") String uid, HttpServletRequest request,
 			HttpServletResponse response) {
 
-		if (uid == null || !StringUtils.isNumeric(uid)) {
+		if (!StringUtils.isNumeric(uid)) {
 			return "{\"newnames\": [],\"checkExport\":false}";
 		}
 
@@ -286,20 +287,20 @@ public class ExportsController extends BasicController {
 		String checkExport = hasPendingExports.toString().toLowerCase();
 		try {
 			if (hasPendingExports) {
-				String newnames = "{\"newnames\": [";
+				StringBuilder newnames = new StringBuilder("{\"newnames\": [");
 				List<Export> exports = exportService.getExports(userID, "name", true, false, true);
 				for (Export export : exports) {
-					if (!newnames.equals("{\"newnames\": [")) {
-						newnames += ", ";
+					if (!newnames.toString().equals("{\"newnames\": [")) {
+						newnames.append(", ");
 					}
 					sessionService.setCheckExport(request, checkExport);
 					exportService.setNotified(export.getId());
 					hasPendingExports = exportService.hasPendingExports(userID);
 					checkExport = hasPendingExports.toString().toLowerCase();
-					newnames += "{\"newname\": \"" + export.getName() + "\"}";
+					newnames.append("{\"newname\": \"").append(export.getName()).append("\"}");
 				}
-				newnames += "],\"checkExport\":" + checkExport + "}";
-				return newnames;
+				newnames.append("],\"checkExport\":").append(checkExport).append("}");
+				return newnames.toString();
 			} else {
 				sessionService.setCheckExport(request, checkExport);
 			}
@@ -371,7 +372,7 @@ public class ExportsController extends BasicController {
 		}
 
 		User user = sessionService.getCurrentUser(request);
-		List<Export> exports = null;
+		List<Export> exports;
 
 		if (user.getGlobalPrivileges().get(GlobalPrivilege.FormManagement).equals(2)) {
 			exports = exportService.getExports(-1, sortKey, sortOrder.equalsIgnoreCase("asc"), page, itemsPerPage, true,

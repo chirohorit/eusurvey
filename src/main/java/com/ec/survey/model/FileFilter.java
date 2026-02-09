@@ -8,7 +8,7 @@ import com.ec.survey.tools.ConversionTools;
 
 public class FileFilter implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+	
 	
 	private String surveyUid;
 	private String surveyShortname;

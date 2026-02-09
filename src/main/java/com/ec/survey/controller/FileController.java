@@ -2,12 +2,13 @@ package com.ec.survey.controller;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import com.ec.survey.tools.FileChecker;
-//import net.sf.jmimemagic.Magic;
+import java.io.IOException;
 import java.nio.file.Files;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import com.ec.survey.handler.FileChecker;
 
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.stereotype.Controller;
@@ -17,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.ec.survey.model.administration.GlobalPrivilege;
-import com.ec.survey.model.administration.LocalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.model.survey.base.File;
@@ -34,7 +35,7 @@ public class FileController extends BasicController {
 			throws ForbiddenURLException, InvalidURLException {
 
 		if (uid != null && uid.length() > 0) {
-			File file = null;
+			File file;
 			try {
 
 				file = fileService.get(uid);
@@ -78,7 +79,7 @@ public class FileController extends BasicController {
 					} else if (file.getName().toLowerCase().endsWith("doc")
 							|| file.getName().toLowerCase().endsWith("docx")) {
 						response.setContentType("application/msword");
-					} else if (type != null && type.length() > 0) {
+					} else if (type.length() > 0) {
 						response.setContentType(type);
 					}
 
@@ -97,23 +98,14 @@ public class FileController extends BasicController {
 		throw new InvalidURLException();
 	}
 
-	/*private String getMimeType(java.io.File f) {
+	private String getMimeType(java.io.File f) {
 		try {
-			return Magic.getMagicMatch(f, false).getMimeType();
-		} catch (Exception e) {
-			// unknown type
+			String mimeType = Files.probeContentType(f.toPath());
+			return (mimeType != null) ? mimeType : "";
+		} catch (IOException e) {
 			return "";
 		}
-	}*/
-
-    private String getMimeType(java.io.File f) {
-        try {
-            return Files.probeContentType(f.toPath());
-        } catch (Exception e) {
-            // unknown type
-            return "";
-        }
-    }
+	}
 	
 	@RequestMapping(value = "/withcomment/{uid}", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView fileWithComment(@PathVariable String uid, HttpServletRequest request,
@@ -138,7 +130,7 @@ public class FileController extends BasicController {
 			HttpServletResponse response) throws ForbiddenURLException {
 
 		if (uid != null && uid.length() > 0) {
-			File file = null;
+			File file;
 			boolean zipped = false;
 			try {
 

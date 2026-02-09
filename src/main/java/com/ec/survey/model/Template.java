@@ -1,6 +1,6 @@
 package com.ec.survey.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -11,10 +11,10 @@ import com.ec.survey.model.survey.Element;
 @Entity
 @Table(name = "TEMPL")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Template implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+	
 	private Integer id;
 	private String name;
 	private Element element;

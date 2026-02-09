@@ -5,24 +5,27 @@ import com.ec.survey.model.DepartmentItem;
 import com.ec.survey.model.KeyValue;
 import com.ec.survey.model.LdapSearchResult;
 import com.ec.survey.model.administration.EcasUser;
-import com.ec.survey.tools.DepartmentUpdater;
-import com.ec.survey.tools.DomainUpdater;
-import com.ec.survey.tools.EcasUserUpdater;
+import com.ec.survey.handler.worker.DepartmentUpdater;
+import com.ec.survey.handler.worker.DomainUpdater;
+import com.ec.survey.handler.worker.EcasUserUpdater;
 import com.ec.survey.tools.Tools;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import com.ec.survey.enumerator.LdapSearchType;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
 import java.util.*;
+
+import static com.ec.survey.enumerator.LdapSearchType.LOGIN;
 
 @Service("ldapService")
 public class LdapService extends BasicService {
@@ -132,7 +135,7 @@ public class LdapService extends BasicService {
 		String login = "";
 		DirContext ctx = initialize();		
 		
-		SearchControls sc = getSearchControls(LdapSearchTypeEnum.MAIL);
+		SearchControls sc = getSearchControls(LdapSearchType.MAIL);
 		NamingEnumeration<SearchResult> ne = null; 
 		Attributes userAttributes;
 		String searchString = "(mail=" + Tools.encodeForLDAP(email) + ")";
@@ -157,7 +160,7 @@ public class LdapService extends BasicService {
 	public List<String> getOrganisationForEmail(String email) throws NamingException {
 		DirContext ctx = initialize();
 
-		SearchControls sc = getSearchControls(LdapSearchTypeEnum.MAIL);
+		SearchControls sc = getSearchControls(LdapSearchType.MAIL);
 		NamingEnumeration<SearchResult> ne = null;
 		Attributes userAttributes;
 		String searchString = "(mail=" + Tools.encodeForLDAP(email) + ")";
@@ -318,7 +321,7 @@ public class LdapService extends BasicService {
 				}
 			}
 							
-			SearchControls sc= getSearchControls(LdapSearchTypeEnum.DEPARTMENT);
+			SearchControls sc= getSearchControls(LdapSearchType.DEPARTMENT);
 			NamingEnumeration<SearchResult> ne = null; 
 			Attributes set_att;
 			String searchString = "(objectClass=*)";
@@ -420,7 +423,7 @@ public class LdapService extends BasicService {
 				String domainDesc=ldapMappingDomainDescription.replace(LDAP_CONSTANT_PREFIX, "");
 				domains.put(domainO, domainDesc);						
 			} else {
-				SearchControls sc = getSearchControls(LdapSearchTypeEnum.DOMAIN);
+				SearchControls sc = getSearchControls(LdapSearchType.DOMAIN);
 				NamingEnumeration<SearchResult> ne = null; 
 		
 				Attributes setOfAttributes;
@@ -480,7 +483,7 @@ public class LdapService extends BasicService {
 		
 		try {
 
-			SearchControls sc= getSearchControls(LdapSearchTypeEnum.USER);
+			SearchControls sc= getSearchControls(LdapSearchType.USER);
 			NamingEnumeration<SearchResult> namingEnumeration = null; 
 
 			Attributes userAttributes;
@@ -610,7 +613,7 @@ public class LdapService extends BasicService {
 		
 		try {
 
-			SearchControls sc = getSearchControls(LdapSearchTypeEnum.USERNAME);
+			SearchControls sc = getSearchControls(LdapSearchType.USERNAME);
 			NamingEnumeration<SearchResult> ne = null; 
 			Attributes userAttributes;
 			String searchString = "(objectClass=*)";
@@ -754,7 +757,7 @@ public class LdapService extends BasicService {
 		DirContext ctx = initialize();
 		
 		try {
-			SearchControls sc = getSearchControls(LdapSearchTypeEnum.LOGIN);
+			SearchControls sc = getSearchControls(LdapSearchType.LOGIN);
 			
 			sc.setCountLimit(limit);
 			sc.setTimeLimit(60000);
@@ -930,7 +933,7 @@ public class LdapService extends BasicService {
 	}
 		
 	
-	private SearchControls getSearchControls(LdapSearchTypeEnum typeSearch){
+	private SearchControls getSearchControls(LdapSearchType typeSearch){
 		List<String> lstAttr= new ArrayList<>();
 		
 		switch (typeSearch) {

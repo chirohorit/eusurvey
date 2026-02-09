@@ -1,25 +1,26 @@
 package com.ec.survey.model.survey;
 
 
+import com.ec.survey.enumerator.DelphiChartDataType;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.owasp.esapi.errors.ValidationException;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Represents a freetext question in a survey
  */
 @Entity
 @DiscriminatorValue("FREETEXT")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class FreeTextQuestion extends Question {
 	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 
 	public FreeTextQuestion() {}
 	
@@ -133,11 +134,9 @@ public class FreeTextQuestion extends Question {
 	public boolean differsFrom(Element element) {
 		if (basicDiffersFrom(element)) return true;
 		
-		if (!(element instanceof FreeTextQuestion)) return true;
-		
-		FreeTextQuestion text = (FreeTextQuestion)element;
-		
-		if (getMinCharacters() != null && !getMinCharacters().equals(text.getMinCharacters())) return true;
+		if (!(element instanceof FreeTextQuestion text)) return true;
+
+        if (getMinCharacters() != null && !getMinCharacters().equals(text.getMinCharacters())) return true;
 		if (getMaxCharacters() != null && !getMaxCharacters().equals(text.getMaxCharacters())) return true;
 		if (getNumRows() != null && !getNumRows().equals(text.getNumRows())) return true;
 		if (getIsPassword() != null && !getIsPassword().equals(text.getIsPassword())) return true;

@@ -5,14 +5,14 @@ import com.ec.survey.model.*;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.*;
 import com.ec.survey.model.survey.base.File;
-import com.ec.survey.tools.CleanupWorker;
+import com.ec.survey.handler.worker.CleanupWorker;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
 import com.ec.survey.tools.MutableInteger;
-import com.ec.survey.tools.RecreateWorker;
+import com.ec.survey.handler.worker.RecreateWorker;
 import com.ec.survey.tools.Tools;
 import com.ec.survey.tools.export.FileExportCreator;
-import edu.emory.mathcs.backport.java.util.Arrays;
+import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class FileService extends BasicService {
 			"ZIP", "OTHER" };
 
 	public void logOldFileSystemUse(String path) {
-		logger.info("OLD FILESYSTEM ACCESS: " + path);
+        logger.info("OLD FILESYSTEM ACCESS: {}", path);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -69,7 +69,7 @@ public class FileService extends BasicService {
 	@Transactional(readOnly = true)
 	public File get(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (File) session.get(File.class, id);
+		return session.get(File.class, id);
 	}
 	
 	@Transactional(readOnly = true)
@@ -81,7 +81,7 @@ public class FileService extends BasicService {
 		}
 
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createQuery("FROM File u where u.uid = :uid").setParameter("uid", (String) uid);
+		Query query = session.createQuery("FROM File u where u.uid = :uid").setParameter("uid", uid);
 		@SuppressWarnings("unchecked")
 		List<File> list = query.list();
 		if (list.isEmpty()) {
@@ -108,7 +108,7 @@ public class FileService extends BasicService {
 		}
 
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createQuery("FROM File u where u.uid = :uid").setParameter("uid", (String) uid);
+		Query query = session.createQuery("FROM File u where u.uid = :uid").setParameter("uid", uid);
 		@SuppressWarnings("unchecked")
 		List<File> list = query.list();
 
@@ -126,51 +126,51 @@ public class FileService extends BasicService {
 		return get(uid);
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void add(File file) {
 		Session session = sessionFactory.getCurrentSession();
-		session.save(file);
+		session.persist(file);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void addNewTransaction(File file) {
 		Session session = sessionFactory.getCurrentSession();
-		session.save(file);
+		session.persist(file);
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void update(File file) {
 		Session session = sessionFactory.getCurrentSession();
-		session.update(file);
+		session.merge(file);
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void delete(File file) {
 		Session session = sessionFactory.getCurrentSession();
-		session.delete(file);
+		session.remove(file);
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void delete(Integer fileId) {
 		if (fileId != null) {
 			Session session = sessionFactory.getCurrentSession();
-			File file = (File) session.get(File.class, fileId);
+			File file = session.get(File.class, fileId);
 			if (file != null) {
-				session.delete(file);
+				session.remove(file);
 			}
 		}
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void save(ExportCache ec) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(ec);
+		session.merge(ec);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void saveNewTransaction(ExportCache ec) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(ec);
+		session.merge(ec);
 	}
 
 	@Transactional(readOnly = true)
@@ -179,7 +179,7 @@ public class FileService extends BasicService {
 		Query query = session
 				.createQuery(
 						"FROM ExportCache c WHERE c.surveyId = :surveyId AND c.filterHash = :hash AND c.type = :type")
-				.setParameter("surveyId", (Integer) surveyId).setParameter("hash", (String) hash).setParameter("type", (String) type);
+				.setParameter("surveyId", surveyId).setParameter("hash", hash).setParameter("type", type);
 		@SuppressWarnings("unchecked")
 		List<ExportCache> list = query.list();
 		if (!list.isEmpty()) {
@@ -203,6 +203,7 @@ public class FileService extends BasicService {
 		return result;
 	}
 
+	@Transactional
 	public List<FileResult> getFiles2(FileFilter filter) throws Exception {
 		final List<FileResult> result = new ArrayList<>();
 		final MutableInteger counter = new MutableInteger(0);
@@ -226,49 +227,49 @@ public class FileService extends BasicService {
 
 			if (dir != null) {
 				try {
-					Files.walkFileTree(dir.toPath(), new SimpleFileVisitor<Path>() {
+					Files.walkFileTree(dir.toPath(), new SimpleFileVisitor<>() {
 
-						@Override
-						public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs)
-								throws IOException {
-							if (!filter.isSystemExports() && file.endsWith("EXPORTS")) {
-								return FileVisitResult.SKIP_SUBTREE;
-							}
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs)
+                                throws IOException {
+                            if (!filter.isSystemExports() && file.endsWith("EXPORTS")) {
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
 
-							if (!filter.isSurveyFiles() && file.endsWith("FILES")) {
-								return FileVisitResult.SKIP_SUBTREE;
-							}
+                            if (!filter.isSurveyFiles() && file.endsWith("FILES")) {
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
 
-							if (!filter.isTemporaryFiles() && file.endsWith("UPLOADS")) {
-								return FileVisitResult.SKIP_SUBTREE;
-							}
+                            if (!filter.isTemporaryFiles() && file.endsWith("UPLOADS")) {
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
 
-							return FileVisitResult.CONTINUE;
-						}
+                            return FileVisitResult.CONTINUE;
+                        }
 
-						@Override
-						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-							if (!file.toFile().isDirectory()) {
-								if (skip - counter.getValue() > 0) {
-									counter.setValue(counter.getValue() + 1);
-								} else {
-									FileResult fileResult = getFileResult(file, null,
-											new java.io.File(archiveDir).toPath(), filter.getSurveyUid());
-									result.add(fileResult);
-								}
-								if (result.size() >= filter.getItemsPerPage()) {
-									return FileVisitResult.TERMINATE;
-								}
-							}
-							return FileVisitResult.CONTINUE;
-						}
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            if (!file.toFile().isDirectory()) {
+                                if (skip - counter.getValue() > 0) {
+                                    counter.setValue(counter.getValue() + 1);
+                                } else {
+                                    FileResult fileResult = getFileResult(file, null,
+                                            new java.io.File(archiveDir).toPath(), filter.getSurveyUid());
+                                    result.add(fileResult);
+                                }
+                                if (result.size() >= filter.getItemsPerPage()) {
+                                    return FileVisitResult.TERMINATE;
+                                }
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
 
-						@Override
-						public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-							// Skip folders that can't be traversed
-							return FileVisitResult.CONTINUE;
-						}
-					});
+                        @Override
+                        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                            // Skip folders that can't be traversed
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
 				} catch (IOException e) {
 					logger.error(e.getLocalizedMessage(), e);
 					return result;
@@ -282,6 +283,7 @@ public class FileService extends BasicService {
 		return result;
 	}
 
+	@Transactional
 	public List<FileResult> getFiles(FileFilter inputfilter) throws Exception {
 		final List<FileResult> result = new ArrayList<>();
 
@@ -305,76 +307,76 @@ public class FileService extends BasicService {
 
 			if (filter.isSystemExports() || filter.isSurveyUploads() || filter.isTemporaryFiles()) {
 				try {
-					Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+					Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 
-						@Override
-						public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs)
-								throws IOException {
-							if (file.equals(dir) || file.equals(filedir)
-									|| (file.equals(archivedir) && filter.isArchivedSurveys())) {
-								return FileVisitResult.CONTINUE;
-							} else if (filter.isTemporaryFiles() && !file.equals(archivedir)) {
-								return FileVisitResult.CONTINUE;
-							} else {
-								return FileVisitResult.SKIP_SUBTREE;
-							}
-						}
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs)
+                                throws IOException {
+                            if (file.equals(dir) || file.equals(filedir)
+                                    || (file.equals(archivedir) && filter.isArchivedSurveys())) {
+                                return FileVisitResult.CONTINUE;
+                            } else if (filter.isTemporaryFiles() && !file.equals(archivedir)) {
+                                return FileVisitResult.CONTINUE;
+                            } else {
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
+                        }
 
-						@Override
-						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-							if (!file.toFile().isDirectory()) {
-								FileResult fileResult = getFileResult(file, null, archivedir, filter.getSurveyUid());
-								if (checkResult(fileResult, filter)) {
-									if (skip - counter.getValue() > 0) {
-										counter.setValue(counter.getValue() + 1);
-									} else {
-										result.add(fileResult);
-									}
-									if (result.size() >= itemsperpage) {
-										return FileVisitResult.TERMINATE;
-									}
-								}
-							}
-							return FileVisitResult.CONTINUE;
-						}
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            if (!file.toFile().isDirectory()) {
+                                FileResult fileResult = getFileResult(file, null, archivedir, filter.getSurveyUid());
+                                if (checkResult(fileResult, filter)) {
+                                    if (skip - counter.getValue() > 0) {
+                                        counter.setValue(counter.getValue() + 1);
+                                    } else {
+                                        result.add(fileResult);
+                                    }
+                                    if (result.size() >= itemsperpage) {
+                                        return FileVisitResult.TERMINATE;
+                                    }
+                                }
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
 
-						@Override
-						public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-							// Skip folders that can't be traversed
-							return FileVisitResult.CONTINUE;
-						}
-					});
+                        @Override
+                        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                            // Skip folders that can't be traversed
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
 				} catch (IOException e) {
 					logger.error(e.getLocalizedMessage(), e);
 					return result;
 				}
 			} else if (filter.isArchivedSurveys()) {
 				try {
-					Files.walkFileTree(archivedir, new SimpleFileVisitor<Path>() {
-						@Override
-						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.walkFileTree(archivedir, new SimpleFileVisitor<>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 
-							FileResult fileResult = getFileResult(file, null, archivedir, filter.getSurveyUid());
-							if (checkResult(fileResult, filter)) {
-								if (skip - counter.getValue() > 0) {
-									counter.setValue(counter.getValue() + 1);
-								} else {
-									result.add(fileResult);
-								}
-								if (result.size() >= itemsperpage) {
-									return FileVisitResult.TERMINATE;
-								}
-							}
+                            FileResult fileResult = getFileResult(file, null, archivedir, filter.getSurveyUid());
+                            if (checkResult(fileResult, filter)) {
+                                if (skip - counter.getValue() > 0) {
+                                    counter.setValue(counter.getValue() + 1);
+                                } else {
+                                    result.add(fileResult);
+                                }
+                                if (result.size() >= itemsperpage) {
+                                    return FileVisitResult.TERMINATE;
+                                }
+                            }
 
-							return FileVisitResult.CONTINUE;
-						}
+                            return FileVisitResult.CONTINUE;
+                        }
 
-						@Override
-						public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-							// Skip folders that can't be traversed
-							return FileVisitResult.CONTINUE;
-						}
-					});
+                        @Override
+                        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                            // Skip folders that can't be traversed
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
 				} catch (IOException e) {
 					logger.error(e.getLocalizedMessage(), e);
 					return result;
@@ -451,9 +453,7 @@ public class FileService extends BasicService {
 		}
 
 		if (filter.getCreatedFrom() != null && filter.getCreatedFrom().after(fileResult.getCreated())) {
-			logger.info("file filtered out by creation date: "
-					+ Tools.formatDate(filter.getCreatedFrom(), ConversionTools.DateFormat) + " : "
-					+ Tools.formatDate(fileResult.getCreated(), ConversionTools.DateFormat));
+            logger.info("file filtered out by creation date: {} : {}", Tools.formatDate(filter.getCreatedFrom(), ConversionTools.DateFormat), Tools.formatDate(fileResult.getCreated(), ConversionTools.DateFormat));
 			return false;
 		}
 
@@ -480,7 +480,8 @@ public class FileService extends BasicService {
 		return true;
 	}
 
-	private List<FileResult> getFilesForSurvey(FileFilter filter, int page, int itemsperpage, Path archivedir) throws Exception
+	@Transactional
+	public List<FileResult> getFilesForSurvey(FileFilter filter, int page, int itemsperpage, Path archivedir) throws Exception
 			 {
 		List<Integer> ids = surveyService.getAllSurveyVersions(filter.getSurveyShortname(), filter.getSurveyUid());
 		Map<String, FileResult> result = new HashMap<>();
@@ -566,8 +567,7 @@ public class FileService extends BasicService {
 				while (!stop) {
 					Set<String> caseids = answerService.getCaseIds(id, r, answerpage++, 1000, false);
 					if (caseids != null && !caseids.isEmpty()) {
-						logger.debug(
-								"found case ids for survey " + id + ": " + StringUtils.join(caseids.toArray(), ","));
+                        logger.debug("found case ids for survey {}: {}", id, StringUtils.join(caseids.toArray(), ","));
 					}
 					if (caseids != null && caseids.size() < 1000)
 						stop = true;
@@ -635,9 +635,8 @@ public class FileService extends BasicService {
 
 			if (filter.isVisible("download") || filter.isVisible("image")) {
 				for (Element question : survey.getElements()) {
-					if (filter.isVisible("download") && question instanceof Download) {
-						Download download = (Download) question;
-						for (File f : download.getFiles()) {
+					if (filter.isVisible("download") && question instanceof Download download) {
+                        for (File f : download.getFiles()) {
 							Path file = getSurveyFile(survey.getUniqueId(), f.getUid()).toPath();
 
 							if (file.toFile().exists()) {
@@ -654,9 +653,8 @@ public class FileService extends BasicService {
 								}
 							}
 						}
-					} else if (filter.isVisible("image") && question instanceof Image) {
-						Image image = (Image) question;
-						String fileUID = getFileUIDFromUrl(image.getUrl());
+					} else if (filter.isVisible("image") && question instanceof Image image) {
+                        String fileUID = getFileUIDFromUrl(image.getUrl());
 
 						Path file = getSurveyFile(survey.getUniqueId(), fileUID).toPath();
 						if (file.toFile().exists()) {
@@ -672,9 +670,8 @@ public class FileService extends BasicService {
 								}
 							}
 						}
-					} else if (filter.isVisible("image") && question instanceof GalleryQuestion) {
-						GalleryQuestion gallery = (GalleryQuestion) question;
-						for (File f : gallery.getFiles()) {
+					} else if (filter.isVisible("image") && question instanceof GalleryQuestion gallery) {
+                        for (File f : gallery.getFiles()) {
 							Path file = getSurveyFile(survey.getUniqueId(), f.getUid()).toPath();
 
 							if (file.toFile().exists()) {
@@ -756,6 +753,7 @@ public class FileService extends BasicService {
 		return new ArrayList<>(result.values());
 	}
 
+	@Transactional
 	public FileResult getFileResult(Path file, Export export, Path archivedir, String surveyUID) throws IOException {
 
 		FileResult fileResult = new FileResult();
@@ -1042,9 +1040,8 @@ public class FileService extends BasicService {
 			}
 
 			for (Element question : survey.getElements()) {
-				if (question instanceof Download) {
-					Download download = (Download) question;
-					for (File f : download.getFiles()) {
+				if (question instanceof Download download) {
+                    for (File f : download.getFiles()) {
 						java.io.File file = fileService.getSurveyFile(survey.getUniqueId(), f.getUid());
 						if (!file.exists()) {
 							String filePath = String.format("%s%s", fileDir, f.getUid());
@@ -1053,9 +1050,8 @@ public class FileService extends BasicService {
 
 						result.add(file);
 					}
-				} else if (question instanceof Image) {
-					Image image = (Image) question;
-					if (image.getUrl() != null && !image.getUrl().contains("photo_scenery.png")) {
+				} else if (question instanceof Image image) {
+                    if (image.getUrl() != null && !image.getUrl().contains("photo_scenery.png")) {
 						String fileUID = getFileUIDFromUrl(image.getUrl());
 
 						java.io.File file = fileService.getSurveyFile(survey.getUniqueId(), fileUID);
@@ -1066,9 +1062,8 @@ public class FileService extends BasicService {
 
 						result.add(file);
 					}
-				} else if (question instanceof GalleryQuestion) {
-					GalleryQuestion gallery = (GalleryQuestion) question;
-					for (File f : gallery.getFiles()) {
+				} else if (question instanceof GalleryQuestion gallery) {
+                    for (File f : gallery.getFiles()) {
 						java.io.File file = fileService.getSurveyFile(survey.getUniqueId(), f.getUid());
 						if (!file.exists()) {
 							String filePath = String.format("%s%s", fileDir, f.getUid());
@@ -1176,6 +1171,7 @@ public class FileService extends BasicService {
 		return counter;
 	}
 
+	@Transactional
 	public int deleteFilesForDeletedElements() throws Exception {
 		// all files that have no link in the database
 		FileFilter filter = new FileFilter();
@@ -1203,7 +1199,7 @@ public class FileService extends BasicService {
 	}
 
 	public int deleteContributions(Date pdfbefore) throws IOException {
-		logger.info("starting deleteContributions: " + ConversionTools.getFullString(new Date()));
+        logger.info("starting deleteContributions: {}", ConversionTools.getFullString(new Date()));
 
 		int deletecounter = 0;
 
@@ -1221,74 +1217,71 @@ public class FileService extends BasicService {
 			}
 
 		}
-		logger.info("finish deleteContributions: " + deletecounter + " files deleted "
-				+ ConversionTools.getFullString(new Date()));
+        logger.info("finish deleteContributions: {} files deleted {}", deletecounter, ConversionTools.getFullString(new Date()));
 
 		return deletecounter;
 	}
 
 	public int deleteTemporaryFiles(final Date tempbefore) throws IOException {
-		logger.info("starting deleteContributions: " + ConversionTools.getFullString(new Date()));
+        logger.info("starting deleteContributions: {}", ConversionTools.getFullString(new Date()));
 		final MutableInteger deletecounter = new MutableInteger(0);
 
 		final Path dir = Paths.get(tempFileDir);
 		final Path filedir = Paths.get(fileDir);
 		final Path archivedir = Paths.get(archiveFileDir);
 
-		Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+		Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 
-			@Override
-			public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
-				if (file.equals(dir)) {
-					return FileVisitResult.CONTINUE;
-				}
-				return FileVisitResult.SKIP_SUBTREE;
-			}
+            @Override
+            public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file.equals(dir)) {
+                    return FileVisitResult.CONTINUE;
+                }
+                return FileVisitResult.SKIP_SUBTREE;
+            }
 
-			@Override
-			public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) throws IOException {
-				if (p.toFile().isDirectory() && !p.equals(dir) && !p.equals(filedir) && !p.equals(archivedir)) {
-					java.io.File candidate = p.toFile();
-					Date modified = new Date(candidate.lastModified());
-					if (modified.before(tempbefore)) {
-						for (java.io.File file : candidate.listFiles()) {
-							if (file.isFile()) {
-								if (file.delete()) {
-									deletecounter.setValue(deletecounter.getValue() + 1);
-								} else {
-									logger.error("not possible to delete file " + file.getAbsolutePath());
-								}
-							} else {
-								for (java.io.File file2 : file.listFiles()) {
-									if (file2.delete()) {
-										deletecounter.setValue(deletecounter.getValue() + 1);
-									} else {
-										logger.error("not possible to delete file " + file.getAbsolutePath());
-									}
-								}
-								if (!file.delete()) {
-									logger.error(
-											"not possible to delete folder " + candidate.getAbsolutePath());
-								}
-							}
-						}
-						if (!candidate.delete()) {
-							logger.error("not possible to delete folder " + candidate.getAbsolutePath());
-						}
-					}					
-				}
-				return FileVisitResult.CONTINUE;
-			}
+            @Override
+            public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) throws IOException {
+                if (p.toFile().isDirectory() && !p.equals(dir) && !p.equals(filedir) && !p.equals(archivedir)) {
+                    java.io.File candidate = p.toFile();
+                    Date modified = new Date(candidate.lastModified());
+                    if (modified.before(tempbefore)) {
+                        for (java.io.File file : candidate.listFiles()) {
+                            if (file.isFile()) {
+                                if (file.delete()) {
+                                    deletecounter.setValue(deletecounter.getValue() + 1);
+                                } else {
+                                    logger.error("not possible to delete file {}", file.getAbsolutePath());
+                                }
+                            } else {
+                                for (java.io.File file2 : file.listFiles()) {
+                                    if (file2.delete()) {
+                                        deletecounter.setValue(deletecounter.getValue() + 1);
+                                    } else {
+                                        logger.error("not possible to delete file {}", file.getAbsolutePath());
+                                    }
+                                }
+                                if (!file.delete()) {
+                                    logger.error("not possible to delete folder {}", candidate.getAbsolutePath());
+                                }
+                            }
+                        }
+                        if (!candidate.delete()) {
+                            logger.error("not possible to delete folder {}", candidate.getAbsolutePath());
+                        }
+                    }
+                }
+                return FileVisitResult.CONTINUE;
+            }
 
-			@Override
-			public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-				// Skip folders that can't be traversed
-				return FileVisitResult.CONTINUE;
-			}
-		});
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                // Skip folders that can't be traversed
+                return FileVisitResult.CONTINUE;
+            }
+        });
 
-		logger.info("finish deleteContributions: " + deletecounter.getValue() + " files deleted "
-				+ ConversionTools.getFullString(new Date()));
+        logger.info("finish deleteContributions: {} files deleted {}", deletecounter.getValue(), ConversionTools.getFullString(new Date()));
 		return deletecounter.getValue();
 	}
 
@@ -1405,7 +1398,7 @@ public class FileService extends BasicService {
 		return false;
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void deleteIfNotReferenced(String fileuid, String surveyuid) throws IOException {
 		try {
 			List<File> fs = getAll(fileuid);
@@ -1437,6 +1430,7 @@ public class FileService extends BasicService {
 		}
 	}
 
+	@Transactional
 	public Map<String, String> getMissingFiles(String uniqueId) throws Exception {
 		final Path archivedir = Paths.get(archiveFileDir);
 
@@ -1486,14 +1480,14 @@ public class FileService extends BasicService {
 	/////////////// new file system ///////////////////////////
 
 	public java.io.File getSurveyFolder(String surveyUID) {
-		java.io.File folder = new java.io.File(surveysDir + surveyUID.substring(0, 1) + Constants.PATH_DELIMITER + surveyUID + Constants.PATH_DELIMITER);
+		java.io.File folder = new java.io.File(surveysDir + surveyUID.charAt(0) + Constants.PATH_DELIMITER + surveyUID + Constants.PATH_DELIMITER);
 		if (!folder.exists())
 			folder.mkdirs();
 		return folder;
 	}
 
 	public java.io.File getSurveyFilesFolder(String surveyUID) {
-		java.io.File folder = new java.io.File(surveysDir + surveyUID.substring(0, 1) + Constants.PATH_DELIMITER + surveyUID + "/FILES/");
+		java.io.File folder = new java.io.File(surveysDir + surveyUID.charAt(0) + Constants.PATH_DELIMITER + surveyUID + "/FILES/");
 		if (!folder.exists())
 			folder.mkdirs();
 		return folder;
@@ -1504,21 +1498,21 @@ public class FileService extends BasicService {
 	}
 
 	public java.io.File getSurveyExportsFolder(String surveyUID, boolean create) {
-		java.io.File folder = new java.io.File(surveysDir + surveyUID.substring(0, 1) + Constants.PATH_DELIMITER + surveyUID + "/EXPORTS/");
+		java.io.File folder = new java.io.File(surveysDir + surveyUID.charAt(0) + Constants.PATH_DELIMITER + surveyUID + "/EXPORTS/");
 		if (!folder.exists() && create)
 			folder.mkdirs();
 		return folder;
 	}
 
 	public java.io.File getSurveyUploadsFolder(String surveyUID, boolean create) {
-		java.io.File folder = new java.io.File(surveysDir + surveyUID.substring(0, 1) + Constants.PATH_DELIMITER + surveyUID + "/UPLOADS/");
+		java.io.File folder = new java.io.File(surveysDir + surveyUID.charAt(0) + Constants.PATH_DELIMITER + surveyUID + "/UPLOADS/");
 		if (!folder.exists() && create)
 			folder.mkdirs();
 		return folder;
 	}
 
 	public java.io.File getSurveyExplanationUploadsFolder(String surveyUID, boolean create) {
-		java.io.File folder = new java.io.File(surveysDir + surveyUID.substring(0, 1) + Constants.PATH_DELIMITER + surveyUID + "/EXPLANATION_UPLOADS/");
+		java.io.File folder = new java.io.File(surveysDir + surveyUID.charAt(0) + Constants.PATH_DELIMITER + surveyUID + "/EXPLANATION_UPLOADS/");
 		if (!folder.exists() && create)
 			folder.mkdirs();
 		return folder;
@@ -1592,7 +1586,7 @@ public class FileService extends BasicService {
 	}
 
 	public java.io.File getArchiveFolder(String surveyUID) {
-		java.io.File folder = new java.io.File(archiveDir + surveyUID.substring(0, 1) + Constants.PATH_DELIMITER + surveyUID + Constants.PATH_DELIMITER);
+		java.io.File folder = new java.io.File(archiveDir + surveyUID.charAt(0) + Constants.PATH_DELIMITER + surveyUID + Constants.PATH_DELIMITER);
 		if (!folder.exists())
 			folder.mkdirs();
 		return folder;
@@ -1628,33 +1622,29 @@ public class FileService extends BasicService {
 	@Transactional
 	public void migrateSurveyFiles(Survey survey) throws Exception {
 		Session session = sessionFactory.getCurrentSession();
-		survey = (Survey) session.merge(survey);
+		survey = session.merge(survey);
 
 		for (Element element : survey.getElements()) {
-			if (element instanceof Image) {
-				Image image = (Image) element;
-				if (image.getUrl() != null && image.getUrl().length() > 0) {
+			if (element instanceof Image image) {
+                if (image.getUrl() != null && image.getUrl().length() > 0) {
 					String fileUID = image.getUrl().replace(contextpath + "/files/", "");
 					if (migrateSurveyFile(survey.getUniqueId(), fileUID)) {
 						image.setUrl(
 								servletContext.getContextPath() + "/files/" + survey.getUniqueId() + Constants.PATH_DELIMITER + fileUID);
 					}
 				}
-			} else if (element instanceof Download) {
-				Download download = (Download) element;
-				for (File file : download.getFiles()) {
+			} else if (element instanceof Download download) {
+                for (File file : download.getFiles()) {
 					String fileUID = file.getUid();
 					migrateSurveyFile(survey.getUniqueId(), fileUID);
 				}
-			} else if (element instanceof Confirmation) {
-				Confirmation confirmation = (Confirmation) element;
-				for (File file : confirmation.getFiles()) {
+			} else if (element instanceof Confirmation confirmation) {
+                for (File file : confirmation.getFiles()) {
 					String fileUID = file.getUid();
 					migrateSurveyFile(survey.getUniqueId(), fileUID);
 				}
-			} else if (element instanceof GalleryQuestion) {
-				GalleryQuestion gallery = (GalleryQuestion) element;
-				for (File file : gallery.getFiles()) {
+			} else if (element instanceof GalleryQuestion gallery) {
+                for (File file : gallery.getFiles()) {
 					String fileUID = file.getUid();
 					migrateSurveyFile(survey.getUniqueId(), fileUID);
 				}
@@ -1794,42 +1784,42 @@ public class FileService extends BasicService {
 		Path dir = folder.toPath();
 		final MutableInteger deletecounter = new MutableInteger(0);
 
-		Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+		Files.walkFileTree(dir, new SimpleFileVisitor<>() {
 
-			@Override
-			public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
-				if (file.equals(dir)) {
-					return FileVisitResult.CONTINUE;
-				}
-				return FileVisitResult.SKIP_SUBTREE;
-			}
+            @Override
+            public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file.equals(dir)) {
+                    return FileVisitResult.CONTINUE;
+                }
+                return FileVisitResult.SKIP_SUBTREE;
+            }
 
-			@Override
-			public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) throws IOException {
-				if (!p.toFile().isDirectory()) {
-					java.io.File candidate = p.toFile();
+            @Override
+            public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) throws IOException {
+                if (!p.toFile().isDirectory()) {
+                    java.io.File candidate = p.toFile();
 
-					if ((candidate.getName().startsWith(Constants.ANSWER) || candidate.getName().startsWith("draft"))
-							&& candidate.getName().endsWith(".pdf")) {
-						Date modified = new Date(candidate.lastModified());
-						if (modified.before(before) && candidate.isFile()) {
-							if (candidate.delete()) {
-								deletecounter.setValue(deletecounter.getValue() + 1);
-							} else {
-								logger.error("not possible to delete file " + candidate.getAbsolutePath());
-							}
-						}
-					}
-				}
-				return FileVisitResult.CONTINUE;
-			}
+                    if ((candidate.getName().startsWith(Constants.ANSWER) || candidate.getName().startsWith("draft"))
+                            && candidate.getName().endsWith(".pdf")) {
+                        Date modified = new Date(candidate.lastModified());
+                        if (modified.before(before) && candidate.isFile()) {
+                            if (candidate.delete()) {
+                                deletecounter.setValue(deletecounter.getValue() + 1);
+                            } else {
+                                logger.error("not possible to delete file {}", candidate.getAbsolutePath());
+                            }
+                        }
+                    }
+                }
+                return FileVisitResult.CONTINUE;
+            }
 
-			@Override
-			public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-				// Skip folders that can't be traversed
-				return FileVisitResult.CONTINUE;
-			}
-		});
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                // Skip folders that can't be traversed
+                return FileVisitResult.CONTINUE;
+            }
+        });
 
 		return deletecounter.getValue();
 	}
@@ -1866,7 +1856,7 @@ public class FileService extends BasicService {
 						FileUtils.deleteDirectory(file);
 						deleteCounter++;
 					} catch (Exception e) {
-						logger.error("not possible to delete folder " + file.getAbsolutePath());
+                        logger.error("not possible to delete folder {}", file.getAbsolutePath());
 					}
 				}
 			}
@@ -1879,38 +1869,38 @@ public class FileService extends BasicService {
 		Path dir = folder.toPath();
 		final MutableInteger deletecounter = new MutableInteger(0);
 
-		Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
-				if (file.equals(dir)) {
-					return FileVisitResult.CONTINUE;
-				}
-				return FileVisitResult.SKIP_SUBTREE;
-			}
+		Files.walkFileTree(dir, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file.equals(dir)) {
+                    return FileVisitResult.CONTINUE;
+                }
+                return FileVisitResult.SKIP_SUBTREE;
+            }
 
-			@Override
-			public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) throws IOException {
-				if (!p.toFile().isDirectory()) {
-					java.io.File candidate = p.toFile();
+            @Override
+            public FileVisitResult visitFile(Path p, BasicFileAttributes attrs) throws IOException {
+                if (!p.toFile().isDirectory()) {
+                    java.io.File candidate = p.toFile();
 
-					if (candidate.getName().startsWith(Constants.SURVEY + id) && candidate.getName().endsWith(".pdf")) {
+                    if (candidate.getName().startsWith(Constants.SURVEY + id) && candidate.getName().endsWith(".pdf")) {
 
-						if (candidate.delete()) {
-							deletecounter.setValue(deletecounter.getValue() + 1);
-						} else {
-							logger.error("not possible to delete file " + candidate.getAbsolutePath());
-						}
-					}
-				}
-				return FileVisitResult.CONTINUE;
-			}
+                        if (candidate.delete()) {
+                            deletecounter.setValue(deletecounter.getValue() + 1);
+                        } else {
+                            logger.error("not possible to delete file {}", candidate.getAbsolutePath());
+                        }
+                    }
+                }
+                return FileVisitResult.CONTINUE;
+            }
 
-			@Override
-			public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-				// Skip folders that can't be traversed
-				return FileVisitResult.CONTINUE;
-			}
-		});
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                // Skip folders that can't be traversed
+                return FileVisitResult.CONTINUE;
+            }
+        });
 
 		return deletecounter.getValue();
 	}
@@ -1939,7 +1929,7 @@ public class FileService extends BasicService {
 							Files.delete(file.toPath());
 							deletecounter++;							
 						} catch (IOException e) {
-							logger.error("not possible to delete file " + file.getAbsolutePath());
+                            logger.error("not possible to delete file {}", file.getAbsolutePath());
 						}
 					}
 				}
@@ -1970,7 +1960,7 @@ public class FileService extends BasicService {
 		try {
 			FileUtils.deleteDirectory(directory);
 		} catch (IOException e) {
-			logger.error("The directory with its content could not be deleted: " + directory.getAbsolutePath());
+            logger.error("The directory with its content could not be deleted: {}", directory.getAbsolutePath());
 			logger.error(e.getLocalizedMessage());
 		}
 	}
@@ -1988,11 +1978,12 @@ public class FileService extends BasicService {
 		return null;
 	}
 
+	@Transactional
 	public void deleteFileFromDiskAndDatabase(final String surveyUid, final File file) {
 
 		final java.io.File fileOnDisk = getSurveyFile(surveyUid, file.getUid());
 		if (!fileOnDisk.delete()) {
-			logger.error("The file could not be deleted: " + fileOnDisk.getAbsolutePath());
+            logger.error("The file could not be deleted: {}", fileOnDisk.getAbsolutePath());
 		}
 		delete(file.getId());
 	}

@@ -1,5 +1,7 @@
 package com.ec.survey.model.administration;
 
+import com.ec.survey.enumerator.GlobalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.ResultAccess;
 import com.ec.survey.model.attendees.AttributeName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -10,20 +12,16 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.*;
 import java.util.Map.Entry;
 
 @Entity
 @Table(name = "USERS", uniqueConstraints = { @UniqueConstraint(columnNames = { "USER_LOGIN" }, name = "USER_LOGIN") })
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class User implements java.io.Serializable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private String login;
 	private String password;
@@ -59,7 +57,7 @@ public class User implements java.io.Serializable {
 	private String agreedToPSVersion;
 	private Integer lastEditedSurvey;
 	private boolean canCreateSurveys = true;
-	private boolean isFrozen = false;
+	private boolean frozen = false;
 	private boolean deleted;
 	private boolean deleteRequested;
 	private String deleteCode;
@@ -224,10 +222,10 @@ public class User implements java.io.Serializable {
 	}
 
 	@ManyToMany(targetEntity = Role.class)
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="USERS_GLOBALROLES",
 			joinColumns = @JoinColumn(name = "USERS_USER_ID"),
 			inverseJoinColumns = @JoinColumn(name = "roles_ROLE_ID"))
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Role> getRoles() {
 		return roles;
 	}
@@ -248,11 +246,11 @@ public class User implements java.io.Serializable {
 	}
 
 	@ManyToMany(targetEntity = AttributeName.class)
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="USERS_ATTRIBUTENAME",
 			joinColumns = @JoinColumn(name = "USERS_USER_ID"),
 			inverseJoinColumns = @JoinColumn(name = "selectedAttributes_AN_ID"))
 	@Fetch(value = FetchMode.SELECT)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<AttributeName> getSelectedAttributes() {
 		return selectedAttributes;
 	}
@@ -438,11 +436,11 @@ public class User implements java.io.Serializable {
 
 	@Column(name = "USER_FROZEN")
 	public boolean isFrozen() {
-		return isFrozen;
+		return frozen;
 	}
 
 	public void setFrozen(Boolean isFrozen) {
-		this.isFrozen = isFrozen != null && isFrozen;
+		this.frozen = isFrozen != null && isFrozen;
 	}
 	
 	@Column(name = "USER_ORGANISATION")

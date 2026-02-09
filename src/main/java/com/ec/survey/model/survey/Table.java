@@ -4,11 +4,11 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.owasp.esapi.errors.ValidationException;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.Transient;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
 
 import java.util.Objects;
 
@@ -17,14 +17,14 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("TABLE")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Table extends MatrixOrTable {
 	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 	
 	public Table(String ptitle, String shortname, String uid) {
 		setTitle(ptitle);

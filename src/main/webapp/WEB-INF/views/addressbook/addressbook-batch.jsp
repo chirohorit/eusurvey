@@ -1,5 +1,5 @@
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <div class="modal" id="batch-attendee-dialog" data-backdrop="static">
 	<div class="modal-dialog">
     <div class="modal-content">

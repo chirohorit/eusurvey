@@ -1,7 +1,7 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>	
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page contentType="text/html; charset=UTF-8" session="false" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">

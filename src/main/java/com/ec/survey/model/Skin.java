@@ -6,7 +6,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,10 +15,10 @@ import java.util.List;
 @Entity
 @Table(name = "SKINS")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Skin implements java.io.Serializable {
 	
-	private static final long serialVersionUID = 1L;
+	
 	private int id;
 	private String name;
 	private boolean isPublic;
@@ -151,12 +151,12 @@ public class Skin implements java.io.Serializable {
 	}
 	
 	@OneToMany(targetEntity=SkinElement.class, cascade = CascadeType.ALL  )
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="SKINS_SKINELEM",
 			joinColumns = @JoinColumn(name = "SKINS_SKIN_ID"),
 			inverseJoinColumns = @JoinColumn(name = "elements_SE_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "name asc")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<SkinElement> getElements() {
 		return elements;
 	}

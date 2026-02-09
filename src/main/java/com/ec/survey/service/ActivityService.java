@@ -24,12 +24,12 @@ import java.util.Map.Entry;
 public class ActivityService extends BasicService {
 	
 	@Autowired
-	private SqlQueryService sqlQueryService;
+	private SqlQueryService sqlQueryService;	
 	
 	@Transactional
 	public void deleteLogsForSurvey(String uniqueId) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery("DELETE FROM Activity WHERE surveyUID = :uid").setParameter("uid", (String) uniqueId);
+		Query query = session.createQuery("DELETE FROM Activity WHERE surveyUID = :uid").setParameter("uid", uniqueId);
 		query.executeUpdate();
 	}
 	
@@ -61,7 +61,7 @@ public class ActivityService extends BasicService {
 						
 						activity.setUserId(userId);
 						activity.setSurveyUID(surveyUID);
-						session.save(activity);
+						session.persist(activity);
 					}
 				}
 			}
@@ -97,7 +97,7 @@ public class ActivityService extends BasicService {
 							
 							activity.setUserId(userId);
 							activity.setSurveyUID(surveyUID);
-							session.save(activity);
+							session.persist(activity);
 						}
 					}
 				}
@@ -116,7 +116,7 @@ public class ActivityService extends BasicService {
 						
 						activity.setUserId(userId);
 						activity.setSurveyUID(surveyUID);
-						session.save(activity);
+						session.persist(activity);
 					}
 				}
 			}
@@ -133,7 +133,7 @@ public class ActivityService extends BasicService {
 			if (loggingenabled != null && loggingenabled.equalsIgnoreCase("true"))
 			{
 				String enabled = settingsService.get(activityCode + "ActivityEnabled");
-
+				
 				if (enabled != null && enabled.equalsIgnoreCase("true"))
 				{
 					return true;
@@ -161,7 +161,7 @@ public class ActivityService extends BasicService {
 			activity.setUserId(userId);
 			activity.setSurveyUID(surveyUID);
 			activity.setType(type);
-			session.save(activity);
+			session.persist(activity);
 		} else {		
 			String loggingenabled = settingsService.get(Setting.ActivityLoggingEnabled);
 			if (loggingenabled != null && loggingenabled.equalsIgnoreCase("true"))
@@ -181,7 +181,7 @@ public class ActivityService extends BasicService {
 					activity.setUserId(userId);
 					activity.setSurveyUID(surveyUID);
 					activity.setType(type);
-					session.save(activity);
+					session.persist(activity);
 				}
 			}
 		}		
@@ -287,7 +287,7 @@ public class ActivityService extends BasicService {
 		Map<String, Object> params = new HashMap<>();
 		
 		String hql = "SELECT count(*) " + getHQL(filter, params);
-		Query<?> query = session.createNativeQuery(hql).setParameter("uid", (String) filter.getSurveyUid());
+		Query query = session.createQuery(hql).setParameter("uid", filter.getSurveyUid());
 		sqlQueryService.setParameters(query, params);
 		
 		return ConversionTools.getValue(query.uniqueResult());
@@ -302,13 +302,13 @@ public class ActivityService extends BasicService {
 		
 		String hql = getHQL(filter, params);
 		hql += " ORDER BY id DESC";
-		Query<?> query = session.createNativeQuery(hql).setParameter("uid", (String) filter.getSurveyUid());
+		Query query = session.createQuery(hql).setParameter("uid", filter.getSurveyUid());
 		
 		for (Entry<String, Object> entry : params.entrySet())
 		{
 			if (entry.getValue() instanceof Integer)
 			{
-				query.setParameter(entry.getKey(), (Integer) entry.getValue());
+				query.setParameter(entry.getKey(), (Integer)entry.getValue());
 			} else if (entry.getValue() instanceof Integer[])
 			{
 				query.setParameterList(entry.getKey(), (Integer[])entry.getValue());
@@ -321,7 +321,7 @@ public class ActivityService extends BasicService {
 			}
 		}
 		
-		return (List<Activity>) query.setFirstResult((page > 1 ? page - 1 : 0)*rowsPerPage).setMaxResults(rowsPerPage).list();
+		return query.setFirstResult((page > 1 ? page - 1 : 0)*rowsPerPage).setMaxResults(rowsPerPage).list();
 	}
 
 	@Transactional(readOnly = true)
@@ -339,8 +339,8 @@ public class ActivityService extends BasicService {
 	@Transactional(readOnly = true)
 	public List<Integer> getAllUsers(String uniqueId) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery("SELECT DISTINCT userId FROM Activity WHERE surveyUID = :uid").setParameter("uid", (String) uniqueId);
-		return (List<Integer>) query.list();
+		Query query = session.createQuery("SELECT DISTINCT userId FROM Activity WHERE surveyUID = :uid").setParameter("uid", uniqueId);
+		return query.list();
 	}
 	
 }

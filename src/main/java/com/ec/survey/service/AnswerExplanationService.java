@@ -1,5 +1,6 @@
 package com.ec.survey.service;
 
+import com.ec.survey.enumerator.DelphiTableOrderBy;
 import com.ec.survey.model.*;
 import com.ec.survey.model.delphi.*;
 import com.ec.survey.model.survey.*;
@@ -28,8 +29,7 @@ public class AnswerExplanationService extends BasicService {
 
 		final Integer answerSetId = answerSet.getId();
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery("DELETE FROM AnswerExplanation WHERE answerSetId = :answerId")
-				.setParameter("answerId", (Integer) answerSetId);
+		final Query query = session.createQuery("DELETE FROM AnswerExplanation WHERE answerSetId = :answerId").setParameter("answerId", answerSetId);
 		query.executeUpdate();
 	}
 
@@ -37,9 +37,9 @@ public class AnswerExplanationService extends BasicService {
 	public AnswerExplanation getExplanation(int answerSetId, String questionUid) {
 
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery(
+		final Query query = session.createQuery(
 				"SELECT ex FROM AnswerExplanation ex WHERE answerSetId = :answerSetId AND questionUid = :questionUid")
-				.setParameter("answerSetId", (Integer) answerSetId).setParameter("questionUid", (String) questionUid);
+				.setParameter("answerSetId", answerSetId).setParameter("questionUid", questionUid);
 		AnswerExplanation explanation = (AnswerExplanation) query.uniqueResult();
 		if (explanation == null) {
 			throw new NoSuchElementException();
@@ -51,20 +51,19 @@ public class AnswerExplanationService extends BasicService {
 	public AnswerExplanation getExplanationIfPossible(int answerSetId, String questionUid) {
 
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery(
+		final Query query = session.createQuery(
 				"SELECT ex FROM AnswerExplanation ex WHERE answerSetId = :answerSetId AND questionUid = :questionUid")
-				.setParameter("answerSetId", (Integer) answerSetId).setParameter("questionUid", (String) questionUid);
-		AnswerExplanation explanation = (AnswerExplanation) query.uniqueResult();
-		return explanation;
+				.setParameter("answerSetId", answerSetId).setParameter("questionUid", questionUid);
+        return (AnswerExplanation) query.uniqueResult();
 	}
 
 	@Transactional(readOnly = true)
 	public AnswerExplanation getExplanation(int explanationId) {
 
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery(
+		final Query query = session.createQuery(
 				"SELECT ex FROM AnswerExplanation ex WHERE id = :explanationId")
-				.setParameter("explanationId", (Integer) explanationId);
+				.setParameter("explanationId", explanationId);
 		AnswerExplanation explanation = (AnswerExplanation) query.uniqueResult();
 		if (explanation == null) {
 			throw new NoSuchElementException();
@@ -75,9 +74,9 @@ public class AnswerExplanationService extends BasicService {
 	@Transactional(readOnly = true)
 	public Map<Integer, Map<String, String>> getAllExplanations(Survey survey) {
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery(
-				"SELECT ex.ANSWER_SET_ID, ex.QUESTION_UID, ex.TEXT FROM ANSWERS_EXPLANATIONS ex JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ex.ANSWER_SET_ID JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID WHERE s.SURVEY_UID = :surveyUid AND s.ISDRAFT = :draft")
-				.setParameter("draft", (Boolean) survey.getIsDraft()).setParameter("surveyUid", (String) survey.getUniqueId());
+		final Query query = session.createNativeQuery(
+				"SELECT ex.ANSWER_SET_ID, ex.QUESTION_UID, ex.TEXT FROM ANSWER_EXPLANATIONS ex JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ex.ANSWER_SET_ID JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID WHERE s.SURVEY_UID = :surveyUid AND s.ISDRAFT = :draft")
+				.setParameter("draft", survey.getIsDraft()).setParameter("surveyUid", survey.getUniqueId());
 
 		Map<Integer, Map<String, String>> result = new HashMap<>();
 
@@ -92,7 +91,7 @@ public class AnswerExplanationService extends BasicService {
 			String explanation = (String) a[2];
 
 			if (!result.containsKey(answerSetId)) {
-				result.put(answerSetId, new HashMap<String, String>());
+				result.put(answerSetId, new HashMap<>());
 			}
 
 			result.get(answerSetId).put(questionUid, explanation);
@@ -118,27 +117,25 @@ public class AnswerExplanationService extends BasicService {
 	@Transactional(readOnly = true)
 	public List<DelphiExplanationLike> getAllLikesForExplanations(List<AnswerExplanation> explanations) {
 
-		final Session session = sessionFactory.getCurrentSession();
-        final Query<?> query = session.createNativeQuery("FROM DelphiExplanationLike WHERE answerExplanationId in :explanationIds");
-		query.setParameterList("explanationIds", explanations.stream().map(ex -> ex.getId()).collect(Collectors.toList()));
+		var session = sessionFactory.getCurrentSession();
+		var query = session.createQuery("FROM DelphiExplanationLike WHERE answerExplanationId in :explanationIds");
+		query.setParameterList("explanationIds", explanations.stream().map(AnswerExplanation::getId).collect(Collectors.toList()));
 
-        @SuppressWarnings("rawtypes")
-        final List<DelphiExplanationLike> result = (List<DelphiExplanationLike>) query.list();
-        return result;
+		return query.list();
 	}
 
 	@Transactional(readOnly = true)
 	public List<AnswerExplanation> getExplanationsOfSurvey(final String surveyUid, final boolean draft) {
 
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery(
-				"SELECT f.FILE_ID, f.FILE_NAME, f.FILE_UID, ex.ANSWER_EXPLANATION_ID, ex.ANSWER_SET_ID, ex.QUESTION_UID, ex.TEXT FROM ANSWERS_EXPLANATIONS ex "
-						+ "LEFT JOIN ANSWERS_EXPLANATIONS_FILES aef ON ex.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
+		final Query query = session.createNativeQuery(
+				"SELECT f.FILE_ID, f.FILE_NAME, f.FILE_UID, ex.ANSWER_EXPLANATION_ID, ex.ANSWER_SET_ID, ex.QUESTION_UID, ex.TEXT FROM ANSWER_EXPLANATIONS ex "
+						+ "LEFT JOIN ANSWER_EXPLANATION_FILES aef ON ex.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
 						+ "LEFT JOIN FILES f ON aef.files_FILE_ID = f.FILE_ID "
 						+ "JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ex.ANSWER_SET_ID "
 						+ "JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID "
 						+ "WHERE s.SURVEY_UID = :surveyUid AND s.ISDRAFT = :draft")
-				.setParameter("surveyUid", (String) surveyUid).setParameter("draft", (Boolean) draft);
+				.setParameter("surveyUid", surveyUid).setParameter("draft", draft);
 
 		@SuppressWarnings("rawtypes")
 		final List queryResult = query.list();
@@ -182,12 +179,12 @@ public class AnswerExplanationService extends BasicService {
 	public List<AnswerComment> getCommentsOfSurvey(final String surveyUid, final boolean draft) {
 
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session
-				.createNativeQuery("SELECT ac.ANSWER_COMMENT_ID " + "FROM ANSWERS_COMMENTS ac "
+		final Query query = session
+				.createNativeQuery("SELECT ac.ANSWER_COMMENT_ID " + "FROM ANSWER_COMMENTS ac "
 						+ "JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ac.ANSWER_SET_ID "
 						+ "JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID "
 						+ "WHERE s.SURVEY_UID = :surveyUid AND s.ISDRAFT = :draft")
-				.setParameter("surveyUid", (String) surveyUid).setParameter("draft", (Boolean) draft);
+				.setParameter("surveyUid", surveyUid).setParameter("draft", draft);
 
 		@SuppressWarnings("rawtypes")
 		List res = query.list();
@@ -207,8 +204,8 @@ public class AnswerExplanationService extends BasicService {
 	public List<AnswerExplanation> getExplanations(int answerSetId) {
 
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery("SELECT ex FROM AnswerExplanation ex WHERE answerSetId = :answerSetId")
-				.setParameter("answerSetId", (Integer) answerSetId);
+		final Query query = session.createQuery("SELECT ex FROM AnswerExplanation ex WHERE answerSetId = :answerSetId")
+				.setParameter("answerSetId", answerSetId);
 		@SuppressWarnings("unchecked")
 		List<AnswerExplanation> explanations = (List<AnswerExplanation>) query.list();
 		return explanations;
@@ -223,7 +220,7 @@ public class AnswerExplanationService extends BasicService {
 
 	@Transactional(readOnly = true)
 	public DelphiContributions getDelphiContributions(Matrix question, DelphiTableOrderBy orderBy, int limit,
-			int offset) {
+													  int offset) {
 		List<String> uids = question.getQuestions().stream().map(Element::getUniqueId).collect(Collectors.toList());
 		return getDelphiContributions(uids, question.getUniqueId(), question.getSurvey().getIsDraft(), orderBy, limit,
 				offset);
@@ -286,10 +283,10 @@ public class AnswerExplanationService extends BasicService {
 				// pagination
 				"    LIMIT :limit OFFSET :offset\n" + ") AS aset ON a.AS_ID = aset.ANSWER_SET_ID\n" +
 				// add explanations
-				"LEFT JOIN ANSWERS_EXPLANATIONS ex ON a.QUESTION_UID = ex.QUESTION_UID AND ex.ANSWER_SET_ID = a.AS_ID\n"
+				"LEFT JOIN ANSWER_EXPLANATIONS ex ON a.QUESTION_UID = ex.QUESTION_UID AND ex.ANSWER_SET_ID = a.AS_ID\n"
 				+
 				// add explanation of main question (i.e. for ratings)
-				"LEFT JOIN (\n" + "    SELECT TEXT, ANSWER_SET_ID\n" + "    FROM ANSWERS_EXPLANATIONS\n"
+				"LEFT JOIN (\n" + "    SELECT TEXT, ANSWER_SET_ID\n" + "    FROM ANSWER_EXPLANATIONS\n"
 				+ "    WHERE QUESTION_UID = :mainQuestionUid\n"
 				+ ") AS main_explanation ON a.AS_ID = main_explanation.ANSWER_SET_ID\n" +
 				// filter by question
@@ -298,16 +295,16 @@ public class AnswerExplanationService extends BasicService {
 				"ORDER BY " + orderByClauseOuter + ", `row`, `column`";
 
 		Session session = sessionFactory.getCurrentSession();
-		NativeQuery<?> contributionsQuery = session.createNativeQuery(contributionsQueryText);
+		NativeQuery contributionsQuery = session.createNativeQuery(contributionsQueryText);
 		contributionsQuery.setResultTransformer(Transformers.aliasToBean(DelphiContribution.class));
 		contributionsQuery.setParameterList("questionUids", questionUids);
-		contributionsQuery.setParameter("isDraft", (Boolean) isDraft);
-		contributionsQuery.setParameter("mainQuestionUid", (String) mainQuestionUid);
-		contributionsQuery.setParameter("limit", (Integer) limit);
-		contributionsQuery.setParameter("offset", (Integer) offset);
+		contributionsQuery.setParameter("isDraft", isDraft);
+		contributionsQuery.setParameter("mainQuestionUid", mainQuestionUid);
+		contributionsQuery.setParameter("limit", limit);
+		contributionsQuery.setParameter("offset", offset);
 
 		@SuppressWarnings("unchecked")
-		List<DelphiContribution> contributions = (List<DelphiContribution>) contributionsQuery.list();
+		List<DelphiContribution> contributions = contributionsQuery.list();
 
 		int totalCount = getTotalDelphiContributions(questionUids, isDraft);
 		return new DelphiContributions(totalCount, contributions);
@@ -318,12 +315,12 @@ public class AnswerExplanationService extends BasicService {
 	public List<String> getDelphiDependentAnswers(String dependentElementUid, int answerSetId) {
 		Session session = sessionFactory.getCurrentSession();
 		String sql = "SELECT VALUE FROM ANSWERS a WHERE a.QUESTION_UID = :questionUid AND a.AS_ID = :answerSetId";
-		NativeQuery<?> query = session.createNativeQuery(sql);
-		query.setParameter("questionUid", (String) dependentElementUid);
-		query.setParameter("answerSetId", (Integer) answerSetId);
+		NativeQuery query = session.createNativeQuery(sql);
+		query.setParameter("questionUid", dependentElementUid);
+		query.setParameter("answerSetId", answerSetId);
 		
 		@SuppressWarnings("unchecked")
-		List<String> result = (List<String>) query.list();
+		List<String> result = query.list();
 		
 		return result;
 	}
@@ -336,9 +333,9 @@ public class AnswerExplanationService extends BasicService {
 				+ "WHERE a.QUESTION_UID IN :questionUids AND s.ISDRAFT = :isDraft";
 
 		Session session = sessionFactory.getCurrentSession();
-		NativeQuery<?> totalCountQuery = session.createNativeQuery(totalCountQueryText);
+		NativeQuery totalCountQuery = session.createNativeQuery(totalCountQueryText);
 		totalCountQuery.setParameterList("questionUids", questionUids);
-		totalCountQuery.setParameter("isDraft", (Boolean) isDraft);
+		totalCountQuery.setParameter("isDraft", isDraft);
 		return ((BigInteger) totalCountQuery.uniqueResult()).intValue();
 	}
 
@@ -375,7 +372,7 @@ public class AnswerExplanationService extends BasicService {
 					if (hasNoLinkedAnswers) {
 						fileService.deleteUploadedExplanationFiles(surveyUid, answerSet.getUniqueCode(), questionUid);
 						fileService.deleteFilesFromDiskAndDatabase(surveyUid, explanation.getFiles());
-						session.delete(explanation);
+						session.remove(explanation);
 						continue;
 					}
 				} catch (NoSuchElementException ex) {
@@ -421,7 +418,7 @@ public class AnswerExplanationService extends BasicService {
 				explanation.setText(explanationData.text);
 				explanation.setFiles(explanationData.files);
 
-				session.saveOrUpdate(explanation);
+				session.merge(explanation);
 				session.flush();
 			}
 		}
@@ -444,31 +441,31 @@ public class AnswerExplanationService extends BasicService {
 	@Transactional
 	public void saveOrUpdateComment(AnswerComment comment) {
 		final Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(comment);
+		session.merge(comment);
 	}
 
 	@Transactional
 	public void saveOrUpdateExplanation(AnswerExplanation explanation) {
 		final Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(explanation);
+		session.merge(explanation);
 	}
 
 	@Transactional
 	public void deleteComment(AnswerComment comment) {
 		final Session session = sessionFactory.getCurrentSession();
-		session.delete(comment);
+		session.remove(comment);
 	}
 
 	@Transactional(readOnly = true)
 	public List<AnswerComment> loadComments(int answerSetId, String questionUid) {
 		final Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"FROM AnswerComment WHERE answerSetId = :answerSetId and questionUid = :questionUid ORDER BY id");
-		query.setParameter("answerSetId", (Integer) answerSetId).setParameter("questionUid", (String) questionUid);
+		query.setParameter("answerSetId", answerSetId).setParameter("questionUid", questionUid);
 
 		@SuppressWarnings("unchecked")
-		List<AnswerComment> list = (List<AnswerComment>) query.list();
+		List<AnswerComment> list = query.list();
 
 		return list;
 	}
@@ -477,9 +474,9 @@ public class AnswerExplanationService extends BasicService {
 	public DelphiCommentLike getCommentLike(int answerCommentId, String uniqueCode) {
 		final Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"FROM DelphiCommentLike WHERE answerCommentId = :answerCommentId and uniqueCode = :uniqueCode ORDER BY id");
-		query.setParameter("answerCommentId", (Integer) answerCommentId).setParameter("uniqueCode", (String) uniqueCode);
+		query.setParameter("answerCommentId", answerCommentId).setParameter("uniqueCode", uniqueCode);
 
 		return (DelphiCommentLike) query.uniqueResult();
 	}
@@ -488,7 +485,7 @@ public class AnswerExplanationService extends BasicService {
 	public List<DelphiCommentLike> getAllLikesForComments(List<AnswerComment> comments) {
 		var session = sessionFactory.getCurrentSession();
 
-		var query = session.createNativeQuery("FROM DelphiCommentLike WHERE answerCommentId IN :commentIds", DelphiCommentLike.class);
+		var query = session.createQuery("FROM DelphiCommentLike WHERE answerCommentId IN :commentIds", DelphiCommentLike.class);
 		query.setParameterList("commentIds", comments.stream().map(co -> co.getId()).collect(Collectors.toList()));
 
 		return query.list();
@@ -498,9 +495,9 @@ public class AnswerExplanationService extends BasicService {
 	public DelphiExplanationLike getExplanationLike(int answerExplanationId, String uniqueCode) {
 		final Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"FROM DelphiExplanationLike WHERE answerExplanationId = :answerExplanationId and uniqueCode = :uniqueCode ORDER BY id");
-		query.setParameter("answerExplanationId", (Integer) answerExplanationId).setParameter("uniqueCode", (String) uniqueCode);
+		query.setParameter("answerExplanationId", answerExplanationId).setParameter("uniqueCode", uniqueCode);
 
 		return (DelphiExplanationLike) query.uniqueResult();
 	}
@@ -509,12 +506,12 @@ public class AnswerExplanationService extends BasicService {
 	public List<DelphiCommentLike> loadCommentLikes(int answerCommentId) {
 		final Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"FROM DelphiCommentLike WHERE answerCommentId = :answerCommentId ORDER BY id");
-		query.setParameter("answerCommentId", (Integer) answerCommentId);
+		query.setParameter("answerCommentId", answerCommentId);
 
 		@SuppressWarnings("unchecked")
-		List<DelphiCommentLike> list = (List<DelphiCommentLike>) query.list();
+		List<DelphiCommentLike> list = query.list();
 
 		return list;
 	}
@@ -523,12 +520,12 @@ public class AnswerExplanationService extends BasicService {
 	public List<String> loadCommentLikesUIDs(int answerCommentId) {
 		final Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"SELECT c.uniqueCode FROM DelphiCommentLike c WHERE answerCommentId = :answerCommentId ORDER BY id");
-		query.setParameter("answerCommentId", (Integer) answerCommentId);
+		query.setParameter("answerCommentId", answerCommentId);
 
 		@SuppressWarnings("unchecked")
-		List<String> list = (List<String>) query.list();
+		List<String> list = query.list();
 
 		return list;
 	}
@@ -537,25 +534,23 @@ public class AnswerExplanationService extends BasicService {
 	public List<DelphiExplanationLike> loadExplanationLikesUIDs(int answerExplanationId) {
 		final Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"FROM DelphiExplanationLike WHERE answerExplanationId = :answerExplanationId");
-		query.setParameter("answerExplanationId", (Integer) answerExplanationId);
+		query.setParameter("answerExplanationId", answerExplanationId);
 
-        @SuppressWarnings("unchecked")
-		List<DelphiExplanationLike> list = (List<DelphiExplanationLike>) query.list();
-		return list;
+        return (List<DelphiExplanationLike>) query.list();
 	}
 
 	@Transactional(readOnly = true)
 	public List<String> loadExplanationLikes(int answerExplanationId) {
 		final Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"SELECT e.uniqueCode FROM DelphiExplanationLike e WHERE answerExplanationId = :answerExplanationId ORDER BY id");
-		query.setParameter("answerExplanationId", (Integer) answerExplanationId);
+		query.setParameter("answerExplanationId", answerExplanationId);
 
 		@SuppressWarnings("unchecked")
-		List<String> list = (List<String>) query.list();
+		List<String> list = query.list();
 
 		return list;
 	}
@@ -563,25 +558,25 @@ public class AnswerExplanationService extends BasicService {
 	@Transactional
 	public void addCommentLike(DelphiCommentLike delphiCommentLike) {
 		final Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(delphiCommentLike);
+		session.merge(delphiCommentLike);
 	}
 
 	@Transactional
 	public void addExplanationLike(DelphiExplanationLike delphiExplanationLike) {
 		final Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(delphiExplanationLike);
+		session.merge(delphiExplanationLike);
 	}
 
 	@Transactional
 	public void deleteCommentLike(DelphiCommentLike delphiCommentLike) {
 		final Session session = sessionFactory.getCurrentSession();
-		session.delete(delphiCommentLike);
+		session.remove(delphiCommentLike);
 	}
 
 	@Transactional
 	public void deleteExplanationLike(DelphiExplanationLike delphiExplanationLike) {
 		final Session session = sessionFactory.getCurrentSession();
-		session.delete(delphiExplanationLike);
+		session.remove(delphiExplanationLike);
 	}
 
 	@Transactional
@@ -608,15 +603,15 @@ public class AnswerExplanationService extends BasicService {
 					}
 				}
 				
-				final Query<?> replyDeletionQuery = session.createNativeQuery("DELETE FROM AnswerComment "
+				final Query replyDeletionQuery = session.createQuery("DELETE FROM AnswerComment "
 						+ "WHERE answerSetId = :answerSetId AND questionUid = :questionUid AND parent IS NOT NULL")
-						.setParameter("answerSetId", (Integer) answerSet.getId()).setParameter("questionUid", (String) question.getUniqueId());
+						.setParameter("answerSetId", answerSet.getId()).setParameter("questionUid", question.getUniqueId());
 				replyDeletionQuery.executeUpdate();
 
-				final Query<?> commentDeletionQuery = session
-						.createNativeQuery("DELETE FROM AnswerComment "
+				final Query commentDeletionQuery = session
+						.createQuery("DELETE FROM AnswerComment "
 								+ "WHERE answerSetId = :answerSetId AND questionUid = :questionUid AND parent IS NULL")
-						.setParameter("answerSetId", (Integer) answerSet.getId()).setParameter("questionUid", (String) question.getUniqueId());
+						.setParameter("answerSetId", answerSet.getId()).setParameter("questionUid", question.getUniqueId());
 				commentDeletionQuery.executeUpdate();
 			}
 		}
@@ -627,14 +622,14 @@ public class AnswerExplanationService extends BasicService {
 
 		final Session session = sessionFactory.getCurrentSession();
 
-		final Query<?> replyDeletionQuery = session.createNativeQuery("DELETE ac.* " + "FROM ANSWERS_COMMENTS ac "
+		final Query replyDeletionQuery = session.createNativeQuery("DELETE ac.* " + "FROM ANSWER_COMMENTS ac "
 				+ "JOIN ANSWERS_SET an ON an.ANSWER_SET_ID = ac.ANSWER_SET_ID "
-				+ "WHERE ac.PARENT IS NOT NULL AND an.SURVEY_ID = :id").setParameter("id", (Integer) surveyId);
+				+ "WHERE ac.PARENT IS NOT NULL AND an.SURVEY_ID = :id").setParameter("id", surveyId);
 		replyDeletionQuery.executeUpdate();
 
-		final Query<?> commentDeletionQuery = session.createNativeQuery("DELETE ac.* " + "FROM ANSWERS_COMMENTS ac "
+		final Query commentDeletionQuery = session.createNativeQuery("DELETE ac.* " + "FROM ANSWER_COMMENTS ac "
 				+ "JOIN ANSWERS_SET an ON an.ANSWER_SET_ID = ac.ANSWER_SET_ID "
-				+ "WHERE ac.PARENT IS NULL AND an.SURVEY_ID = :id").setParameter("id", (Integer) surveyId);
+				+ "WHERE ac.PARENT IS NULL AND an.SURVEY_ID = :id").setParameter("id", surveyId);
 		commentDeletionQuery.executeUpdate();
 	}
 
@@ -643,23 +638,23 @@ public class AnswerExplanationService extends BasicService {
 
 		final Session session = sessionFactory.getCurrentSession();
 
-		final Query<?> explanationFilesRetrievalQuery = session.createNativeQuery("SELECT f.FILE_UID " + "FROM FILES f "
-				+ "JOIN ANSWERS_EXPLANATIONS_FILES aef ON aef.files_FILE_ID = f.FILE_ID "
-				+ "JOIN ANSWERS_EXPLANATIONS ae ON ae.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
+		final Query explanationFilesRetrievalQuery = session.createNativeQuery("SELECT f.FILE_UID " + "FROM FILES f "
+				+ "JOIN ANSWER_EXPLANATION_FILES aef ON aef.files_FILE_ID = f.FILE_ID "
+				+ "JOIN ANSWER_EXPLANATIONS ae ON ae.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
 				+ "JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ae.ANSWER_SET_ID " + "WHERE ans.SURVEY_ID = :id")
-				.setParameter("id", (Integer) surveyId);
-		final List<String> fileUids = (List<String>) explanationFilesRetrievalQuery.list();
+				.setParameter("id", surveyId);
+		final List<String> fileUids = explanationFilesRetrievalQuery.list();
 
-		final Query<?> explanationFilesDeletionQuery12 = session.createNativeQuery("DELETE aef.* "
-				+ "FROM ANSWERS_EXPLANATIONS_FILES aef "
-				+ "JOIN ANSWERS_EXPLANATIONS ae ON ae.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
+		final Query explanationFilesDeletionQuery12 = session.createNativeQuery("DELETE aef.* "
+				+ "FROM ANSWER_EXPLANATION_FILES aef "
+				+ "JOIN ANSWER_EXPLANATIONS ae ON ae.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
 				+ "JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ae.ANSWER_SET_ID " + "WHERE ans.SURVEY_ID = :id")
-				.setParameter("id", (Integer) surveyId);
+				.setParameter("id", surveyId);
 		explanationFilesDeletionQuery12.executeUpdate();
 
 		if (fileUids.isEmpty())
 			return;
-		final Query<?> explanationFilesDeletionQuery2 = session
+		final Query explanationFilesDeletionQuery2 = session
 				.createNativeQuery("DELETE f.* " + "FROM FILES f " + "WHERE f.FILE_UID IN :ids")
 				.setParameterList("ids", fileUids);
 		explanationFilesDeletionQuery2.executeUpdate();
@@ -670,10 +665,10 @@ public class AnswerExplanationService extends BasicService {
 
 		final Session session = sessionFactory.getCurrentSession();
 
-		final Query<?> query = session
-				.createNativeQuery("DELETE ae.* " + "FROM ANSWERS_EXPLANATIONS ae "
+		final Query query = session
+				.createNativeQuery("DELETE ae.* " + "FROM ANSWER_EXPLANATIONS ae "
 						+ "JOIN ANSWERS_SET an ON ae.ANSWER_SET_ID = an.ANSWER_SET_ID " + "WHERE an.SURVEY_ID = :id")
-				.setParameter("id", (Integer) surveyId);
+				.setParameter("id", surveyId);
 		query.executeUpdate();
 	}
 
@@ -681,12 +676,12 @@ public class AnswerExplanationService extends BasicService {
 	public Map<String, String> getUserAliases(String surveyUid) {
 		final Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery(
-				"SELECT DISTINCT ac.ANSWER_SET_CODE FROM ANSWERS_COMMENTS ac JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ac.ANSWER_SET_ID JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID WHERE s.SURVEY_UID = :surveyuid ORDER BY ac.COMMENT_DATE DESC");
-		query.setParameter("surveyuid", (String) surveyUid);
+		Query query = session.createNativeQuery(
+				"SELECT DISTINCT ac.ANSWER_SET_CODE FROM ANSWER_COMMENTS ac JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ac.ANSWER_SET_ID JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID WHERE s.SURVEY_UID = :surveyuid ORDER BY ac.COMMENT_DATE DESC");
+		query.setParameter("surveyuid", surveyUid);
 
 		@SuppressWarnings("unchecked")
-		List<String> list = (List<String>) query.list();
+		List<String> list = query.list();
 
 		Map<String, String> result = new HashMap<>();
 
@@ -805,16 +800,16 @@ public class AnswerExplanationService extends BasicService {
 	@Transactional(readOnly = true)
 	public Map<Integer, Map<String, String>> getAllDiscussions(Survey survey) {
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery(
-				"SELECT ac.ANSWER_SET_ID, ac.QUESTION_UID, ac.TEXT, ac.ANSWER_SET_CODE, ac.PARENT FROM ANSWERS_COMMENTS ac JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ac.ANSWER_SET_ID JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID WHERE s.SURVEY_UID = :surveyUid AND s.ISDRAFT = :draft ORDER BY ac.COMMENT_DATE")
-				.setParameter("draft", (Boolean) survey.getIsDraft()).setParameter("surveyUid", (String) survey.getUniqueId());
+		final Query query = session.createNativeQuery(
+				"SELECT ac.ANSWER_SET_ID, ac.QUESTION_UID, ac.TEXT, ac.ANSWER_SET_CODE, ac.PARENT FROM ANSWER_COMMENTS ac JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ac.ANSWER_SET_ID JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID WHERE s.SURVEY_UID = :surveyUid AND s.ISDRAFT = :draft ORDER BY ac.COMMENT_DATE")
+				.setParameter("draft", survey.getIsDraft()).setParameter("surveyUid", survey.getUniqueId());
 
 		Map<Integer, Map<String, String>> result = new HashMap<>();
 
 		@SuppressWarnings("rawtypes")
 		List res = query.list();
 
-		Map<String, String> usersByUid = new HashMap<String, String>();
+		Map<String, String> usersByUid = new HashMap<>();
 
 		for (Object o : res) {
 			Object[] a = (Object[]) o;
@@ -830,7 +825,7 @@ public class AnswerExplanationService extends BasicService {
 			}
 
 			if (!result.containsKey(answerSetId)) {
-				result.put(answerSetId, new HashMap<String, String>());
+				result.put(answerSetId, new HashMap<>());
 			}
 
 			String text = "";
@@ -864,8 +859,8 @@ public class AnswerExplanationService extends BasicService {
 	@Transactional(readOnly = true)
 	public boolean hasCommentChildren(int id) {
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session.createNativeQuery("SELECT COUNT(*) FROM ANSWERS_COMMENTS WHERE PARENT = :parent")
-				.setParameter("parent", (Integer) id);
+		final Query query = session.createNativeQuery("SELECT COUNT(*) FROM ANSWER_COMMENTS WHERE PARENT = :parent")
+				.setParameter("parent", id);
 		return ((BigInteger) query.uniqueResult()).intValue() > 0;
 	}
 
@@ -877,12 +872,12 @@ public class AnswerExplanationService extends BasicService {
 	@Transactional(readOnly = true)
 	public boolean hasUnreadComments(String uniqueCode, String questionUid) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery(""
+		Query query = session.createNativeQuery(""
 				+ "SELECT EXISTS "
 				+ "( "
 				+ "  SELECT * "
-				+ "  FROM ANSWERS_COMMENTS ac "
-				+ "  LEFT JOIN ANSWERS_COMMENTS parents ON ac.PARENT = parents.ANSWER_COMMENT_ID "
+				+ "  FROM ANSWER_COMMENTS ac "
+				+ "  LEFT JOIN ANSWER_COMMENTS parents ON ac.PARENT = parents.ANSWER_COMMENT_ID "
 				+ "  JOIN ANSWERS_SET asets ON asets.ANSWER_SET_ID = ac.ANSWER_SET_ID "
 				+ "  WHERE ac.QUESTION_UID = :questionUid "
 				+ "  AND ("
@@ -891,8 +886,8 @@ public class AnswerExplanationService extends BasicService {
 				+ "  )"
 				+ ")");
 
-		query.setParameter("uniqueCode", (String) uniqueCode);
-		query.setParameter("questionUid", (String) questionUid);
+		query.setParameter("uniqueCode", uniqueCode);
+		query.setParameter("questionUid", questionUid);
 
 		return ((BigInteger) query.uniqueResult()).intValue() > 0;
 	}
@@ -903,14 +898,14 @@ public class AnswerExplanationService extends BasicService {
 		final FilesByTypes<Integer, String> result = new FilesByTypes<>();
 
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session
+		final Query query = session
 				.createNativeQuery("SELECT f.FILE_ID, f.FILE_NAME, f.FILE_UID, ans.ANSWER_SET_ID, ae.QUESTION_UID "
-						+ "FROM FILES f " + "JOIN ANSWERS_EXPLANATIONS_FILES aef ON aef.files_FILE_ID = f.FILE_ID "
-						+ "JOIN ANSWERS_EXPLANATIONS ae ON ae.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
+						+ "FROM FILES f " + "JOIN ANSWER_EXPLANATION_FILES aef ON aef.files_FILE_ID = f.FILE_ID "
+						+ "JOIN ANSWER_EXPLANATIONS ae ON ae.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
 						+ "JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ae.ANSWER_SET_ID "
 						+ "JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID "
 						+ "WHERE s.SURVEY_UID = :surveyUid AND s.ISDRAFT = :draft " + "ORDER BY f.FILE_NAME")
-				.setParameter("draft", (Boolean) survey.getIsDraft()).setParameter("surveyUid", (String) survey.getUniqueId());
+				.setParameter("draft", survey.getIsDraft()).setParameter("surveyUid", survey.getUniqueId());
 
 		@SuppressWarnings("rawtypes")
 		final List queryResult = query.list();
@@ -939,19 +934,19 @@ public class AnswerExplanationService extends BasicService {
 			final String fileName) {
 
 		final Session session = sessionFactory.getCurrentSession();
-		final Query<?> query = session
+		final Query query = session
 				.createNativeQuery("SELECT f.FILE_ID, f.FILE_UID "
 						+ "FROM FILES f "
-						+ "JOIN ANSWERS_EXPLANATIONS_FILES aef ON aef.files_FILE_ID = f.FILE_ID "
-						+ "JOIN ANSWERS_EXPLANATIONS ae ON ae.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
+						+ "JOIN ANSWER_EXPLANATION_FILES aef ON aef.files_FILE_ID = f.FILE_ID "
+						+ "JOIN ANSWER_EXPLANATIONS ae ON ae.ANSWER_EXPLANATION_ID = aef.ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID "
 						+ "JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = ae.ANSWER_SET_ID "
 						+ "JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID "
 						+ "WHERE s.SURVEY_UID = :surveyUid AND ans.UNIQUECODE = :uniqueCode "
 							+ "AND ae.QUESTION_UID = :questionUid AND f.FILE_NAME = :fileName")
-				.setParameter("surveyUid",  (String) surveyUid)
-				.setParameter("uniqueCode", (String) uniqueCode)
-				.setParameter("questionUid", (String) questiondUid)
-				.setParameter("fileName", (String) fileName);
+				.setParameter("surveyUid", surveyUid)
+				.setParameter("uniqueCode", uniqueCode)
+				.setParameter("questionUid", questiondUid)
+				.setParameter("fileName", fileName);
 
 		@SuppressWarnings("rawtypes")
 		final Object result = query.uniqueResult();
@@ -975,7 +970,7 @@ public class AnswerExplanationService extends BasicService {
 		final Session session = sessionFactory.getCurrentSession();
 		final AnswerExplanation explanation = getExplanation(answerSetId, questionUid);
 		explanation.getFiles().removeIf(f -> f.getUid().equals(fileUid));
-		session.saveOrUpdate(explanation);
+		session.merge(explanation);
 		session.flush();
 	}
 

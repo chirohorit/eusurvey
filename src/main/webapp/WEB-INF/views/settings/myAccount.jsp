@@ -1,6 +1,6 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>	
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
 <head>
@@ -168,7 +168,7 @@
 							
 							<br />
 							
-							<img id="add-wait-animation" class="hideme" style="margin-right:90px;" src="${contextpath}/resources/images/ajax-loader.gif" />							
+							<img id="add-wait-animation" class="hideme" style="margin-right:90px;" src="${contextpath}/resources/images/ajax-loader.gif" />
 							<a onclick='validateInputAndSubmit($("#change-lang-form"));' class="btn btn-primary"><spring:message code="label.Save" /></a>
 						</form:form>
 					</td>
@@ -202,7 +202,7 @@
 							
 							<br />
 														
-							<img id="add-wait-animation" class="hideme" style="margin-right:90px;" src="${contextpath}/resources/images/ajax-loader.gif" />							
+							<img id="add-wait-animation" class="hideme" style="margin-right:90px;" src="${contextpath}/resources/images/ajax-loader.gif" />
 							<a onclick='validateInputAndSubmit($("#change-pivot-lang-form"));' class="btn btn-primary"><spring:message code="label.Save" /></a>
 						</form:form>
 					</td>

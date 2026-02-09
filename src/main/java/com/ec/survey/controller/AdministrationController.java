@@ -5,17 +5,17 @@ import com.ec.survey.exception.InvalidURLException;
 import com.ec.survey.model.*;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.ReportingService.ToDoItem;
-import com.ec.survey.tools.ArchiveExecutor;
-import com.ec.survey.tools.ArchiveFlagExecutor;
+import com.ec.survey.handler.worker.ArchiveExecutor;
+import com.ec.survey.handler.worker.ArchiveFlagExecutor;
 import com.ec.survey.tools.Constants;
-import com.ec.survey.tools.CreateAllOLAPTablesExecutor;
-import com.ec.survey.tools.FileUpdater;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
-import com.ec.survey.tools.RecreateAllOLAPTablesExecutor;
+import com.ec.survey.handler.worker.CreateAllOLAPTablesExecutor;
+import com.ec.survey.handler.worker.FileUpdater;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
+import com.ec.survey.handler.worker.RecreateAllOLAPTablesExecutor;
 import com.ec.survey.tools.Tools;
-import com.ec.survey.tools.UpdateAllOLAPTablesExecutor;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.handler.worker.UpdateAllOLAPTablesExecutor;
+import com.ec.survey.exception.WeakAuthenticationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -35,9 +35,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -307,7 +307,7 @@ public class AdministrationController extends BasicController {
 		result.addObject("time", time);
 		
 		String survey = settingsService.get(Setting.ReportingMigrationSurveyToMigrate);
-		if (survey.isEmpty())
+		if (survey.length() == 0)
 		{
 			survey = "-";
 		}
@@ -462,7 +462,7 @@ public class AdministrationController extends BasicController {
 		} else if (format.equalsIgnoreCase("json")) {
 			int min = 0;
 			String minPublished = request.getParameter("min");
-			if (minPublished != null && !minPublished.isEmpty()) {
+			if (minPublished != null && minPublished .length() > 0) {
 				min = Integer.parseInt(minPublished);
 			}			
 			

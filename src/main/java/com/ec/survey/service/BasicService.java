@@ -1,12 +1,11 @@
 package com.ec.survey.service;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.slf4j.Logger;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -29,8 +28,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletContext;
+import jakarta.annotation.Resource;
+import jakarta.servlet.ServletContext;
 
 @Service
 public class BasicService implements BeanFactoryAware {
@@ -89,8 +88,8 @@ public class BasicService implements BeanFactoryAware {
 	@Resource(name= "ecfService")
 	protected ECFService ecfService;
 	
-	@Resource(name = "selfassessmentService")
-	protected SelfAssessmentService selfassessmentService;
+	@Resource(name = "selfAssessmentService")
+	protected SelfAssessmentService selfAssessmentService;
 	
 	@Autowired
 	protected MessageSource resources;
@@ -223,22 +222,22 @@ public class BasicService implements BeanFactoryAware {
 	public boolean isEVoteEnabled() {
 		return (!StringUtils.isEmpty(enableevote) && enableevote.equalsIgnoreCase("true"));
 	}
-	
+
 	public void callHook(String hook) throws IOException {
 		sessionService.initializeProxy();
-		CloseableHttpClient httpclient = HttpClients.createSystem();	
-		
-		try {
+
+		try (CloseableHttpClient httpclient = HttpClients.createSystem()) {
 			logger.info("Calling webhook " + hook);
 			HttpGet httpget = new HttpGet(hook);
-			CloseableHttpResponse response = httpclient.execute(httpget);			
-			int statusCode = response.getStatusLine().getStatusCode();
-			logger.info("Server responded with http code " + statusCode);
+
+			httpclient.execute(httpget, response -> {
+				int statusCode = response.getCode();
+				logger.info("Server responded with http code " + statusCode);
+				return response;
+			});
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage(), e);
-		} finally {
-			httpclient.close();
 		}
-
 	}
+
 }

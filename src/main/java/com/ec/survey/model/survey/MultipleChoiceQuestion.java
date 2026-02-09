@@ -1,11 +1,11 @@
 package com.ec.survey.model.survey;
 
-//import org.codehaus.jackson.annotate.JsonIgnore;
+import com.ec.survey.enumerator.MultipleChoiceStyle;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.owasp.esapi.errors.ValidationException;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Objects;
@@ -15,14 +15,14 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("MULTIPLECHOICE")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class MultipleChoiceQuestion extends ChoiceQuestion {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 
 	public MultipleChoiceQuestion() {
 	}

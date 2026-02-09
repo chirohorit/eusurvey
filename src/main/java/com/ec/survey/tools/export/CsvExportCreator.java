@@ -2,7 +2,7 @@ package com.ec.survey.tools.export;
 
 import com.ec.survey.model.Activity;
 import com.ec.survey.model.ActivityFilter;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.attendees.Attendee;
 import com.ec.survey.model.attendees.AttributeName;

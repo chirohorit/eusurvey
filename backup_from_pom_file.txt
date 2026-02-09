@@ -1,0 +1,680 @@
+<!--  HTTP client  -->
+        <!-- Source: https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5 -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--  JSON library: use Jackson (BOM above) + keep org.json only if you explicitly need it  -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20250517</version>
+            <!-- 20230227 -->
+            <!--  keep if your code uses org.json directly; otherwise prefer Jackson  -->
+        </dependency>
+            <!--<dependency>
+              <groupId>tools.jackson.core</groupId>
+              <artifactId>jackson-annotations</artifactId>
+              <version>2.17.2</version>
+            </dependency>-->
+            <!--<dependency>
+              <groupId>tools.jackson.core</groupId>
+              <artifactId>jackson-core</artifactId>
+              <version>${jackson.bom.version}</version> &lt;!&ndash; 2.12.6 spring 5 and javax compatible &ndash;&gt;
+            </dependency>
+            <dependency>
+              <groupId>tools.jackson.core</groupId>
+              <artifactId>jackson-databind</artifactId>
+              <version>${jackson.bom.version}</version>
+            </dependency>-->
+        <!--  Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core  -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.bom.version}</version>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-databind  -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.bom.version}</version>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-annotations  -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.21</version>
+        </dependency>
+        <!-- <dependency>
+              <groupId>jakarta.annotation</groupId>
+              <artifactId>jakarta.annotation-api</artifactId>
+              <version>2.1.1</version>
+            </dependency> -->
+        <!--  Source: https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api  -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>3.0.0</version>
+            <!-- <scope>compile</scope> -->
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/jakarta.transaction/jakarta.transaction-api -->
+        <!--<dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>-->
+        <!-- Source: https://mvnrepository.com/artifact/javax.transaction/javax.transaction-api -->
+        <!--<dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>javax.transaction-api</artifactId>
+            <version>1.3</version>
+        </dependency>-->
+        <!--  JFreeChart: keep a single modern version  -->
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.5.6</version>
+        </dependency>
+        <!--  ESAPI: note — ESAPI historically had security issues if old; keep only if used  -->
+        <dependency>
+            <groupId>org.owasp.esapi</groupId>
+            <artifactId>esapi</artifactId>
+            <version>2.7.0.0</version>
+            <classifier>jakarta</classifier>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-lang</groupId>
+                    <artifactId>commons-lang</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-configuration</groupId>
+                    <artifactId>commons-configuration</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--  BouncyCastle: standardize on a single modern provider  -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.83</version>
+        </dependency>
+        <dependency>
+            <groupId>org.passay</groupId>
+            <artifactId>passay</artifactId>
+            <version>1.6.6</version>
+            <!--  Use the latest version  -->
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--  Jsoup  -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.21.2</version>
+        </dependency>
+        <!--  AspectJ  -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${org.aspectj-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${org.aspectj-version}</version>
+        </dependency>
+        <!--  Spring modules (as in original POM)  -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${org.springframework-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${org.springframework-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <version>${org.springframework-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${org.springframework-version}</version>
+        </dependency>
+		<dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>${org.springframework-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${org.springframework-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+            <version>${org.springframework.security-version}</version>
+            <!-- 5.6.18 -->
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>${org.springframework.security-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${org.springframework.security-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-taglibs</artifactId>
+            <version>${org.springframework.security-version}</version>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/javax.xml/jaxrpc-api  -->
+        <!--<dependency>
+            <groupId>javax.xml</groupId>
+            <artifactId>jaxrpc-api</artifactId>
+            <version>1.1</version>
+            &lt;!&ndash; <scope>compile</scope> &ndash;&gt;
+        </dependency>-->
+        <!--  Source: https://mvnrepository.com/artifact/jakarta.activation/jakarta.activation-api  -->
+        <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <version>2.2.0-M1</version>
+            <!-- <scope>compile</scope> -->
+        </dependency>
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-core</artifactId>
+            <version>9.3.2</version>
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/org.xhtmlrenderer/flying-saucer-pdf-itext5  -->
+        <!--  Uses itextpdf-5 which has CVE-2022-24196  -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf-itext5</artifactId>
+            <version>9.3.2</version>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api  -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/jakarta.servlet.jsp/jakarta.servlet.jsp-api  -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
+            <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/jakarta.servlet.jsp.jstl/jakarta.servlet.jsp.jstl-api  -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/com.github.ulisesbocchio/jasypt-spring-boot -->
+        <dependency>
+            <groupId>com.github.ulisesbocchio</groupId>
+            <artifactId>jasypt-spring-boot</artifactId>
+            <version>4.0.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--  This requires to read and run the JSP files  -->
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/jakarta.persistence/jakarta.persistence-api  -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>3.1.0</version>
+            <!--  Compatible with Hibernate 6.6.40  -->
+            <!-- <scope>compile</scope> -->
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/jakarta.inject/jakarta.inject-api  -->
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <version>2.0.1</version>
+            <!-- <scope>compile</scope> -->
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/org.slf4j/slf4j-api  -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.17</version>
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core  -->
+        <!--  https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j2-impl  -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+            <version>2.25.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-to-slf4j  -->
+        <!-- <dependency>
+              <groupId>org.apache.logging.log4j</groupId>
+              <artifactId>log4j-to-slf4j</artifactId>
+              <version>2.25.3</version>
+            </dependency> -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>${mysql-connector-version}</version>
+            <!-- 8.0.28 -->
+        </dependency>
+        <!--  Hibernate  -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>xml-apis</artifactId>
+                    <groupId>xml-apis</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-c3p0</artifactId>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-jcache -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-jcache</artifactId>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.ehcache/ehcache -->
+        <dependency>
+            <groupId>org.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <version>3.11.1</version>
+            <classifier>jakarta</classifier>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.ehcache/ehcache-transactions -->
+        <dependency>
+            <groupId>org.ehcache</groupId>
+            <artifactId>ehcache-transactions</artifactId>
+            <version>3.11.1</version>
+            <classifier>jakarta</classifier>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/jakarta.transaction/jakarta.transaction-api -->
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <version>2.0.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.antlr/antlr4 -->
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4</artifactId>
+            <version>4.13.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.5.1</version>
+            <!-- 5.5.1 -->
+        </dependency>
+        <!--  Other utilities  -->
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.28.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.21.0</version>
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/commons-net/commons-net  -->
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <!--  Commons  -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.14.0</version>
+            <!--  Use the latest version  -->
+        </dependency>
+        <!--  ODF Toolkit  -->
+        <!--  https://mvnrepository.com/artifact/org.odftoolkit/odftoolkit  -->
+        <dependency>
+            <groupId>org.odftoolkit</groupId>
+            <artifactId>simple-odf</artifactId>
+            <version>0.9.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.jena</groupId>
+                    <artifactId>jena-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/org.apache.jena/jena-core  -->
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-core</artifactId>
+            <version>5.6.0</version>
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/xerces/xercesImpl -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.12.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <!--  CSV  -->
+        <dependency>
+            <groupId>net.sf.supercsv</groupId>
+            <artifactId>super-csv</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.4</version>
+            <!-- <scope>compile</scope> -->
+        </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-impl -->
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>4.0.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime  -->
+        <!--<dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>4.0.6</version>
+            &lt;!&ndash; <scope>compile</scope> &ndash;&gt;
+        </dependency>-->
+        <!--  https://mvnrepository.com/artifact/org.apache.camel/camel-core  -->
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-core</artifactId>
+            <version>${camel.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>tools.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/org.apache.camel/camel-spring  -->
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-spring-xml</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/org.apache.camel/camel-ftp  -->
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-ftp</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <!--  Misc  -->
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.21</version>
+        </dependency>
+        <dependency>
+            <groupId>com.memetix</groupId>
+            <artifactId>microsoft-translator-java-api</artifactId>
+            <version>0.6.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.kennycason</groupId>
+            <artifactId>kumo-core</artifactId>
+            <version>1.28</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-utils</artifactId>
+            <version>3.0.24</version>
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/joda-time/joda-time  -->
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.14.0</version>
+        </dependency>
+        <!--  https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail  -->
+        <!--  Source: https://mvnrepository.com/artifact/com.sun.mail/jakarta.mail  -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>jakarta.mail</artifactId>
+            <version>2.0.2</version>
+            <!-- <scope>compile</scope> -->
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.2.1-jre</version>
+            <!--  Check Maven Central for the latest version  -->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-shared-utils</artifactId>
+            <version>3.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-catalina</artifactId>
+            <version>10.1.50</version>
+            <!--  Use the version matching your target Tomcat server  -->
+            <scope>provided</scope>
+        </dependency>
+        <!--  Source: https://mvnrepository.com/artifact/net.bull.javamelody/javamelody-core  -->
+        <dependency>
+            <groupId>net.bull.javamelody</groupId>
+            <artifactId>javamelody-core</artifactId>
+            <version>2.6.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+
+
+
+
+        <!--  buildnumber plugin used in original. keep as plugin (not dependency)  -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>buildnumber-maven-plugin</artifactId>
+                        <version>1.3</version>
+                        <!-- 3.0.0 -->
+                        <executions>
+                            <execution>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>create</goal>
+                                </goals>
+                                <configuration>
+                                    <doUpdate>${svn.buildNumber.doUpdate}</doUpdate>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!--  Compiler  -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.7.0</version>
+                        <configuration>
+                            <release>${java-version}</release>
+                            <debug>true</debug>
+                            <debuglevel>lines,vars,source</debuglevel>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <!--  Plugin used for moving the config from ${environment} to the target
+                                    folder  -->
+                        <!--  Used for deployment  -->
+                        <!--  also used for generating version number  -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.7</version>
+                        <executions>
+                            <!--  Generates the footer version number  -->
+                            <execution>
+                                <id>preparePackageAntCreateSvnVersionPropertiesForALl</id>
+                                <phase>prepare-package</phase>
+                                <configuration>
+                                    <target description="update the properties xml file">
+                                        <tstamp>
+                                            <format property="touch.time" pattern="dd/MM/yyyy HH:mm"/>
+                                        </tstamp>
+                                        <property name="version.footer.build" value="v${project.version} ${buildNumber} (${touch.time})"/>
+                                        <!-- >
+                                                        <scriptdef name="updatescmbranch"
+                                                            language="javascript">
+                                                            <![CDATA[
+                                                                var scm = project.getProperty("version.footer.build");
+                                                                var branchPresent= scm.indexOf("branches"); if(branchPresent==0)
+                                                                {
+                                                                    scm = "Version " + scm.substring(9);
+                                                                    project.setProperty("version.footer.build", scm);
+                                                                }
+                                                            ]]>
+                                                        </scriptdef>
+                                                        <updatescmbranch /> -->
+                                        <echo>Version footer value = ${version.footer.build}</echo>
+                                        <property name="verfilename" value="${basedir}/src/main/webapp/WEB-INF/views/versionfooter.txt"/>
+                                        <echo output="${verfilename}" message="${version.footer.build}"/>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                            <!--  Generates the text file version  -->
+                            <execution>
+                                <id>preparePackageAntCreateRevisionVersionPropertiesForALl</id>
+                                <phase>prepare-package</phase>
+                                <configuration>
+                                    <target description="create version.txt for javascript refresh">
+                                        <property name="version.jscript.build" value="${buildNumber}"/>
+                                        <echo>Version in text file = ${version.jscript.build}</echo>
+                                        <property name="jscriptname" value="${basedir}/src/main/webapp/WEB-INF/views/version.txt"/>
+                                        <echo output="${jscriptname}" message="${version.jscript.build}"/>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!--  War plugin  -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>${maven.war.plugin.version}</version>
+                        <configuration>
+                            <packagingExcludes>
+                                <!-- Exclude all JARs in WEB-INF/lib -->
+                                WEB-INF/lib/jackson-core-2.19.4.jar,
+                                WEB-INF/lib/jackson-databind-2.19.4.jar
+                            </packagingExcludes>
+                            <warSourceExcludes>resources/application.properties</warSourceExcludes>
+                            <warName>eusurvey</warName>
+                        </configuration>
+                    </plugin>
+                    <!--  OWASP dependency-check as plugin  -->
+                    <!-- <plugin>
+                            <groupId>org.owasp</groupId>
+                            <artifactId>dependency-check-maven</artifactId>
+                            <version>12.1.9</version>
+                            <configuration>
+                              <nvdApiKeyEnvironmentVariable>myNvdApiKey</nvdApiKeyEnvironmentVariable>
+                              <ossIndexServerId>ossIndex</ossIndexServerId>
+                            </configuration>
+                            <executions>
+                              <execution>
+                                <goals>
+                                  <goal>check</goal>
+                                </goals>
+                              </execution>
+                            </executions>
+                          </plugin> -->

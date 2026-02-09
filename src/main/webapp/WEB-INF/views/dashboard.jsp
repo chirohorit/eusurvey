@@ -1,7 +1,6 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
-<%@ taglib prefix="esapi"
-	uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API"%>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API"%>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
 <head>
@@ -14,7 +13,7 @@
 	<script type="text/javascript" src="${contextpath}/resources/js/Chart.min.js?version=<%@include file="version.txt" %>"></script>
 	<script type="text/javascript" src="${contextpath}/resources/js/vis.min.js?version=<%@include file="version.txt" %>"></script>
 	<script type="text/javascript" src="${contextpath}/resources/js/dashboard.js?version=<%@include file="version.txt" %>"></script>
-	<script type="text/javascript" src="${contextpath}/resources/js/dashboard-add.js?version=<%@include file="version.txt" %>"></script>	
+	<script type="text/javascript" src="${contextpath}/resources/js/dashboard-add.js?version=<%@include file="version.txt" %>"></script>
 	
 	<script type="text/javascript">
 		var labelpublished = "<spring:message code='label.Published' />";
@@ -110,7 +109,7 @@
 								<div class="col-md-6" style="text-align: right" data-bind="visible: latestReplyOn() != null && latestReplyOn().length > 0">
 									<spring:message code="label.LatestReplyOn" />:
 									<a data-bind="html: latestReplyOn, attr: {href: '${contextpath}/' + latestReplyOn() + '/management/overview'}"></a>
-									<a data-toggle="tooltip" title="<spring:message code="label.ViewResults" />" data-bind="attr: {href: '${contextpath}/' + latestReplyOn() + '/management/results'}"><img style="width: 20px" src="${contextpath}/resources/images/icons/24/table.png"></a>							
+									<a data-toggle="tooltip" title="<spring:message code="label.ViewResults" />" data-bind="attr: {href: '${contextpath}/' + latestReplyOn() + '/management/results'}"><img style="width: 20px" src="${contextpath}/resources/images/icons/24/table.png"></a>
 								</div>
 							</div>				
 						
@@ -587,11 +586,11 @@
 															<!-- /ko -->
 															
 															<!-- ko if: accessResultsRights -->
-															<a rel="tooltip" data-toggle="tooltip" title="<spring:message code="label.Results" />" data-bind="attr: {href: '${contextpath}/' + shortname + '/management/results'}"><img style="width: 20px; margin-bottom: 3px;" src="${contextpath}/resources/images/icons/24/table.png"></a>							
+															<a rel="tooltip" data-toggle="tooltip" title="<spring:message code="label.Results" />" data-bind="attr: {href: '${contextpath}/' + shortname + '/management/results'}"><img style="width: 20px; margin-bottom: 3px;" src="${contextpath}/resources/images/icons/24/table.png"></a>
 															<!-- /ko -->
 															
 															<!-- ko if: !accessResultsRights -->
-															<a class="actionRowAction disabled" rel="tooltip" data-toggle="tooltip" title="<spring:message code="label.Results" />"><img style="width: 20px; margin-bottom: 3px;" src="${contextpath}/resources/images/icons/24/table_grey.png"></a>							
+															<a class="actionRowAction disabled" rel="tooltip" data-toggle="tooltip" title="<spring:message code="label.Results" />"><img style="width: 20px; margin-bottom: 3px;" src="${contextpath}/resources/images/icons/24/table_grey.png"></a>
 															<!-- /ko -->
 														</td>											
 													</tr>		

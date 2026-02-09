@@ -2,7 +2,7 @@ package com.ec.survey.model;
 
 import org.springframework.beans.factory.annotation.Configurable;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 @Configurable
 @Entity
 @Table(name="STATISTICSREQUEST")

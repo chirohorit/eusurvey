@@ -1,5 +1,7 @@
 package com.ec.survey.model.survey;
 
+import com.ec.survey.enumerator.DelphiChartDataType;
+import com.ec.survey.enumerator.DelphiChartType;
 import com.ec.survey.model.ECFCompetency;
 import com.ec.survey.tools.Tools;
 import org.hibernate.annotations.Cache;
@@ -7,7 +9,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -18,14 +20,14 @@ import java.util.Objects;
 
 @Entity
 @Inheritance (strategy=InheritanceType.SINGLE_TABLE)
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public abstract class Question extends Element {
 	
 	public static final String FEEDBACK = "FEEDBACK";
 	public static final String FIRSTCELL = "FIRSTCELL";
 	
-	private static final long serialVersionUID = 1L;
+	
 	private String help;
 	private boolean optional;
 	private boolean readonly;
@@ -163,9 +165,8 @@ public abstract class Question extends Element {
 				return DelphiChartType.Bar;
 			}
 			
-			if (this instanceof ComplexTableItem) {
-				ComplexTableItem item = (ComplexTableItem) this;
-				if (item.isChoice() || item.getCellType() == ComplexTableItem.CellType.Formula || item.getCellType() == ComplexTableItem.CellType.Number){
+			if (this instanceof ComplexTableItem item) {
+                if (item.isChoice() || item.getCellType() == ComplexTableItem.CellType.Formula || item.getCellType() == ComplexTableItem.CellType.Number){
 					return DelphiChartType.Pie;
 				}
 				else if (item.getCellType() == ComplexTableItem.CellType.FreeText) {
@@ -201,12 +202,12 @@ public abstract class Question extends Element {
 	}
 
 	@OneToMany(targetEntity = ScoringItem.class, cascade = CascadeType.ALL)
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="ELEMENTS_SCORINGITEMS",
 			inverseJoinColumns = @JoinColumn(name = "scoringItems_ID"),
 			joinColumns = @JoinColumn(name = "ELEMENTS_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
-
+	////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<ScoringItem> getScoringItems() {
 		return scoringItems;
 	}
@@ -216,7 +217,7 @@ public abstract class Question extends Element {
 	}
 
 	@ManyToOne
-	@JoinColumn(name="ECF_COMPETENCY", nullable = true)    
+	@JoinColumn(name="ECF_COMPETENCY")
 	public ECFCompetency getEcfCompetency() {
 		return ecfCompetency;
 	}	
@@ -293,11 +294,10 @@ public abstract class Question extends Element {
 		
 		if (getUseAndLogic() != null && !getUseAndLogic().equals(element.getUseAndLogic())) return true;
 
-		if (element instanceof Question)
+		if (element instanceof Question question)
 		{
-			Question question = (Question) element;
 
-			if (help != null && !help.equals(question.help))
+            if (help != null && !help.equals(question.help))
 			{
 				if (help.length() == 0 && question.help == null)
 				{

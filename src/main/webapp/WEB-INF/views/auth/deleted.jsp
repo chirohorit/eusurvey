@@ -1,4 +1,4 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %> 
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
@@ -13,7 +13,7 @@
 		<%@ include file="../header.jsp" %>	
 		
 		<<div style="margin-top: 120px; margin-bottom: 120px; text-align: center">
-	 		<spring:message code="message.AccountDeactivated" arguments="${contextpath}/home/documentation" />	 	
+	 		<spring:message code="message.AccountDeactivated" arguments="${contextpath}/home/documentation" />
 		</div>
 	
 	</div>

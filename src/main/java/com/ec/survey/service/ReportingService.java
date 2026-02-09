@@ -1,18 +1,29 @@
 package com.ec.survey.service;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.Map.Entry;
 
-import javax.annotation.Resource;
-import javax.persistence.PersistenceException;
+import jakarta.annotation.Resource;
+import jakarta.persistence.PersistenceException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.hibernate.query.Query;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -55,7 +66,7 @@ import com.ec.survey.tools.ConversionTools;
 import com.ec.survey.tools.Tools;
 
 import org.hibernate.exception.SQLGrammarException;
-
+import org.hibernate.query.NativeQuery;
 
 @Service("reportingService")
 public class ReportingService extends BasicService {
@@ -570,7 +581,7 @@ public class ReportingService extends BasicService {
 			sql += where;
 		}
 
-		NativeQuery<?> query = session.createNativeQuery(sql);
+		NativeQuery query = session.createNativeQuery(sql);
 		sqlQueryService.setParameters(query, values);
 
 		try {
@@ -581,7 +592,7 @@ public class ReportingService extends BasicService {
 			}
 
 			@SuppressWarnings("unchecked")
-			List<Object> result = Collections.singletonList(query.list());
+			List<Object> result = query.list();
 
 			for (Object o : result) {
 				List<String> row = new ArrayList<>();
@@ -611,28 +622,28 @@ public class ReportingService extends BasicService {
 								ChoiceQuestion choicequestion = (ChoiceQuestion) question;
 								String[] answerids = item.toString().split(";");
 								String v = "";
-
-								boolean isTargetDatasetQuestion = false;
+								
+								boolean isTargetDatasetQuestion = false; 
 								if (survey.getIsSelfAssessment() && question instanceof SingleChoiceQuestion ) {
 									SingleChoiceQuestion scq = (SingleChoiceQuestion) question;
 									if (scq.getIsTargetDatasetQuestion()) {
 										isTargetDatasetQuestion = true;
 									}
-								}
-
+								}								
+								
 								for (String answerid : answerids) {
 									if (v.length() > 0) v += "; ";
-
+									
 									if (isTargetDatasetQuestion) {
-
+										
 										if (doNotReplaceAnswerIDs) {
 											v += answerid;
 										} else {
-											SATargetDataset dataset = selfassessmentService.getTargetDataset(Integer.parseInt(answerid));
+											SATargetDataset dataset = selfAssessmentService.getTargetDataset(Integer.parseInt(answerid));
 											v += dataset.getName();
 										}
-
-									} else {
+										
+									} else {									
 										Element answer = choicequestion.getPossibleAnswerByUniqueId(answerid);
 										if (answer != null) {
 											if (doNotReplaceAnswerIDs) {
@@ -640,7 +651,7 @@ public class ReportingService extends BasicService {
 											} else {
 												v += answer.getStrippedTitle();
 											}
-
+	
 											if (showShortnames) {
 												v += "<span class='assignedValue hideme'>(" + answer.getShortname() + ")</span>";
 											}
@@ -850,38 +861,38 @@ public class ReportingService extends BasicService {
 			return null;
 		}
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public List<Integer> getAnswerSetIDsInternal(Survey survey, ResultFilter filter, SqlPagination sqlPagination) throws Exception {
 		Session session = sessionFactoryReporting.getCurrentSession();
-
+		
 		Map<String, Object> values = new HashMap<>();
 		String where = getWhereClause(filter, values, survey);
-
+		
 		String sql = "SELECT QANSWERSETID FROM " + getOLAPTableName(survey);
-
+		
 		if (isSecondTableUsed(survey))
 		{
 			sql += ", " + getOLAPTableName(survey) + "_1";
-		}
-
+		}		
+		
 		if (where.length() > 10)
 		{
 			sql += where;
 		}
-
-		NativeQuery<?> query = session.createNativeQuery(sql);
+		
+		NativeQuery query = session.createNativeQuery(sql);		
 		sqlQueryService.setParameters(query, values);
 
 		List<Integer> res;
-
-		try {
-			res = (List<Integer>) query.setFirstResult(sqlPagination.getFirstResult()).setMaxResults(sqlPagination.getMaxResult()).list();
+		
+		try {			
+			res = query.setFirstResult(sqlPagination.getFirstResult()).setMaxResults(sqlPagination.getMaxResult()).list();		
 			return res;
 		} catch (Exception e) {
 			return null;
-		}
+		}		
 	}
 
 	public boolean OLAPTableExistsInternal(Survey survey) {
@@ -906,7 +917,7 @@ public class ReportingService extends BasicService {
 			sql.append("SELECT 1 FROM ");
 			sql.append(this.getOLAPTableName(!isDraft, surveyUid, counter));
 			sql.append(" LIMIT 1");
-			NativeQuery<?> queryreporting = sessionReporting.createNativeQuery(sql.toString());
+			NativeQuery queryreporting = sessionReporting.createNativeQuery(sql.toString());
 			queryreporting.uniqueResult();
 			return true;
 		} catch (Exception e) {
@@ -920,23 +931,23 @@ public class ReportingService extends BasicService {
 	}
 
 	@Transactional(transactionManager = "transactionManagerReporting")
-	public boolean OLAPTableExistsInternal(String uid, boolean draft) {
+	public boolean OLAPTableExistsInternal(String uid, boolean draft) {	
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-		NativeQuery<?> query = sessionReporting.createNativeQuery("SELECT count(*) AS totalTables FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = database() AND TABLE_NAME = 'T" + (draft ? "D" : "") + uid.replace("-", "") + "';");
-
+		NativeQuery query = sessionReporting.createNativeQuery("SELECT count(*) AS totalTables FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = database() AND TABLE_NAME = 'T" + (draft ? "D" : "") + uid.replace("-", "") + "';");
+	 
 		return ConversionTools.getValue(query.uniqueResult()) > 0;
 	}
-
+	
 	@Transactional(transactionManager = "transactionManagerReporting")
 	public void deleteOLAPTableInternal(String uid, boolean draftversion, boolean publishedversion) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-		NativeQuery<?> query;
+		NativeQuery query;
 		int counter = 1;
 		if (publishedversion)
 		{
 			query = sessionReporting.createNativeQuery("DROP TABLE IF EXISTS T" + uid.replace("-", ""));
 			query.executeUpdate();
-
+			
 			while (OLAPTableExistsInternal(uid + "_" + counter, false))
 			{
 				query = sessionReporting.createNativeQuery("DROP TABLE IF EXISTS T" + uid.replace("-", "") + "_" + counter);
@@ -944,13 +955,13 @@ public class ReportingService extends BasicService {
 				counter++;
 			}
 		}
-
+		
 		counter = 1;
 		if (draftversion)
 		{
 			query = sessionReporting.createNativeQuery("DROP TABLE IF EXISTS TD" + uid.replace("-", ""));
 			query.executeUpdate();
-
+			
 			while (OLAPTableExistsInternal(uid + "_" + counter, true))
 			{
 				query = sessionReporting.createNativeQuery("DROP TABLE IF EXISTS TD" + uid.replace("-", "") + "_" + counter);
@@ -959,7 +970,7 @@ public class ReportingService extends BasicService {
 			}
 		}
 	}
-
+	
 	@Transactional(transactionManager = "transactionManagerReporting")
 	public void createOLAPTableInternal(String shortname, boolean draftversion, boolean publishedversion) throws Exception {
 		if (publishedversion)
@@ -970,7 +981,7 @@ public class ReportingService extends BasicService {
 				createOLAPTable(survey);
 			}
 		}
-
+		
 		if (draftversion)
 		{
 			//create draft survey table
@@ -1059,12 +1070,12 @@ public class ReportingService extends BasicService {
 		}
 		return columnNamesToType;
 	}
-
+	
 	private void putColumnNameAndType(Map<String, String> columnNamesToType, String uid, String type) {
 		if (columnNamesToType.containsKey(uid)) {
 			return; //Ignore
 		}
-
+		
 		columnNamesToType.put(uid, type);
 	}
 
@@ -1081,7 +1092,7 @@ public class ReportingService extends BasicService {
 
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
 		Map<String, String> expectedColumnNamesToType = this.getColumnNamesAndTypes(survey);
-		// SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME =
+		// SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = 
 		// 'te8b255c4a738405083105036263c654a_1'
 		// AND COLUMN_NAME in ('QINVITATIONID', 'QCONTRIBUTIONID')
 		StringBuilder sql = new StringBuilder();
@@ -1097,7 +1108,7 @@ public class ReportingService extends BasicService {
 			sql.append(",");
 		}
 		String sqlString = sql.substring(0, sql.length() - 1) + ")";
-		NativeQuery<?> queryReporting = sessionReporting.createNativeQuery(sqlString);
+		NativeQuery queryReporting = sessionReporting.createNativeQuery(sqlString);
 		queryReporting.setParameter("tableName", getOLAPTableName(survey, counter));
 
 		List<Object[]> actualColumnNamesAndType = (List<Object[]>) queryReporting.list();
@@ -1113,7 +1124,7 @@ public class ReportingService extends BasicService {
 			String expectedColumnType = expectedColumnNamesToType.get(expectedColumName);
 			// Verifying column name
 			if (!actualColumnNameToType.containsKey(realExpectedColumnName)){
-				logger.info("/!\\ OLAP table is missing the column " + realExpectedColumnName
+				logger.info("/!\\ OLAP table is missing the column " + realExpectedColumnName 
 				+ " for " + survey.getUniqueId()
 				+ (survey.getIsDraft() ? " (draft)" : "")
 				+ (counter == null ? "" : " counter = " + counter));
@@ -1123,7 +1134,7 @@ public class ReportingService extends BasicService {
 			// Verifying column type
 			// expected = varchar(2) actual = varchar
 			if (!expectedColumnType.startsWith(actualColumnType)) {
-				logger.info("/!\\ OLAP table column " + realExpectedColumnName
+				logger.info("/!\\ OLAP table column " + realExpectedColumnName 
 				+ " has the wrong type " + actualColumnType
 				+ " (should be " + expectedColumnType + ")"
 				+ " for " + survey.getUniqueId()
@@ -1167,7 +1178,7 @@ public class ReportingService extends BasicService {
 		if (surveyUID == null || surveyUID.isEmpty()) {
 			throw new IllegalArgumentException("surveyUID is not null and not empty");
 		}
-
+		
 		logger.info("starting reporting table validation for survey UID" + surveyUID
 				+ (isDraft ? " (draft)" : ""));
 
@@ -1177,23 +1188,23 @@ public class ReportingService extends BasicService {
 
 
 	private void createOLAPTable(Survey survey) throws Exception
-	{
+	{		
 		if (survey == null) return;
-
-		logger.info("starting creating reporting table creation for " + survey.getShortname() + (survey.getIsDraft() ? " (draft)" : ""));
+		
+		logger.info("starting creating reporting table creation for " + survey.getShortname() + (survey.getIsDraft() ? " (draft)" : ""));	
 		settingsService.update(Setting.ReportingMigrationSurveyToMigrate, survey.getShortname() + (survey.getIsDraft() ? " (draft)" : ""));
-
+		
 		Map<String,String> columns = this.getColumnNamesAndTypes(survey);
-
+				
 		if (columns.size() >= 1000)
 		{
 			logger.info("1000 columns exceeded by " + survey.getUniqueId());
 		}
-
+		
 		StringBuilder sql = new StringBuilder();
-
+		
 		sql.append("CREATE TABLE ").append(getOLAPTableName(survey)).append(" (");
-
+		
 		boolean first = true;
 		int counter = 0;
 		int tablecounter = 1;
@@ -1205,9 +1216,9 @@ public class ReportingService extends BasicService {
 			} else {
 				sql.append(", ");
 			}
-
+			
 			sql.append("Q").append(entry.getKey().replace("-", "")).append(" ").append(entry.getValue());
-
+			
 			counter++;
 			if (counter > 1000)
 			{
@@ -1225,17 +1236,17 @@ public class ReportingService extends BasicService {
 				tablecounter++;
 			}
 		}
-
+		
 		sql.append(" ) ENGINE=MYISAM");
-
+		
 		executeInternal(sql.toString());
-
+		
 		analyseAnswers(survey, null, true);
-
-		logger.info("finished creating reporting table creation for " + survey.getShortname());
+			
+		logger.info("finished creating reporting table creation for " + survey.getShortname());	
 		settingsService.update(Setting.ReportingMigrationSurveyToMigrate, "");
 	}
-
+	
 	@Transactional(transactionManager = "transactionManagerReporting")
 	public void updateOLAPTableInternal(String shortname, boolean draftversion, boolean publishedversion) throws Exception {
 		if (publishedversion)
@@ -1246,14 +1257,14 @@ public class ReportingService extends BasicService {
 				if (!OLAPTableExistsInternal(survey.getUniqueId(), false))
 				{
 					createOLAPTableInternal(survey.getUniqueId(), false, true);
-				} else {
+				} else {			
 					updateOLAPTable(survey);
 				}
-
+				
 				answerService.deleteStatisticsForSurvey(survey.getId());
 			}
 		}
-
+		
 		if (draftversion)
 		{
 			Survey draft = surveyService.getSurvey(shortname, true, false, false, true, null, true, false);
@@ -1262,10 +1273,10 @@ public class ReportingService extends BasicService {
 				if (!OLAPTableExistsInternal(draft.getUniqueId(), true))
 				{
 					createOLAPTableInternal(draft.getUniqueId(), true, false);
-				} else {
+				} else {			
 					updateOLAPTable(draft);
 				}
-
+				
 				answerService.deleteStatisticsForSurvey(draft.getId());
 			}
 		}
@@ -1278,12 +1289,12 @@ public class ReportingService extends BasicService {
 		}
 		return tableName;
 	}
-
+	
 	private String getOLAPTableName(Survey survey)
 	{
 		return getOLAPTableName(!survey.getIsDraft(), survey.getUniqueId());
 	}
-
+		
 	private String getOLAPTableName(boolean publishedSurvey, String uid) {
 		return this.getOLAPTableName(publishedSurvey, uid, null);
 	}
@@ -1301,111 +1312,111 @@ public class ReportingService extends BasicService {
 		}
 		return tableName;
 	}
-
-	private void updateOLAPTable(Survey survey) throws Exception {
+	
+	private void updateOLAPTable(Survey survey) throws Exception {		
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-		NativeQuery<?> queryreporting = sessionReporting.createNativeQuery("SELECT MAX(QUPDATED) FROM " + getOLAPTableName(survey));
+		NativeQuery queryreporting = sessionReporting.createNativeQuery("SELECT MAX(QUPDATED) FROM " + getOLAPTableName(survey));
 		Date lastReportDate = (Date) queryreporting.uniqueResult();
 		Date lastAnswerDate = survey.getIsDraft() ? answerService.getNewestTestAnswerDate(survey.getId()) : answerService.getNewestAnswerDate(survey.getId());
-
+		
 		if (Tools.isEqual(lastReportDate, lastAnswerDate))
 		{
 			logger.info("no new answers");
 			return;
 		}
-
+		
 		analyseAnswers(survey, lastReportDate, false);
 	}
-
+	
 	private void analyseAnswers(Survey survey, Date lastReportDate, boolean create) throws Exception
 	{
 		Session session;
 		session = sessionFactory.getCurrentSession();
-
+		
 		List<Integer> allVersions = surveyService.getAllSurveyVersions(survey.getId());
-		String hql = "SELECT a.id FROM AnswersSet a WHERE a.isDraft = false AND a.surveyId IN (" + StringUtils.collectionToCommaDelimitedString(allVersions) + ")";
-
+		String hql = "SELECT a.id FROM AnswerSet a WHERE a.isDraft = false AND a.surveyId IN (" + StringUtils.collectionToCommaDelimitedString(allVersions) + ")";		
+		
 		if (lastReportDate != null)
 		{
 			hql += " AND a.updateDate > :start";
 		}
-
-		Query<?> query = session.createNativeQuery(hql);
-
+		
+		Query query = session.createQuery(hql);
+		
 		if (lastReportDate != null)
 		{
 			query.setParameter("start", lastReportDate);
 		}
-
+		
 		query.setFetchSize(Integer.MIN_VALUE);
 		query.setReadOnly(true);
 		query.setCacheable(false);
-
+		
 		@SuppressWarnings("rawtypes")
 		List results = query.list();
-
-		for (Object o : results)
+			
+		for (Object o : results) 
 		{
 			int id = ConversionTools.getValue(o);
 			AnswerSet answerSet = answerService.get(id, true);
 			parseAnswerSetForReportingTable(answerSet, create, survey);
 			session.evict(answerSet);
 		}
-
+		
 		logger.info(results.size() + " new answers copied");
 	}
-
+		
 	private void executeInternal(String sql) {
 		lastQuery = sql;
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-		NativeQuery<?> createQuery = sessionReporting.createNativeQuery(sql);
-		createQuery.executeUpdate();
+		NativeQuery createQuery = sessionReporting.createNativeQuery(sql);
+		createQuery.executeUpdate();		
 	}
 
 	private void parseAnswerSetForReportingTable(AnswerSet answerSet, boolean create, Survey survey) throws Exception
 	{
 		List<String> columns = new ArrayList<>();
 		Map<String, String> columnByParent = new HashMap<>();
-		List<String> values = new ArrayList<>();
-
-		HashMap<String, Object> parameters = new HashMap<>();
+		List<String> values = new ArrayList<>();		
+		
+		HashMap<String, Object> parameters = new HashMap<>();	
 
 		columns.add("INVITATIONID");
 		values.add(answerSet.getInvitationId() != null && answerSet.getInvitationId().length() > 0 ? "'" + answerSet.getInvitationId() + "'" : null);
-
+		
 		columns.add("CONTRIBUTIONID");
 		values.add(answerSet.getUniqueCode() != null && answerSet.getUniqueCode().length() > 0 ? "'" + answerSet.getUniqueCode() + "'" : null);
-
+		
 		columns.add("USER");
 		values.add(":value" + parameters.size());
-		parameters.put("value" + parameters.size(), answerSet.getResponderEmail() != null && answerSet.getResponderEmail().length() > 0 ? answerSet.getResponderEmail() : null);
-
-		columns.add("CREATED");
+		parameters.put("value" + parameters.size(), answerSet.getResponderEmail() != null && answerSet.getResponderEmail().length() > 0 ? answerSet.getResponderEmail() : null);	
+		
+		columns.add("CREATED");			
 		values.add(":value" + parameters.size());
-		parameters.put("value" + parameters.size(), answerSet.getDate());
-
+		parameters.put("value" + parameters.size(), answerSet.getDate());			
+		
 		columns.add("UPDATED");
 		values.add(":value" + parameters.size());
 		parameters.put("value" + parameters.size(), answerSet.getUpdateDate());
-
+		
 		columns.add("LANGUAGE");
 		values.add(answerSet.getLanguageCode() != null && answerSet.getLanguageCode().length() > 0 ? "'" + answerSet.getLanguageCode() + "'" : null);
-
+		
 		columns.add("SCORE");
 		values.add(answerSet.getScore() != null ? answerSet.getScore().toString() : null);
-
+		
 		columns.add("ECFPROFILEUID");
 		values.add(answerSet.getEcfProfileUid() != null && answerSet.getEcfProfileUid().length() > 0 ? "'" + answerSet.getEcfProfileUid() + "'" : null);
-
+		
 		columns.add("ECFTOTALSCORE");
 		values.add(answerSet.getEcfTotalScore() != null ? answerSet.getEcfTotalScore().toString() : null);
-
+		
 		columns.add("ECFTOTALGAP");
 		values.add(answerSet.getEcfTotalGap() != null ? answerSet.getEcfTotalGap().toString() : null);
-
+		
 		columns.add("ANSWERSETID");
 		values.add(answerSet.getId().toString());
-
+		
 		for (Element question : survey.getQuestions())
 		{
 			if (question instanceof FreeTextQuestion || question instanceof EmailQuestion || question instanceof RegExQuestion)
@@ -1415,7 +1426,7 @@ public class ReportingService extends BasicService {
 				values.add(":value" + parameters.size());
 				parameters.put("value" + parameters.size(), !answers.isEmpty() ? shrink(answers.get(0).getValue()) : null);
 			} else if (question instanceof NumberQuestion || question instanceof FormulaQuestion) {
-				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());
+				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());				
 				Double num = null;
 				if (!answers.isEmpty())
 				{
@@ -1424,22 +1435,22 @@ public class ReportingService extends BasicService {
 					} catch (Exception e) {
 						num = 0.0;
 					}
-				}
+				}											
 				columns.add(question.getUniqueId());
 				values.add(":value" + parameters.size());
-				parameters.put("value" + parameters.size(), num);
+				parameters.put("value" + parameters.size(), num);			
 			} else if (question instanceof DateQuestion) {
-				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());
+				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());				
 				Date d = null;
 				if (!answers.isEmpty())
 				{
-					d = ConversionTools.getDate(answers.get(0).getValue());
+					d = ConversionTools.getDate(answers.get(0).getValue());						
 				}
 				columns.add(question.getUniqueId());
 				values.add(":value" + parameters.size());
 				parameters.put("value" + parameters.size(), d);
 			} else if (question instanceof TimeQuestion) {
-				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());
+				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());				
 				String d = null;
 				if (!answers.isEmpty())
 				{
@@ -1450,9 +1461,9 @@ public class ReportingService extends BasicService {
 				}
 				columns.add(question.getUniqueId());
 				values.add(":value" + parameters.size());
-				parameters.put("value" + parameters.size(), d);
+				parameters.put("value" + parameters.size(), d);			
 			} else if (question instanceof ChoiceQuestion) {
-				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());
+				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());				
 				columns.add(question.getUniqueId());
 				String v = null;
 				if (!answers.isEmpty())
@@ -1471,9 +1482,9 @@ public class ReportingService extends BasicService {
 					}
 					v += "'";
 				}
-				values.add(v);
+				values.add(v);				
 			} else if (question instanceof Matrix) {
-				Matrix matrix = (Matrix) question;
+				Matrix matrix = (Matrix) question;				
 				for(Element matrixQuestion: matrix.getQuestions()) {
 					List<Answer> answers = answerSet.getAnswers(matrixQuestion.getUniqueId());
 					String v = null;
@@ -1487,12 +1498,12 @@ public class ReportingService extends BasicService {
 						}
 						v += "'";
 					}
-
+					
 					if (columns.contains(matrixQuestion.getUniqueId()))
 					{
 						logger.info("multiple table rows with same uid: " + matrixQuestion.getUniqueId() + " - " + columnByParent.get(matrixQuestion.getUniqueId()) + " and " + matrix.getUniqueId());
 					} else {
-						columns.add(matrixQuestion.getUniqueId());
+						columns.add(matrixQuestion.getUniqueId());				
 						values.add(v);
 					}
 				}
@@ -1505,26 +1516,26 @@ public class ReportingService extends BasicService {
 					int col = 0;
 					for (Element ta : table.getAnswers())
 					{
-						col++;
-						String answer = shrink(answerSet.getTableAnswer(table, row, col, false));
+						col++;				
+						String answer = shrink(answerSet.getTableAnswer(table, row, col, false));							
 						String hash = Tools.md5hash(tq.getUniqueId() + ta.getUniqueId());
-
+						
 						if (columns.contains(hash))
 						{
 							logger.info("multiple table rows with same uid: " + hash + " - " + columnByParent.get(hash) + " and " + table.getUniqueId());
-						} else {
-							columns.add(hash);
+						} else {						
+							columns.add(hash);						
 							columnByParent.put(hash, table.getUniqueId());
-
+							
 							values.add(":value" + parameters.size());
-							parameters.put("value" + parameters.size(), shrink(answer));
+							parameters.put("value" + parameters.size(), shrink(answer));						
 						}
 					}
 				}
-
+				
 			} else if (question instanceof Upload) {
 				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());
-				String v = null;
+				String v = null; 
 				if (!answers.isEmpty())
 				{
 					v = "'";
@@ -1536,8 +1547,8 @@ public class ReportingService extends BasicService {
 						}
 					}
 					v += "'";
-				}
-
+				}					
+				
 				columns.add(question.getUniqueId());
 				values.add(v);
 			} else if (question instanceof GalleryQuestion) {
@@ -1545,7 +1556,7 @@ public class ReportingService extends BasicService {
 				if (gallery.getSelection())
 				{
 					List<Answer> answers = answerSet.getAnswers(question.getUniqueId());
-					String v = null;
+					String v = null; 
 					if (!answers.isEmpty())
 					{
 						v = "'";
@@ -1553,40 +1564,40 @@ public class ReportingService extends BasicService {
 						{
 							if (!StringUtils.isEmpty(answer.getPossibleAnswerUniqueId())) {
 								v += answer.getPossibleAnswerUniqueId() + ";";
-							} else {
+							} else {							
 								v += answer.getValue() + ";";
 							}
 						}
 						v += "'";
-					}
-
+					}					
+					
 					columns.add(question.getUniqueId());
 					values.add(v);
 				}
 			} else if (question instanceof RatingQuestion) {
-
+				
 				RatingQuestion rating = (RatingQuestion) question;
-
+				
 				for(Element ratingQuestion: rating.getQuestions()) {
 					List<Answer> answers = answerSet.getAnswers(ratingQuestion.getUniqueId());
-					columns.add(ratingQuestion.getUniqueId());
+					columns.add(ratingQuestion.getUniqueId());		
 					values.add(answers.isEmpty() ? null : "'" + answers.get(0).getValue() + "'");
 				}
 			} else if (question instanceof RankingQuestion) {
-				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());
+				List<Answer> answers = answerSet.getAnswers(question.getUniqueId());				
 				String d = null;
 				if (!answers.isEmpty())
 				{
-					d = answers.get(0).getValue();
+					d = answers.get(0).getValue();						
 				}
 				columns.add(question.getUniqueId());
 				values.add(":value" + parameters.size());
-				parameters.put("value" + parameters.size(), d);
+				parameters.put("value" + parameters.size(), d);	
 			} else if (question instanceof ComplexTable) {
-
+				
 				ComplexTable table = (ComplexTable) question;
-
-				for(ComplexTableItem child: table.getQuestionChildElements()) {
+				
+				for(ComplexTableItem child: table.getQuestionChildElements()) {				
 					if (child.getCellType() == ComplexTableItem.CellType.FreeText)
 					{
 						List<Answer> answers = answerSet.getAnswers(child.getUniqueId());
@@ -1594,7 +1605,7 @@ public class ReportingService extends BasicService {
 						values.add(":value" + parameters.size());
 						parameters.put("value" + parameters.size(), !answers.isEmpty() ? shrink(answers.get(0).getValue()) : null);
 					} else if (child.getCellType() == ComplexTableItem.CellType.Number || child.getCellType() == ComplexTableItem.CellType.Formula) {
-						List<Answer> answers = answerSet.getAnswers(child.getUniqueId());
+						List<Answer> answers = answerSet.getAnswers(child.getUniqueId());				
 						Double num = null;
 						if (!answers.isEmpty())
 						{
@@ -1603,12 +1614,12 @@ public class ReportingService extends BasicService {
 							} catch (Exception e) {
 								num = 0.0;
 							}
-						}
+						}											
 						columns.add(child.getUniqueId());
 						values.add(":value" + parameters.size());
-						parameters.put("value" + parameters.size(), num);
+						parameters.put("value" + parameters.size(), num);			
 					} else if (child.getCellType() == ComplexTableItem.CellType.SingleChoice || child.getCellType() == ComplexTableItem.CellType.MultipleChoice) {
-						List<Answer> answers = answerSet.getAnswers(child.getUniqueId());
+						List<Answer> answers = answerSet.getAnswers(child.getUniqueId());				
 						columns.add(child.getUniqueId());
 						String v = null;
 						if (!answers.isEmpty())
@@ -1621,44 +1632,44 @@ public class ReportingService extends BasicService {
 							}
 							v += "'";
 						}
-						values.add(v);
-					}
+						values.add(v);				
+					}					
 				}
 			}
 		}
-
-		StringBuilder row = new StringBuilder();
+		
+		StringBuilder row = new StringBuilder(); 
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-
+		
 		if (!create)
 		{
 			row.append("DELETE FROM ");
 			row.append(getOLAPTableName(survey));
 			row.append(" WHERE QANSWERSETID = ");
 			row.append(answerSet.getId());
-
-			NativeQuery<?> deleteQuery = sessionReporting.createNativeQuery(row.toString());
+			
+			NativeQuery deleteQuery = sessionReporting.createNativeQuery(row.toString());
 			deleteQuery.executeUpdate();
-			row = new StringBuilder();
-
+			row = new StringBuilder(); 
+			
 			if (columns.size() > 1000)
 			{
 				row.append("DELETE FROM ");
 				row.append(getOLAPTableName(survey));
 				row.append("_1 WHERE QANSWERSETID = ");
 				row.append(answerSet.getId());
-
+				
 				deleteQuery = sessionReporting.createNativeQuery(row.toString());
 				deleteQuery.executeUpdate();
-				row = new StringBuilder();
+				row = new StringBuilder(); 
 			}
 		}
-
+		
 		int counter = 0;
 		int tablecounter = 0;
-
+		
 		StringBuilder cols = new StringBuilder();
-		StringBuilder vals = new StringBuilder();
+		StringBuilder vals = new StringBuilder();		
 
 		boolean first = true;
 		for (int i = 0; i < columns.size(); i++)
@@ -1675,7 +1686,7 @@ public class ReportingService extends BasicService {
 			cols.append("Q").append(col.replace("-", ""));
 			vals.append(val);
 			counter++;
-
+			
 			if (counter > 1000) {
 				row.append("INSERT INTO ");
 				row.append(getOLAPTableName(survey));
@@ -1689,27 +1700,27 @@ public class ReportingService extends BasicService {
 				row.append(" ) VALUES ( ");
 				row.append(vals.toString());
 				row.append(" );");
-
+				
 				lastQuery = row.toString();
-				NativeQuery<?> createQuery = sessionReporting.createNativeQuery(lastQuery);
+				NativeQuery createQuery = sessionReporting.createNativeQuery(lastQuery);				
 				sqlQueryService.setParameters(createQuery, parameters);
 				createQuery.executeUpdate();
-
+				
 				counter = 0;
 				tablecounter++;
-				row = new StringBuilder();
+				row = new StringBuilder(); 
 				cols = new StringBuilder();
 				vals = new StringBuilder();
-
+				
 				cols.append("QANSWERSETID");
 				vals.append(answerSet.getId());
 			}
 		}
-
+		
 		if (counter > 0) {
 			row.append("INSERT INTO ");
 			row.append(getOLAPTableName(survey));
-
+			
 			if (tablecounter > 0)
 			{
 				row.append("_");
@@ -1720,20 +1731,20 @@ public class ReportingService extends BasicService {
 			row.append(" ) VALUES ( ");
 			row.append(vals.toString());
 			row.append(" );");
-
+			
 			lastQuery = row.toString();
-			NativeQuery<?> createQuery = sessionReporting.createNativeQuery(lastQuery);
+			NativeQuery createQuery = sessionReporting.createNativeQuery(lastQuery);				
 			sqlQueryService.setParameters(createQuery, parameters);
 			createQuery.executeUpdate();
 		}
 	}
-
+	
 	public static String lastQuery;
-
+	
 	public void removeFromOLAPTableInternal(String surveyUID, String code, boolean publishedSurvey) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
 		StringBuilder query = new StringBuilder();
-
+		
 		if (OLAPTableExistsInternal(surveyUID, !publishedSurvey))
 		{
 			//get the answerset id first
@@ -1741,7 +1752,7 @@ public class ReportingService extends BasicService {
 			query.append(getOLAPTableName(publishedSurvey, surveyUID));
 			query.append(" WHERE QCONTRIBUTIONID = '");
 			query.append(code).append("'");
-			NativeQuery<?> selectQuery = sessionReporting.createNativeQuery(query.toString());
+			NativeQuery selectQuery = sessionReporting.createNativeQuery(query.toString());
 			Object result = selectQuery.uniqueResult();
 			if (result == null)
 			{
@@ -1749,15 +1760,15 @@ public class ReportingService extends BasicService {
 			}
 			int answerSetId = ConversionTools.getValue(result);
 			query = new StringBuilder();
-
+			
 			query.append("DELETE FROM ");
 			query.append(getOLAPTableName(publishedSurvey, surveyUID));
 			query.append(" WHERE QANSWERSETID = ");
 			query.append(answerSetId);
-
-			NativeQuery<?> deleteQuery = sessionReporting.createNativeQuery(query.toString());
+			
+			NativeQuery deleteQuery = sessionReporting.createNativeQuery(query.toString());
 			deleteQuery.executeUpdate();
-
+			
 			//also remove from additional tables
 			int counter = 1;
 			while (OLAPTableExistsInternal(surveyUID + "_" + counter, !publishedSurvey))
@@ -1767,14 +1778,14 @@ public class ReportingService extends BasicService {
 				query.append(getOLAPTableName(publishedSurvey, surveyUID) + "_" + counter);
 				query.append(" WHERE QANSWERSETID = ");
 				query.append(answerSetId);
-
+				
 				deleteQuery = sessionReporting.createNativeQuery(query.toString());
 				deleteQuery.executeUpdate();
 				counter++;
 			}
 		}
 	}
-
+	
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public int getCount(Survey survey) {
 		return this.getCountInternal(survey.getIsDraft(), survey.getUniqueId());
@@ -1798,17 +1809,17 @@ public class ReportingService extends BasicService {
 			sql += where;
 		}
 
-		Query<?> query = sessionReporting.createQuery(sql);
+		NativeQuery query = sessionReporting.createNativeQuery(sql);
 
 		if (where != null && values != null && !values.isEmpty()) {
 			for (String attrib : values.keySet()) {
 				Object value = values.get(attrib);
 				if (value instanceof String) {
-					query.setParameter((String) attrib, (String) values.get(attrib));
+					query.setParameter(attrib, (String) values.get(attrib));
 				} else if (value instanceof Integer) {
-					query.setParameter((String) attrib, (Integer) values.get(attrib));
+					query.setParameter(attrib, (Integer) values.get(attrib));
 				} else if (value instanceof Date) {
-					query.setParameter((String)attrib, (Date) values.get(attrib));
+					query.setParameter(attrib, (Date) values.get(attrib));
 				}
 			}
 		}
@@ -1825,54 +1836,53 @@ public class ReportingService extends BasicService {
 	public int getCountInternal(Survey survey, String where, Map<String, Object> values) {
 		return this.getCountInternal(survey.getIsDraft(), survey.getUniqueId(), where, values);
 	}
-
+	
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public int getCountInternal(Survey survey, String quid, String auid, boolean noPrefixSearch, boolean noPostfixSearch, boolean noUUIDs, String where, Map<String, Object> values) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-
+		
 		String sql = "SELECT COUNT(*) FROM " + getOLAPTableName(survey) + " WHERE Q" + quid.replace("-", "");
 		if (auid == null) {
 			sql += " IS NOT NULL";
 		} else if (noPrefixSearch && noPostfixSearch) {
-			sql += " LIKE '" + auid + "'";
+			sql += " LIKE '" + auid + "'";			
 		} else if (noPrefixSearch) {
 			sql += " LIKE '" + auid + "%'";
 		} else {
 			sql += " LIKE '%" + auid + "%'";
 		}
-
+		
 		if (noUUIDs) {
-			sql += " AND Q" + quid.replace("-", "") + " NOT LIKE '%-%'";
+			sql += " AND Q" + quid.replace("-", "") + " NOT LIKE '%-%'";			
 		}
-
+		
 		if (where != null)
 		{
 			sql += " AND QANSWERSETID IN (SELECT QANSWERSETID FROM " + getOLAPTableName(survey) + " " + where + ")";
 		}
-
-		NativeQuery<?> query = sessionReporting.createNativeQuery(sql);
-
+		
+		NativeQuery query = sessionReporting.createNativeQuery(sql);
+		
 		if (where != null)
 		{
 			for (String attrib : values.keySet()) {
 				Object value = values.get(attrib);
 				if (value instanceof String)
 				{
-                    query.setParameter((String)attrib, (String) values.get(attrib));
+					query.setParameter(attrib, (String)values.get(attrib));
 				} else if (value instanceof Integer)
 				{
-                    query.setParameter((String)attrib, (Integer) values.get(attrib));
+					query.setParameter(attrib, (Integer)values.get(attrib));
 				}  else if (value instanceof Date)
 				{
-                    query.setParameter((String)attrib, (Date) values.get(attrib));
-
+					query.setParameter(attrib, (Date)values.get(attrib));
 				}
 			}
-		}
-
+		}		
+		
 		return ConversionTools.getValue(query.uniqueResult());
-	}
-
+	}	
+	
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public int getAnswerSetsByQuestionUIDInternal(Survey survey, String quid, Map<Integer, Set<String>> answersByAnswerSetID, String where, Map<String, Object> values) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
@@ -1884,21 +1894,18 @@ public class ReportingService extends BasicService {
 
 		sql += " ORDER BY QCREATED DESC";
 
-		NativeQuery<?> query = sessionReporting.createNativeQuery(sql);
+		NativeQuery query = sessionReporting.createNativeQuery(sql);
 
 		if (where != null && values != null && !values.isEmpty()) {
 			for (String attrib : values.keySet()) {
 				Object value = values.get(attrib);
-                if (value instanceof String)
-                {
-                    query.setParameter((String)attrib, (String) values.get(attrib));
-                } else if (value instanceof Integer)
-                {
-                    query.setParameter((String)attrib, (Integer) values.get(attrib));
-                }  else if (value instanceof Date)
-                {
-                    query.setParameter((String)attrib, (Date) values.get(attrib));
-                }
+				if (value instanceof String) {
+					query.setParameter(attrib, (String) values.get(attrib));
+				} else if (value instanceof Integer) {
+					query.setParameter(attrib, (Integer) values.get(attrib));
+				} else if (value instanceof Date) {
+					query.setParameter(attrib, (Date) values.get(attrib));
+				}
 			}
 		}
 
@@ -1920,37 +1927,36 @@ public class ReportingService extends BasicService {
 		}
 		return length;
 	}
-
+	
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public List<String> getAnswersByQuestionUIDInternal(Survey survey, String quid, String where, Map<String, Object> values) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
 		String sql = "SELECT Q" + quid.replace("-", "") + " FROM " + getOLAPTableName(survey);
-
+		
 		if (where != null) {
 			sql += where;
 		}
 
-		NativeQuery<?> query = sessionReporting.createNativeQuery(sql);
+		NativeQuery query = sessionReporting.createNativeQuery(sql);
 
 		if (where != null && values != null && !values.isEmpty()) {
 			for (String attrib : values.keySet()) {
 				Object value = values.get(attrib);
-                if (value instanceof String) {
-                    query.setParameter((String)attrib, (String) values.get(attrib));
-                } else if (value instanceof Integer) {
-                    query.setParameter((String)attrib, (Integer) values.get(attrib));
-                } else if (value instanceof Double) {
-                    query.setParameter((String)attrib, (Double) values.get(attrib));
-                } else if (value instanceof Date) {
-                    query.setParameter((String)attrib, (Date) values.get(attrib));
-                }
-
+				if (value instanceof String) {
+					query.setParameter(attrib, (String) values.get(attrib));
+				} else if (value instanceof Integer) {
+					query.setParameter(attrib, (Integer) values.get(attrib));
+				} else if (value instanceof Double) {
+					query.setParameter(attrib, (Double) values.get(attrib));
+				} else if (value instanceof Date) {
+					query.setParameter(attrib, (Date) values.get(attrib));
+				}
 			}
 		}
-
+		
 		List<String> result = new ArrayList<>();
 
-		for (Object answer : query.list()) {
+		for (Object answer : query.list()) {	
 			if (answer != null) {
 				result.add(answer.toString());
 			}
@@ -1964,48 +1970,48 @@ public class ReportingService extends BasicService {
 	}
 
 	@Transactional(readOnly = false, transactionManager = "transactionManagerReporting")
-	public void addToDoInternal(ToDo todo, String uid, String code) {
+	public void addToDoInternal(ToDo todo, String uid, String code) { 
 		this.addToDoInternal(todo, uid, code, false);
 	}
 
 	@Transactional(readOnly = false, transactionManager = "transactionManagerReporting")
 	public void addToDoInternal(ToDo todo, String uid, String code, boolean executeTodoSynchronously) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-
+		
 		//check if table exists
 		try {
-			NativeQuery<?> querytodoexists = sessionReporting.createNativeQuery("SELECT 1 FROM TODO LIMIT 1");
+			NativeQuery querytodoexists = sessionReporting.createNativeQuery("SELECT 1 FROM TODO LIMIT 1");
 			querytodoexists.uniqueResult();
 			//table exists
 		} catch (Exception e) {
 			//table does not exist: create it:
-			Query<?> querycreate = sessionReporting.createNativeQuery("CREATE TABLE TODO (ID INT NOT NULL AUTO_INCREMENT, TYPE INT, UID VARCHAR(36), CODE VARCHAR(36), PRIMARY KEY (ID))");
+			NativeQuery querycreate = sessionReporting.createNativeQuery("CREATE TABLE TODO (ID INT NOT NULL AUTO_INCREMENT, TYPE INT, UID VARCHAR(36), CODE VARCHAR(36), PRIMARY KEY (ID))");
 			querycreate.executeUpdate();
-
-			NativeQuery<?> queryindex = sessionReporting.createNativeQuery("CREATE UNIQUE INDEX IDXUNIQUE ON TODO (TYPE, UID, CODE)");
+			
+			NativeQuery queryindex = sessionReporting.createNativeQuery("CREATE UNIQUE INDEX IDXUNIQUE ON TODO (TYPE, UID, CODE)");
 			queryindex.executeUpdate();
 		}
 
 		boolean similarEntryPresent = false;
-
-		if (todo == ToDo.NEWCONTRIBUTION || todo == ToDo.NEWTESTCONTRIBUTION) {
+		
+		if (todo == ToDo.NEWCONTRIBUTION || todo == ToDo.NEWTESTCONTRIBUTION) {		
 			//check if there is a similar entry
-			NativeQuery<?> querytodoexists = sessionReporting.createNativeQuery("SELECT ID FROM TODO WHERE TYPE = :type AND UID = :uid LIMIT 1");
-			querytodoexists.setParameter("type", (Integer) todo.getValue());
-			querytodoexists.setParameter("uid", (String) uid);
+			NativeQuery querytodoexists = sessionReporting.createNativeQuery("SELECT ID FROM TODO WHERE TYPE = :type AND UID = :uid LIMIT 1");
+			querytodoexists.setParameter("type", todo.getValue());
+			querytodoexists.setParameter("uid", uid);
 			@SuppressWarnings("rawtypes")
 			List results = querytodoexists.list();
-
+			
 			if (!results.isEmpty()) {
 				similarEntryPresent = true;
 			}
 		}
 
 		if (!similarEntryPresent) {
-			NativeQuery<?> queryinsert = sessionReporting.createNativeQuery("INSERT INTO TODO (ID, TYPE, UID, CODE) VALUES (null, :type, :uid, :code)");
-			queryinsert.setParameter("type", (Integer) todo.getValue());
-			queryinsert.setParameter("uid", (String) uid);
-			queryinsert.setParameter("code", (String) code);
+			NativeQuery queryinsert = sessionReporting.createNativeQuery("INSERT INTO TODO (ID, TYPE, UID, CODE) VALUES (null, :type, :uid, :code)");
+			queryinsert.setParameter("type", todo.getValue());
+			queryinsert.setParameter("uid", uid);
+			queryinsert.setParameter("code", code);
 			try {
 				queryinsert.executeUpdate();
 			} catch (PersistenceException pe) {
@@ -2025,55 +2031,55 @@ public class ReportingService extends BasicService {
 			}
 		}
 	}
-
+	
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public List<ToDoItem> getToDosInternal(int page, int rowsPerPage) {
 		List<ToDoItem> todos = new ArrayList<>();
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-
+		
 		//check if TODO table exists
 		try {
-			NativeQuery<?> querytodoexists = sessionReporting.createNativeQuery("SELECT 1 FROM TODO LIMIT 1");
+			NativeQuery querytodoexists = sessionReporting.createNativeQuery("SELECT 1 FROM TODO LIMIT 1");
 			querytodoexists.uniqueResult();
 			//table exists
 		} catch (Exception e) {
 			return todos;
-		}
-
-		NativeQuery<?> query = sessionReporting.createNativeQuery("SELECT ID, TYPE, UID, CODE FROM TODO ORDER BY ID ASC");
-
+		}		
+	
+		NativeQuery query = sessionReporting.createNativeQuery("SELECT ID, TYPE, UID, CODE FROM TODO ORDER BY ID ASC");
+		
 		@SuppressWarnings("rawtypes")
 		List results;
-
+		
 		if (page > -1)
 		{
 			results = query.setFirstResult(page * rowsPerPage).setMaxResults(rowsPerPage).setReadOnly(true).list();
 		} else {
 			results = query.setReadOnly(true).list();
 		}
-
+		
 		for (Object o: results)
 		{
 			Object[] a = (Object[]) o;
 			todos.add(new ToDoItem(ConversionTools.getValue(a[0]), ConversionTools.getValue(a[1]), (String)a[2], (String)a[3]));
 		}
-
+		
 		return todos;
 	}
-
+	
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public ToDoItem getToDoInternal(int id) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-		NativeQuery<?> query = sessionReporting.createNativeQuery("SELECT ID, TYPE, UID, CODE FROM TODO WHERE ID = :id");
+		NativeQuery query = sessionReporting.createNativeQuery("SELECT ID, TYPE, UID, CODE FROM TODO WHERE ID = :id");
 		@SuppressWarnings("rawtypes")
-		List result = query.setParameter("id", (Integer) id).list();
-
+		List result = query.setParameter("id", id).list();
+		
 		for (Object o: result)
 		{
 			Object[] a = (Object[]) o;
 			return new ToDoItem(ConversionTools.getValue(a[0]), ConversionTools.getValue(a[1]), (String)a[2], (String)a[3]);
 		}
-
+		
 		return null;
 	}
 
@@ -2204,35 +2210,35 @@ public class ReportingService extends BasicService {
 				}
 				break;
 		}
-
+		
 		removeToDoInternal(todo, removeSimilar);
 	}
-
+		
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public int getNumberOfToDosInternal() {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-		NativeQuery<?> query = sessionReporting.createNativeQuery("SELECT COUNT(*) FROM TODO");
-
-		try {
+		NativeQuery query = sessionReporting.createNativeQuery("SELECT COUNT(*) FROM TODO");
+		
+		try {		
 			return ConversionTools.getValue(query.uniqueResult());
 		} catch (Exception e) {
 			return 0;
-		}
+		}		
 	}
-
+	
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public int getNumberOfTablesInternal()
 	{
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-		NativeQuery<?> query = sessionReporting.createNativeQuery("SELECT count(*) AS totalTables FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = database() AND TABLE_NAME != 'todo' AND NOT TABLE_NAME LIKE '%\\_%';");
-
-		try {
+		NativeQuery query = sessionReporting.createNativeQuery("SELECT count(*) AS totalTables FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = database() AND TABLE_NAME != 'todo' AND NOT TABLE_NAME LIKE '%\\_%';");
+		
+		try {		 
 			return ConversionTools.getValue(query.uniqueResult());
 		} catch (Exception e) {
 			return 0;
-		}
+		}		
 	}
-
+	
 	@Transactional(readOnly = false, transactionManager = "transactionManagerReporting")
 	public void removeToDoInternal(ToDoItem todo, boolean includesimilar) {
 		if (includesimilar)
@@ -2244,11 +2250,11 @@ public class ReportingService extends BasicService {
 			} else {
 				sql += " AND Code = :code";
 			}
-			NativeQuery<?> query = sessionReporting.createNativeQuery(sql);
-			query.setParameter("type", (Integer) todo.Type.value);
-			query.setParameter("uid", (String)todo.UID);
+			NativeQuery query = sessionReporting.createNativeQuery(sql);
+			query.setParameter("type", todo.Type.value);
+			query.setParameter("uid", todo.UID);
 			if (todo.Code != null) {
-				query.setParameter("code", (String) todo.Code);
+				query.setParameter("code", todo.Code);
 			}
 			query.executeUpdate();
 		} else {
@@ -2257,84 +2263,84 @@ public class ReportingService extends BasicService {
 			removeToDosInternal(list);
 		}
 	}
-
+	
 	private void removeToDosInternal(List<ToDoItem> todos) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-
+		
 		List<Integer> ids = new ArrayList<>();
 		for (ToDoItem todo : todos)
 		{
 			ids.add(todo.Id);
 		}
-
-		NativeQuery<?> queryremove = sessionReporting.createNativeQuery("DELETE FROM TODO WHERE ID IN (:ids)");
+		
+		NativeQuery queryremove = sessionReporting.createNativeQuery("DELETE FROM TODO WHERE ID IN (:ids)");
 		queryremove.setParameterList("ids", ids);
 		queryremove.executeUpdate();
 	}
-
+	
 	@Transactional(readOnly = false, transactionManager = "transactionManagerReporting")
 	public void removeAllToDosInternal() {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-
+		
 		List<ToDoItem> todos = getToDosInternal(-1,-1);
 		if (todos.isEmpty()) {
 			return;
 		}
-
-		NativeQuery<?> queryremove = sessionReporting.createNativeQuery("DELETE FROM TODO");
+		
+		NativeQuery queryremove = sessionReporting.createNativeQuery("DELETE FROM TODO");
 		queryremove.executeUpdate();
 	}
-
+		
 	@Transactional(readOnly = true, transactionManager = "transactionManagerReporting")
 	public Date getLastUpdateInternal(Survey survey) {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-
-		NativeQuery<?> query = sessionReporting.createNativeQuery("SELECT COUNT(*) FROM TODO WHERE UID = :uid");
-		query.setParameter("uid", (String) survey.getUniqueId());
+		
+		NativeQuery query = sessionReporting.createNativeQuery("SELECT COUNT(*) FROM TODO WHERE UID = :uid");
+		query.setParameter("uid", survey.getUniqueId());
 		int result = ConversionTools.getValue(query.uniqueResult());
-
+		
 		if (result == 0) return null;
-
+		
 		query = sessionReporting.createNativeQuery("SELECT UPDATE_TIME FROM information_schema.TABLES WHERE TABLE_NAME = :name AND TABLE_SCHEMA = database()");
-		query.setParameter("name", (String) getOLAPTableName(survey));
-
+		query.setParameter("name", getOLAPTableName(survey));
+		
 		return  (Date) query.uniqueResult();
 	}
-
+	
 	@Transactional(transactionManager = "transactionManagerReporting")
 	public int clearAnswersForQuestionInReportingDatabase(Survey survey, ResultFilter filter, String questionUID, String childUID) throws Exception {
 		Session sessionReporting = sessionFactoryReporting.getCurrentSession();
-
+		
 		if (!OLAPTableExistsInternal(survey.getUniqueId(), survey.getIsDraft()))
 		{
 			return 0;
 		}
-
+		 
 		String column = questionUID;
-
+		
 		if (childUID != null)
 		{
-			column = Tools.md5hash(questionUID + childUID);
+			column = Tools.md5hash(questionUID + childUID); 
 		}
-
+		
 		String sql = "UPDATE " + getOLAPTableName(survey) + " SET Q" + column.replace("-", "") + " = NULL";
-
+		
 		Map<String, Object> values = new HashMap<>();
-
+		
 		if (!filter.isEmpty()) {
-
+		
 			String where = getWhereClause(filter, values, survey);
-
+			
 			if (where.length() > 10)
 			{
 				sql += where;
-			}
+			}		
 		}
-
-		Query<?> query = sessionReporting.createNativeQuery(sql);
+		
+		Query query = sessionReporting.createNativeQuery(sql);
 		sqlQueryService.setParameters(query, values);
-
-		return query.executeUpdate();
+		
+		return query.executeUpdate();		
 	}
 
 	

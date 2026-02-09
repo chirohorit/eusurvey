@@ -1,19 +1,14 @@
 package com.ec.survey.controller;
 
-import com.ec.survey.exception.BadRequestException;
-import com.ec.survey.exception.InternalServerErrorException;
-import com.ec.survey.exception.ECFException;
+import com.ec.survey.exception.*;
 import com.ec.survey.exception.httpexception.NotFoundException;
-import com.ec.survey.exception.ForbiddenException;
-import com.ec.survey.exception.ForbiddenURLException;
-import com.ec.survey.exception.FrozenSurveyException;
-import com.ec.survey.exception.InvalidURLException;
-import com.ec.survey.exception.MessageException;
-import com.ec.survey.exception.NoFormLoadedException;
+import com.ec.survey.handler.SurveyExportHelper;
+import com.ec.survey.handler.TranslationsHelper;
+import com.ec.survey.handler.XHTMLValidator;
 import com.ec.survey.model.*;
-import com.ec.survey.model.Export.ExportState;
-import com.ec.survey.model.administration.GlobalPrivilege;
-import com.ec.survey.model.administration.LocalPrivilege;
+import com.ec.survey.enumerator.ExportState;
+import com.ec.survey.enumerator.GlobalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.administration.Role;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.delphi.DelphiMedian;
@@ -28,24 +23,23 @@ import com.ec.survey.model.survey.base.File;
 import com.ec.survey.service.ECService;
 import com.ec.survey.service.MailService;
 import com.ec.survey.service.SelfAssessmentService;
-import com.ec.survey.service.SurveyException;
 import com.ec.survey.service.ReportingService.ToDo;
 import com.ec.survey.service.mapping.PaginationMapper;
 import com.ec.survey.tools.*;
 import com.ec.survey.tools.activity.ActivityRegistry;
 import com.ec.survey.tools.export.XlsxExportCreator;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.hc.core5.http.ContentType;
+import tools.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.owasp.esapi.errors.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,12 +57,15 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
+import com.ec.survey.handler.SurveyHelper;
+import com.ec.survey.handler.QuizHelper;
+import com.ec.survey.handler.worker.RecalculateScoreExecutor;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import javax.naming.NamingException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.swing.*;
 import java.awt.Image;
 import java.awt.*;
@@ -77,6 +74,7 @@ import java.io.*;
 import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -94,7 +92,7 @@ import com.ec.survey.model.survey.ecf.ECFOrganizationalResult;
 import com.ec.survey.model.survey.ecf.ECFSummaryResult;
 
 @Controller
-@RequestMapping("/{shortname}/management")
+//@RequestMapping("/{shortname}/management")
 public class ManagementController extends BasicController {
 
 	@Autowired
@@ -117,8 +115,8 @@ public class ManagementController extends BasicController {
 	@Resource(name = "ecService")
 	private ECService ecService;
 	
-	@Resource(name = "selfassessmentService")
-	protected SelfAssessmentService selfassessmentService;
+	@Resource(name = "selfAssessmentService")
+	protected SelfAssessmentService selfAssessmentService;
 
 	private static final String[] KNOWN_RESULTTYPES = {
 			"content", "charts", "statistics", "ecf", "ecf2", "ecf3", "statistics-delphi", "statistics-quiz"
@@ -140,7 +138,7 @@ public class ManagementController extends BasicController {
 		});
 	}
 
-	@GetMapping(value = "/confirmation")
+	@GetMapping(value = "/{shortname}/management/confirmation")
 	public ModelAndView confirmation(HttpServletRequest request, HttpServletResponse response, Locale locale,
 			Model modelMap) throws InvalidURLException {
 		String code = request.getParameter("code");
@@ -183,12 +181,12 @@ public class ManagementController extends BasicController {
 		return result;
 	}
 
-	@RequestMapping(method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value="/{shortname}/management", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public String root(HttpServletRequest request) {
 		return "redirect:/noform/management/overview";
 	}
 
-	@RequestMapping(value = "/repairxhtml", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/repairxhtml", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView repairxhtml(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws Exception {
 
@@ -222,7 +220,7 @@ public class ManagementController extends BasicController {
 		return overview(shortname, request, locale);
 	}
 
-	@RequestMapping(value = "/overview", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/overview", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView overview(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws ForbiddenURLException, InvalidURLException, NotAgreedToTosException, WeakAuthenticationException,
 			NotAgreedToPsException {
@@ -292,7 +290,7 @@ public class ManagementController extends BasicController {
 		}
 
 		List<ParticipationGroup> group = participationService.getAll(survey.getUniqueId());
-		if (group.size() > 0) {
+		if (!group.isEmpty()) {
 			boolean active = group.get(0).getActive();
 			overviewPage.addObject("active", active);
 		}
@@ -309,23 +307,29 @@ public class ManagementController extends BasicController {
 		return overviewPage;
 	}
 
-	@PostMapping(value = "/overview")
+	@PostMapping(value = "/{shortname}/management/overview")
 	public ModelAndView overviewPOST(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws Exception {
 		String target = request.getParameter("target");
 
 		if (target != null) {
-			if (target.equals("publish")) {
-				return publish(shortname, request, locale);
-			} else if (target.equals("unpublish")) {
-				return unpublish(shortname, request, locale);
-			} else if (target.equals("activate")) {
-				return activate(shortname, request, locale);
-			} else if (target.equals("applyChanges")) {
-				return applyChanges(shortname, request, locale);
-			} else if (target.equals("clearchanges")) {
-				return clearchanges(shortname, request, locale);
-			}
+            switch (target) {
+                case "publish" -> {
+                    return publish(shortname, request, locale);
+                }
+                case "unpublish" -> {
+                    return unpublish(shortname, request, locale);
+                }
+                case "activate" -> {
+                    return activate(shortname, request, locale);
+                }
+                case "applyChanges" -> {
+                    return applyChanges(shortname, request, locale);
+                }
+                case "clearchanges" -> {
+                    return clearchanges(shortname, request, locale);
+                }
+            }
 		}
 
 		return overview(shortname, request, locale);
@@ -378,7 +382,7 @@ public class ManagementController extends BasicController {
 		return null;
 	}
 
-	@PostMapping(value = "/importSurvey")
+	@PostMapping(value = "/{shortname}/management/importSurvey")
 	public void importSurvey(HttpServletRequest request, HttpServletResponse response, Locale locale) {
 
 		PrintWriter writer = null;
@@ -401,9 +405,8 @@ public class ManagementController extends BasicController {
 
 			writer = response.getWriter();
 
-			if (request instanceof DefaultMultipartHttpServletRequest) {
-				DefaultMultipartHttpServletRequest r = (DefaultMultipartHttpServletRequest) request;
-				is = r.getFile("qqfile").getInputStream();
+			if (request instanceof DefaultMultipartHttpServletRequest r) {
+                is = r.getFile("qqfile").getInputStream();
 				filename = com.ec.survey.tools.FileUtils.cleanFilename(r.getFile("qqfile").getOriginalFilename());
 			} else {
 				is = request.getInputStream();
@@ -411,8 +414,8 @@ public class ManagementController extends BasicController {
 			}
 
 			String uuid = UUID.randomUUID().toString().replace(Constants.PATH_DELIMITER, "");
-			java.io.File file = null;
-			ImportResult result = null;
+			java.io.File file;
+			ImportResult result;
 			file = fileService.createTempFile("import" + uuid, null);
 			fos = new FileOutputStream(file);
 			IOUtils.copy(is, fos);
@@ -451,7 +454,7 @@ public class ManagementController extends BasicController {
 			}
 
 		} catch (Exception ex) {
-			logger.error(ex.getLocalizedMessage(), ex);
+			logger.error(ex.getMessage(), ex);
 			response.setStatus(HttpServletResponse.SC_OK);
 			String message = resources.getMessage("message.FileCouldNotBeImported", null,
 					"The file could not be imported.", locale);
@@ -461,7 +464,7 @@ public class ManagementController extends BasicController {
 				fos.close();
 				is.close();
 			} catch (IOException ex2) {
-				logger.error(ex2.getLocalizedMessage(), ex2);
+				logger.error(ex2.getMessage(), ex2);
 			}
 		}
 
@@ -590,7 +593,7 @@ public class ManagementController extends BasicController {
 		return overview(shortname, request, locale);
 	}
 	
-	@RequestMapping(value = "/parameters", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/parameters", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView parameters(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, InvalidURLException,
 			ForbiddenURLException {
@@ -618,7 +621,7 @@ public class ManagementController extends BasicController {
 		return result;
 	}
 
-	@RequestMapping(value = "/properties", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/properties", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView properties(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, InvalidURLException,
 			ForbiddenURLException {
@@ -722,10 +725,9 @@ public class ManagementController extends BasicController {
 		boolean nameFound = false;
 		boolean emailFound = false;
 		for (Element element : form.getSurvey().getElements()) {
-			if (element instanceof Question) {
-				Question question = (Question) element;
+			if (element instanceof Question question) {
 
-				if (!question.getOptional()) {
+                if (!question.getOptional()) {
 					if (question.getAttributeName().equalsIgnoreCase("name"))
 						nameFound = true;
 					if (question.getAttributeName().equalsIgnoreCase(Constants.EMAIL))
@@ -766,19 +768,19 @@ public class ManagementController extends BasicController {
 		return result;
 	}
 
-	@PostMapping(value = "/properties")
+	@PostMapping(value = "/{shortname}/management/properties")
 	public ModelAndView propertiesPost(@ModelAttribute Form form, BindingResult bindingresult,
 			HttpServletRequest request, Locale locale) throws Exception {
 		if (bindingresult.hasErrors()) {
 			for (ObjectError error : bindingresult.getAllErrors()) {
-				logger.error(error.getDefaultMessage());
+				logger.error(String.valueOf(error));
 			}
 		}
 
 		return updateSurvey(form, request, false, locale);
 	}
 
-	@PostMapping(value = "/changeOwner")
+	@PostMapping(value = "/{shortname}/management/changeOwner")
 	public @ResponseBody String changeOwner(@PathVariable String shortname, HttpServletRequest request, Locale locale) throws Exception {
 		User u = sessionService.getCurrentUser(request);
 		Survey survey = surveyService.getSurveyByShortname(shortname, true, u, request, false, false, false, false);
@@ -826,7 +828,7 @@ public class ManagementController extends BasicController {
 		return "success";
 	}
 
-	@RequestMapping(value = "/sendOrganisationValidationReminder", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/sendOrganisationValidationReminder", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody String sendOrganisationValidationReminder(@PathVariable String shortname, HttpServletRequest request) throws Exception {
 		User u = sessionService.getCurrentUser(request);
 		int surveyId = Integer.parseInt(request.getParameter("surveyId"));
@@ -846,8 +848,8 @@ public class ManagementController extends BasicController {
 
 	private boolean checkSendOrganisationValidationEmail(Survey survey, User user) throws NamingException, MessageException {
 		//check if validator belongs to correct domain
-		Set<String> externalOrganisations = new HashSet<String>(Arrays.asList("CITIZEN", "OTHER", "PRIVATEORGANISATION", "PUBLICADMINISTRATION"));
-		if (user.isExternal() || user.getType().equalsIgnoreCase(User.SYSTEM)) {
+		Set<String> externalOrganisations = new HashSet<>(Arrays.asList("CITIZEN", "OTHER", "PRIVATEORGANISATION", "PUBLICADMINISTRATION"));
+		if (user.getType().equalsIgnoreCase(User.SYSTEM)) {
 			if (survey.getOrganisation().length() > 0 && !externalOrganisations.contains(survey.getOrganisation())) {
 				if (survey.getValidator() == null || survey.getValidator().length() == 0) {
 					throw new MessageException("no validator found");
@@ -868,7 +870,7 @@ public class ManagementController extends BasicController {
 		return false;
 	}
 
-	@PostMapping(value = "createNewSurvey")
+	@PostMapping(value = "/{shortname}/management/createNewSurvey")
 	public ModelAndView createNewSurvey(HttpServletRequest request, HttpServletResponse response, Locale locale)
 			throws Exception {
 		User u = sessionService.getCurrentUser(request);
@@ -1090,7 +1092,7 @@ public class ManagementController extends BasicController {
 					copy.setSaveAsDraft(copy.getSaveAsDraft() && !copy.getIsDelphi() && !copy.getIsEVote());
 
 					if (copy.getIsSelfAssessment() && original.getIsSelfAssessment()) {
-						selfassessmentService.copyData(original.getUniqueId(), copy);
+						selfAssessmentService.copyData(original.getUniqueId(), copy);
 					} else {
 						surveyService.update(copy, false, true, u.getId());
 					}
@@ -1145,9 +1147,8 @@ public class ManagementController extends BasicController {
 		if (!isNormal && !isQuiz &&  isOPC && !isDelphi && !isEVote && !isSelfAssessment) return true;
 		if (!isNormal && !isQuiz && !isOPC &&  isDelphi && !isEVote && !isSelfAssessment) return true;
 		if (!isNormal && !isQuiz && !isOPC &&  !isDelphi && isEVote && !isSelfAssessment) return true;
-		if (!isNormal && !isQuiz && !isOPC &&  !isDelphi && !isEVote && isSelfAssessment) return true;
-		return false;
-	}
+        return !isNormal && !isQuiz && !isOPC && !isDelphi && !isEVote && isSelfAssessment;
+    }
 
 	/** when a particular Survey type has some conditions on properties, they are set here
 	 * @throws ValidationException 
@@ -1173,29 +1174,16 @@ public class ManagementController extends BasicController {
 			survey.setPassword("");
 			
 			if (creation) {
-				String templateUid;
-				switch (survey.geteVoteTemplate()){
-					case "b":
-						templateUid = evoteBruTemplate;
-						break;
-					case "i":
-						templateUid = evoteIspraTemplate;
-						break;
-					case "l":
-						templateUid = evoteLuxTemplate;
-						break;
-					case "o":
-						templateUid = evoteOutsideTemplate;
-						break;
-					case "p":
-						templateUid = evotePresidenTemplate;
-						break;
-					default:
-						templateUid = null;
-						break;
-				}
+				String templateUid = switch (survey.geteVoteTemplate()) {
+                    case "b" -> evoteBruTemplate;
+                    case "i" -> evoteIspraTemplate;
+                    case "l" -> evoteLuxTemplate;
+                    case "o" -> evoteOutsideTemplate;
+                    case "p" -> evotePresidenTemplate;
+                    default -> null;
+                };
 
-				if (templateUid != null && templateUid.length() > 0){
+                if (templateUid != null && templateUid.length() > 0){
 					Survey templateSurvey = applyTemplate(survey, templateUid, translationsToCreate);
 
 					survey.setQuorum(templateSurvey.getQuorum());
@@ -1264,7 +1252,7 @@ public class ManagementController extends BasicController {
 		surveyService.add(survey, false, survey.getOwner().getId());
 
 		//Copy files eg for Gallery Question
-		surveyService.copyFiles(survey, new HashMap<>(), true, new HashMap<String, String>(), templateUid);
+		surveyService.copyFiles(survey, new HashMap<>(), true, new HashMap<>(), templateUid);
 
 		// recreate unique ids
 		for (Element elem : survey.getElementsRecursive(true)) {
@@ -1454,7 +1442,7 @@ public class ManagementController extends BasicController {
 					survey.getTags().add(tag);
 				}
 			}
-			List<Tag> toDelete = survey.getTags().stream().filter(t -> !tags.contains(t.getName())).collect(Collectors.toList());
+			List<Tag> toDelete = survey.getTags().stream().filter(t -> !tags.contains(t.getName())).toList();
 			for (Tag tag : toDelete) {
 				survey.getTags().remove(tag);
 			}
@@ -1509,10 +1497,9 @@ public class ManagementController extends BasicController {
 
 			// check if name and email questions exist
 			for (Element element : survey.getElements()) {
-				if (element instanceof Question) {
-					Question question = (Question) element;
+				if (element instanceof Question question) {
 
-					if (question.getIsAttribute() && !question.getOptional()) {
+                    if (question.getIsAttribute() && !question.getOptional()) {
 						if (question.getAttributeName().equalsIgnoreCase("name"))
 							nameFound = true;
 						if (question.getAttributeName().equalsIgnoreCase(Constants.EMAIL))
@@ -1525,10 +1512,9 @@ public class ManagementController extends BasicController {
 			}
 			if (!nameFound || !emailFound) {
 				for (Element element : survey.getElements()) {
-					if (element instanceof Question) {
-						Question question = (Question) element;
+					if (element instanceof Question question) {
 
-						if (!question.getOptional()) {
+                        if (!question.getOptional()) {
 							if (!nameFound && question.getShortname().equalsIgnoreCase("name")) {
 								nameFound = true;
 								question.setAttributeName("name");
@@ -1987,8 +1973,7 @@ public class ManagementController extends BasicController {
 
 			if (!survey.getIsOPC())
 				survey.setCaptcha(uploadedSurvey.getCaptcha());
-			Map<String, String> oldLinks = new HashMap<>();
-			oldLinks.putAll(survey.getUsefulLinks());
+            Map<String, String> oldLinks = new HashMap<>(survey.getUsefulLinks());
 
 			// useful links
 			survey.getUsefulLinks().clear();
@@ -2246,12 +2231,12 @@ public class ManagementController extends BasicController {
 				newContributions = new StringBuilder("all");
 			}
 
-			if (!newQuestions.toString().equals(oldQuestions.toString())) {
+			if (!newQuestions.toString().contentEquals(oldQuestions)) {
 				String[] oldnew = { oldQuestions.toString(), newQuestions.toString() };
 				activitiesToLog.put(ActivityRegistry.ID_PUBLISH_QUESTION_SET, oldnew);
 			}
 
-			if (!newContributions.toString().equals(oldContributions.toString())) {
+			if (!newContributions.toString().contentEquals(oldContributions)) {
 				String[] oldnew = { oldContributions.toString(), newContributions.toString() };
 				activitiesToLog.put(ActivityRegistry.ID_PUBLISH_ANSWER_SET, oldnew);
 			}
@@ -2503,24 +2488,13 @@ public class ManagementController extends BasicController {
 	}
 
 	private String getNumberingLabel(int value) {
-		switch (value) {
-		case 0:
-			return "disabled";
-		case 1:
-			return "numbers";
-		case 2:
-			return "smalls";
-		case 3:
-			return "capitals";
-		case 4:
-			return "numbers";
-		case 5:
-			return "smalls";
-		case 6:
-			return "capitals";
-		default:
-			return "disabled";
-		}
+        return switch (value) {
+            case 0 -> "disabled";
+            case 1, 4 -> "numbers";
+            case 2, 5 -> "smalls";
+            case 3, 6 -> "capitals";
+            default -> "disabled";
+        };
 	}
 
 	private boolean invalid(String term) {
@@ -2529,7 +2503,7 @@ public class ManagementController extends BasicController {
 		return !m.find();
 	}
 
-	@RequestMapping(value = "/edit", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/edit", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView edit(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws Exception {
 		Form form;
@@ -2560,7 +2534,7 @@ public class ManagementController extends BasicController {
 		}
 		
 		if (form.getSurvey().getIsSelfAssessment()) {
-			List<SACriterion> criteria = selfassessmentService.getCriteria(form.getSurvey().getUniqueId());
+			List<SACriterion> criteria = selfAssessmentService.getCriteria(form.getSurvey().getUniqueId());
 			StringBuilder builder = new StringBuilder();
 			builder.append("[");
 			boolean first = true;
@@ -2579,7 +2553,7 @@ public class ManagementController extends BasicController {
 			
 			result.addObject("SACriteria", builder.toString());
 			
-			List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(form.getSurvey().getUniqueId());
+			List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(form.getSurvey().getUniqueId());
 			builder = new StringBuilder();
 			builder.append("[");
 			first = true;
@@ -2602,12 +2576,12 @@ public class ManagementController extends BasicController {
 		return result;
 	}
 
-	@PostMapping(value = "/checkXHTML")
+	@PostMapping(value = "/{shortname}/management/checkXHTML")
 	public @ResponseBody XHTMLValidation checkXHTML(@RequestBody String data, HttpServletRequest request) {
 		return new XHTMLValidation(data, !XHTMLValidator.validate(data, servletContext, null));
 	}
 
-	@PostMapping(value = "/edit")
+	@PostMapping(value = "/{shortname}/management/edit")
 	public ModelAndView editPOST(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws Exception {
 		Form form;
@@ -2646,7 +2620,7 @@ public class ManagementController extends BasicController {
 		return new ModelAndView("redirect:/" + form.getSurvey().getShortname() + "/management/edit?saved=true");
 	}
 
-	@PostMapping(value = "/saveTemplate")
+	@PostMapping(value = "/{shortname}/management/saveTemplate")
 	public @ResponseBody List<Template> saveTemplate(@PathVariable String shortname, HttpServletRequest request,
 			HttpServletResponse response, Locale locale) {
 
@@ -2659,7 +2633,7 @@ public class ManagementController extends BasicController {
 			String name = Tools.escapeHTML(parameterMap.get("template-name")[0]);
 			String id = Tools.escapeHTML(parameterMap.get("template-id")[0]);
 
-			Element element = SurveyHelper.parseElement(request, fileService, selfassessmentService, id, form.getSurvey(), servletContext,
+			Element element = SurveyHelper.parseElement(request, fileService, selfAssessmentService, id, form.getSurvey(), servletContext,
 					activityService.isEnabled(ActivityRegistry.ID_ELEMENT_UPDATED));
 
 			Template template = new Template();
@@ -2679,12 +2653,12 @@ public class ManagementController extends BasicController {
 
 	}
 
-	@PostMapping(value = "/upload")
+	@PostMapping(value = "/{shortname}/management/upload")
 	public void upload(@PathVariable String shortname, HttpServletRequest request, HttpServletResponse response) {
 		upload(request, response, false);
 	}
 
-	@PostMapping(value = "/uploadimage")
+	@PostMapping(value = "/{shortname}/management/uploadimage")
 	public void uploadImage(@PathVariable String shortname, HttpServletRequest request, HttpServletResponse response) {
 		upload(request, response, true);
 	}
@@ -2706,14 +2680,13 @@ public class ManagementController extends BasicController {
 
 		try {
 
-			if (request instanceof DefaultMultipartHttpServletRequest) {
-				DefaultMultipartHttpServletRequest r = (DefaultMultipartHttpServletRequest) request;
-				filename = com.ec.survey.tools.FileUtils
-						.cleanFilename(java.net.URLDecoder.decode(r.getFile("qqfile").getOriginalFilename(), "UTF-8"));
+			if (request instanceof DefaultMultipartHttpServletRequest r) {
+                filename = com.ec.survey.tools.FileUtils
+						.cleanFilename(java.net.URLDecoder.decode(r.getFile("qqfile").getOriginalFilename(), StandardCharsets.UTF_8));
 				is = r.getFile("qqfile").getInputStream();
 			} else {
 				filename = com.ec.survey.tools.FileUtils
-						.cleanFilename(java.net.URLDecoder.decode(request.getHeader("X-File-Name"), "UTF-8"));
+						.cleanFilename(java.net.URLDecoder.decode(request.getHeader("X-File-Name"), StandardCharsets.UTF_8));
 				is = request.getInputStream();
 			}
 
@@ -2783,7 +2756,7 @@ public class ManagementController extends BasicController {
 		writer.close();
 	}
 
-	@RequestMapping(value = "/copyfile", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/copyfile", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public void copyfile(HttpServletRequest request, HttpServletResponse response) {
 		String uid = request.getParameter("uid");
 
@@ -2814,7 +2787,7 @@ public class ManagementController extends BasicController {
 		writer.close();
 	}
 
-	@RequestMapping(value = "/deleteFile", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/deleteFile", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody String deleteFile(HttpServletRequest request, HttpServletResponse response) {
 
 		try {
@@ -2831,7 +2804,7 @@ public class ManagementController extends BasicController {
 		return "{\"success\": false}";
 	}
 
-	@RequestMapping(value = "/deleteDownloadFile", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/deleteDownloadFile", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody String deleteDownloadFile(HttpServletRequest request, HttpServletResponse response) {
 
 		try {
@@ -2842,12 +2815,10 @@ public class ManagementController extends BasicController {
 
 			try {
 				Element element = surveyService.getElement(Integer.parseInt(eid));
-				if (element instanceof Download) {
-					Download download = (Download) element;
-					download.getFiles().remove(file);
-				} else if (element instanceof Confirmation) {
-					Confirmation confirmation = (Confirmation) element;
-					confirmation.getFiles().remove(file);
+				if (element instanceof Download download) {
+                    download.getFiles().remove(file);
+				} else if (element instanceof Confirmation confirmation) {
+                    confirmation.getFiles().remove(file);
 				}
 				surveyService.update(element);
 			} catch (NumberFormatException e) {
@@ -2866,7 +2837,7 @@ public class ManagementController extends BasicController {
 		return "{\"success\": false}";
 	}
 
-	@RequestMapping(value = "/test", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/test", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView test(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws InvalidURLException, NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException,
 			ForbiddenURLException, FrozenSurveyException {
@@ -2987,7 +2958,7 @@ public class ManagementController extends BasicController {
 		return result;
 	}
 
-	@PostMapping(value = "/test")
+	@PostMapping(value = "/{shortname}/management/test")
 	public ModelAndView testPOST(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws Exception {
 
@@ -3056,7 +3027,7 @@ public class ManagementController extends BasicController {
 			return model;
 		}
 
-		if (validation.size() > 0) {
+		if (!validation.isEmpty()) {
 			// load form
 			if (request.getParameter("language.code") != null && request.getParameter("language.code").length() == 2) {
 				survey = surveyService.getSurvey(survey.getId(), lang);
@@ -3135,10 +3106,10 @@ public class ManagementController extends BasicController {
 			result.addObject("surveyprefix", survey.getId());
 			result.addObject("issaresultpage", true);
 			
-			SAReportConfiguration config = selfassessmentService.getReportConfiguration(answerSet.getSurvey().getUniqueId());
+			SAReportConfiguration config = selfAssessmentService.getReportConfiguration(answerSet.getSurvey().getUniqueId());
 			result.addObject("SAReportConfiguration", config);
 			
-			List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(answerSet.getSurvey().getUniqueId());
+			List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(answerSet.getSurvey().getUniqueId());
 			result.addObject("SATargetDatasets", datasets);
 						
 			return result;
@@ -3187,11 +3158,11 @@ public class ManagementController extends BasicController {
 		return builder.toString();
 	}
 
-	@RequestMapping(value = "/recalculateScore")
+	@RequestMapping(value = "/{shortname}/management/recalculateScore")
 	public ModelAndView recalculateScore(@PathVariable String shortname, @RequestParam String id,
 			HttpServletRequest request, Locale locale)
 			throws NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, ForbiddenURLException {
-		Survey survey = null;
+		Survey survey;
 		User u = sessionService.getCurrentUser(request);
 
 		survey = surveyService.getSurvey(Integer.parseInt(id));
@@ -3217,7 +3188,7 @@ public class ManagementController extends BasicController {
 	@ResponseBody
 	public ResponseEntity<Object> results_access_log(@PathVariable String shortname, HttpServletRequest request, Locale locale, @RequestParam("type") String type)
 			throws Exception {
-		Survey survey = null;
+		Survey survey;
 		User u = sessionService.getCurrentUser(request);
 
 		survey = surveyService.getSurveyByShortname(shortname, true, u, request, false, true, true, false);
@@ -3232,13 +3203,13 @@ public class ManagementController extends BasicController {
 
 		activityService.log(ActivityRegistry.ID_RESULTS_ACCESS, null, type, u.getId(), survey.getUniqueId());
 
-		return new ResponseEntity<Object>(null,HttpStatus.OK);
+		return new ResponseEntity<>(null, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/results")
+	@RequestMapping(value = "/{shortname}/management/results")
 	public ModelAndView results(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws Exception {
-		Survey survey = null;
+		Survey survey;
 		User u = sessionService.getCurrentUser(request);
 
 		survey = surveyService.getSurveyLight(shortname, true, true);  //; .getSurveyByShortname(shortname, true, u, request, false, true, true, false);
@@ -3302,20 +3273,20 @@ public class ManagementController extends BasicController {
 			} else {
 				String lastSource = (String) request.getSession().getAttribute(uid + "lastSource");
 				if (lastSource != null) {
-					switch (lastSource) {
-					case "allanswers":
-						allanswers = true;
-						active = true;
-						break;
-					case "active":
-						allanswers = false;
-						active = true;
-						break;
-					default:
-						allanswers = false;
-						active = false;
-						break;
-					}
+                    active = switch (lastSource) {
+                        case "allanswers" -> {
+                            allanswers = true;
+                            yield true;
+                        }
+                        case "active" -> {
+                            allanswers = false;
+                            yield true;
+                        }
+                        default -> {
+                            allanswers = false;
+                            yield false;
+                        }
+                    };
 				}
 			}
 		}
@@ -3613,8 +3584,7 @@ public class ManagementController extends BasicController {
 		if (forPDF) {
 			Statistics statistics = answerService.getStatisticsOrStartCreator(survey, filter, false, active && allanswers, false);
 			result.addObject("statistics", statistics);
-			Set<String> newids = new HashSet<>();
-			newids.addAll(filter.getExportedQuestions());
+            Set<String> newids = new HashSet<>(filter.getExportedQuestions());
 			filter.setVisibleQuestions(newids);
 		}
 		
@@ -3636,7 +3606,7 @@ public class ManagementController extends BasicController {
 		}
 		
 		if (survey.getIsSelfAssessment()) {
-			List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+			List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 			result.addObject("targetdatasets", datasets);
 		}
 
@@ -3696,7 +3666,7 @@ public class ManagementController extends BasicController {
 		return result;
 	}
 	
-	@RequestMapping(value = "/seatCounting", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/seatCounting", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody SeatCounting seatCounting(HttpServletRequest request, Locale locale) {
 		try {
 			Form form = sessionService.getForm(request, null, false, false);
@@ -3716,9 +3686,8 @@ public class ManagementController extends BasicController {
 			}
 			
 			activityService.log(ActivityRegistry.ID_DISPLAY_RESULTS, null, null, u.getId(), uid);
-			SeatCounting result = eVoteService.getCounting(form.getSurvey().getUniqueId(), null, resources, locale, false);
-		
-			return result;
+
+            return eVoteService.getCounting(form.getSurvey().getUniqueId(), null, resources, locale, false);
 			
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage(), e);
@@ -3727,7 +3696,7 @@ public class ManagementController extends BasicController {
 		return null;
 	}
 	
-	@RequestMapping(value = "/seatAllocation", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/seatAllocation", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody SeatCounting seatAllocation(HttpServletRequest request, Locale locale) {
 		try {
 			Form form = sessionService.getForm(request, null, false, false);
@@ -3747,9 +3716,8 @@ public class ManagementController extends BasicController {
 			}
 			
 			activityService.log(ActivityRegistry.ID_ALLOCATE_SEATS, null, null, u.getId(), uid);
-			SeatCounting result = eVoteService.getCounting(form.getSurvey().getUniqueId(), null, resources, locale, true);
-		
-			return result;
+
+            return eVoteService.getCounting(form.getSurvey().getUniqueId(), null, resources, locale, true);
 			
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage(), e);
@@ -3795,15 +3763,14 @@ public class ManagementController extends BasicController {
 		return null;
 	}
 	
-	@PostMapping(value = "/uploadSeatTest")
+	@PostMapping(value = "/{shortname}/management/uploadSeatTest")
 	public @ResponseBody eVoteResults uploadSeatTest(@PathVariable String shortname, HttpServletRequest request, HttpServletResponse response) {
 		InputStream is = null;
 		
 		try {
 
-			if (request instanceof DefaultMultipartHttpServletRequest) {
-				DefaultMultipartHttpServletRequest r = (DefaultMultipartHttpServletRequest) request;
-				is = r.getFile("qqfile").getInputStream();
+			if (request instanceof DefaultMultipartHttpServletRequest r) {
+                is = r.getFile("qqfile").getInputStream();
 			} else {
 				is = request.getInputStream();
 			}
@@ -3921,7 +3888,7 @@ public class ManagementController extends BasicController {
 		return 0;
 	}
 	
-	@RequestMapping(value = "/seatCountingTest", method = { RequestMethod.POST })
+	@RequestMapping(value = "/{shortname}/management/seatCountingTest", method = { RequestMethod.POST })
 	public @ResponseBody SeatCounting seatCountingTest(HttpServletRequest request, Locale locale) {
 		try {
 			Form form = sessionService.getForm(request, null, false, false);
@@ -3975,7 +3942,7 @@ public class ManagementController extends BasicController {
 		return null;
 	}
 
-	@RequestMapping(value = "/resultsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/resultsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody List<String> resultsJSON(@PathVariable String shortname, HttpServletRequest request) {
 
 		try {
@@ -4083,7 +4050,7 @@ public class ManagementController extends BasicController {
 			boolean surveyExists = survey != null;
 
 			if (!surveyExists) {
-				logger.error("Survey not set: " + request.getRequestURL());
+                logger.error("Survey not set: {}", request.getRequestURL());
 			}
 			
 			List<Element> visibleQuestions = new ArrayList<>();
@@ -4117,7 +4084,7 @@ public class ManagementController extends BasicController {
 									if (surveyExists) {
 										answer.setTitle(ConversionTools.escape(form.getAnswerTitle(answer)));
 									}
-									if (s.length() > 0) {
+									if (!s.isEmpty()) {
 										s.append("; ");
 									}
 									s.append(answer.getTitle());
@@ -4127,23 +4094,21 @@ public class ManagementController extends BasicController {
 								}
 								result.add(s.toString());
 							}
-						} else if (question instanceof Table) {
-							Table table = (Table) question;
-							for (int r = 1; r < table.getAllRows(); r++) {
+						} else if (question instanceof Table table) {
+                            for (int r = 1; r < table.getAllRows(); r++) {
 								for (int c = 1; c < table.getAllColumns(); c++) {
 									result.add(ConversionTools.escape(answerSet.getTableAnswer(question, r, c, false)));
 								}
 							}
-						} else if (question instanceof ComplexTable) {
-							ComplexTable table = (ComplexTable) question;
-							for (ComplexTableItem childQuestion : table.getQuestionChildElements()) {
+						} else if (question instanceof ComplexTable table) {
+                            for (ComplexTableItem childQuestion : table.getQuestionChildElements()) {
 								StringBuilder s = new StringBuilder();
 								for (Answer answer : answerSet.getAnswers(childQuestion.getUniqueId())) {
 									if (!allanswers && childQuestion.isChoice() && !childQuestion.containsPossibleAnswer(answer.getPossibleAnswerUniqueId())) {
 										continue;
 									}
 
-									if (s.length() > 0) {
+									if (!s.isEmpty()) {
 										s.append("; ");
 									}
 									
@@ -4157,9 +4122,8 @@ public class ManagementController extends BasicController {
 								}
 								result.add(s.toString());
 							}
-						} else if (question instanceof GalleryQuestion) {
-							GalleryQuestion gallery = (GalleryQuestion) question;
-							StringBuilder s = new StringBuilder();
+						} else if (question instanceof GalleryQuestion gallery) {
+                            StringBuilder s = new StringBuilder();
 							
 							for (Answer answer : answerSet.getAnswers(question.getUniqueId())) {
 								File file = null;
@@ -4174,7 +4138,7 @@ public class ManagementController extends BasicController {
 								}
 								
 								if (file != null) {
-									if (s.length() > 0) {
+									if (!s.isEmpty()) {
 										s.append("; ");
 									}
 									s.append(file.getName());
@@ -4206,7 +4170,7 @@ public class ManagementController extends BasicController {
 							for (Element childQuestion : ((RatingQuestion) question).getQuestions()) {
 								StringBuilder s = new StringBuilder();
 								for (Answer answer : answerSet.getAnswers(childQuestion.getUniqueId())) {
-									if (s.length() > 0) {
+									if (!s.isEmpty()) {
 										s.append("; ");
 									}
 									s.append(answer.getValue());
@@ -4219,13 +4183,13 @@ public class ManagementController extends BasicController {
 						} else {
 							StringBuilder s = new StringBuilder();
 							for (Answer answer : answerSet.getAnswers(question.getUniqueId())) {
-								if (s.length() > 0) {
+								if (!s.isEmpty()) {
 									s.append("; ");
 								}
 
 								if (question instanceof ChoiceQuestion || question instanceof RankingQuestion) {
 									if ("TARGETDATASET".equals(answer.getPossibleAnswerUniqueId())) {
-										SATargetDataset dataset = selfassessmentService.getTargetDataset(Integer.parseInt(answer.getValue()));
+										SATargetDataset dataset = selfAssessmentService.getTargetDataset(Integer.parseInt(answer.getValue()));
 										s.append(dataset.getName());
 									} else if ("EVOTE-ALL".equals(answer.getValue())){
 										s.append(form.getMessage("label.EntireList"));
@@ -4306,7 +4270,7 @@ public class ManagementController extends BasicController {
 		return null;
 	}
 
-	@RequestMapping(value = "/ecfGlobalResultsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/ecfGlobalResultsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody ECFGlobalResult ecfGlobalResultsJSON(@PathVariable String shortname, HttpServletRequest request) 
 			throws NotFoundException, BadRequestException, InternalServerErrorException, NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, ForbiddenException {
 		// PARAMS
@@ -4356,7 +4320,7 @@ public class ManagementController extends BasicController {
 		}
 	}
 	
-	@RequestMapping(value = "/ecfProfileAssessmentResultsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/ecfProfileAssessmentResultsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody ECFProfileResult ecfProfileAssessmentResultsJSON(@PathVariable String shortname, HttpServletRequest request) 
 			throws NotFoundException, InternalServerErrorException, NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, ForbiddenException {
 		String profileOrNull = request.getParameter("profile");
@@ -4379,7 +4343,7 @@ public class ManagementController extends BasicController {
 		}
 	}
 	
-	@RequestMapping(value = "/ecfOrganizationalResultsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/ecfOrganizationalResultsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody ECFOrganizationalResult ecfOrganizationalResultsJSON(@PathVariable String shortname, HttpServletRequest request) 
 			throws NotFoundException, BadRequestException, InternalServerErrorException, NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, ForbiddenException {
 		ResultFilter filter = sessionService.getLastResultFilter(request);
@@ -4395,7 +4359,7 @@ public class ManagementController extends BasicController {
 		}
 	}
 
-	@RequestMapping(value = "/ecfResultJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/ecfResultJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody ECFIndividualResult ecfResultJSON(@PathVariable String shortname, HttpServletRequest request)
 	throws NotFoundException, InternalServerErrorException {
 		String answerSetIdOrNull = request.getParameter("answerSetId");
@@ -4415,7 +4379,7 @@ public class ManagementController extends BasicController {
 		return ecfResult;
 	}
 
-	@RequestMapping(value = "/statisticsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/statisticsJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody Statistics statisticsJSON(@PathVariable String shortname, HttpServletRequest request) {
 
 		try {
@@ -4436,7 +4400,7 @@ public class ManagementController extends BasicController {
 						filter = userFilter;
 				}
 
-				Survey survey = null;
+				Survey survey;
 				if (filter == null || filter.getSurveyId() == 0) {
 					// can only happen in case of published results
 					survey = surveyService.getSurvey(shortname, false, true, false, false, null, true, false);
@@ -4483,8 +4447,7 @@ public class ManagementController extends BasicController {
 							s.setRequestID(statisticsRequest.getId());
 							return s;
 						} else {
-							logger.error(
-									"calling worker server for statisticsrequest " + statisticsRequest.getId() + " returned" + result);
+                            logger.error("calling worker server for statisticsrequest {} returned{}", statisticsRequest.getId(), result);
 							return null;
 						}
 					} catch (ConnectException e) {
@@ -4506,7 +4469,7 @@ public class ManagementController extends BasicController {
 		return null;
 	}
 	
-	@RequestMapping(value = "/statisticsDelphiJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/statisticsDelphiJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody Map<String, String> statisticsDelphiJSON(@PathVariable String shortname, HttpServletRequest request) {
 		
 		try {
@@ -4535,7 +4498,7 @@ public class ManagementController extends BasicController {
 		return Collections.emptyMap();
 	}
 	
-	@RequestMapping(value = "/statisticsDelphiMedianJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/statisticsDelphiMedianJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody Map<String, String> statisticsDelphiMedianJSON(@PathVariable String shortname, HttpServletRequest request) {
 	
 		try {
@@ -4556,10 +4519,9 @@ public class ManagementController extends BasicController {
 			Map<String, String> result = new HashMap<>();
 			
 			for (Element element : survey.getQuestionsAndSections()) {
-				if (element instanceof SingleChoiceQuestion) {
-					SingleChoiceQuestion singleChoiceQuestion = (SingleChoiceQuestion)element;
-					
-					if (!singleChoiceQuestion.getUseLikert() || singleChoiceQuestion.getMaxDistance() <= -1) {
+				if (element instanceof SingleChoiceQuestion singleChoiceQuestion) {
+
+                    if (!singleChoiceQuestion.getUseLikert() || singleChoiceQuestion.getMaxDistance() <= -1) {
 					   continue;
 					}
 
@@ -4579,10 +4541,9 @@ public class ManagementController extends BasicController {
 					}
 				}
 				
-				if (element instanceof NumberQuestion) {
-					NumberQuestion numberQuestion = (NumberQuestion)element;
-					
-					if (!numberQuestion.isSlider() || numberQuestion.getMaxDistance() <= -1) {
+				if (element instanceof NumberQuestion numberQuestion) {
+
+                    if (!numberQuestion.isSlider() || numberQuestion.getMaxDistance() <= -1) {
 					   continue;
 					}
 					
@@ -4602,7 +4563,7 @@ public class ManagementController extends BasicController {
 		return Collections.emptyMap();
 	}
 
-	@RequestMapping(value = "/preparecharts/{id}/{exportId}", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/preparecharts/{id}/{exportId}", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView preparecharts(@PathVariable String id, @PathVariable String exportId, Locale locale) {
 
 		try {
@@ -4643,7 +4604,7 @@ public class ManagementController extends BasicController {
 	/**
 	 * Used to prepare a web page for PDF creation of the ECF Global Results
 	 */
-	@RequestMapping(value = "/prepareECFGlobalResults/{id}/{exportId}", method = {RequestMethod.GET, RequestMethod.HEAD})
+	@RequestMapping(value = "/{shortname}/management/prepareECFGlobalResults/{id}/{exportId}", method = {RequestMethod.GET, RequestMethod.HEAD})
 	public ModelAndView prepareECFGlobalResults(@PathVariable String id, @PathVariable String exportId, Locale locale, HttpServletRequest request) throws Exception {
 		Export export = exportService.getExport(Integer.parseInt(exportId), false);
 		if (export == null) {
@@ -4652,12 +4613,12 @@ public class ManagementController extends BasicController {
 		}
 		
 		if (export.getState() != ExportState.Pending) {
-			logger.error("export state is " + export.getState());
+            logger.error("export state is {}", export.getState());
 			return null;
 		}
 		
 		if (!export.getSurvey().getId().equals(Integer.parseInt(id))) {
-			logger.error("mismatch: " + export.getSurvey().getId() + " : " + id );
+            logger.error("mismatch: {} : {}", export.getSurvey().getId(), id);
 			return null;
 		}
 		
@@ -4665,7 +4626,7 @@ public class ManagementController extends BasicController {
 		return new ModelAndView("management/ecfGlobalResultsPDF", "ecfGlobalResult", ecfGlobalResult);
 	}
 
-	@RequestMapping(value = "/preparestatistics/{id}/{exportId}", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/preparestatistics/{id}/{exportId}", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView preparestatistics(@PathVariable String id, @PathVariable String exportId, Locale locale,
 			HttpServletRequest request) throws Exception {
 
@@ -4677,12 +4638,12 @@ public class ManagementController extends BasicController {
 		}
 
 		if (export.getState() != ExportState.Pending) {
-			logger.error("export state is " + export.getState());
+            logger.error("export state is {}", export.getState());
 			return null;
 		}
 
 		if (!export.getSurvey().getId().equals(Integer.parseInt(id))) {
-			logger.error("mismatch: " + export.getSurvey().getId() + " : " + id);
+            logger.error("mismatch: {} : {}", export.getSurvey().getId(), id);
 			return null;
 		}
 
@@ -4716,7 +4677,7 @@ public class ManagementController extends BasicController {
 		return results;
 	}
 		
-	@RequestMapping(value = "/preparepdfreport/{id}/{exportId}", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/preparepdfreport/{id}/{exportId}", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView preparepdfreport(@PathVariable String id, @PathVariable String exportId, Locale locale,
 			HttpServletRequest request) throws Exception {
 
@@ -4728,12 +4689,12 @@ public class ManagementController extends BasicController {
 		}
 
 		if (export.getState() != ExportState.Pending) {
-			logger.error("export state is " + export.getState());
+            logger.error("export state is {}", export.getState());
 			return null;
 		}
 
 		if (!export.getSurvey().getId().equals(Integer.parseInt(id))) {
-			logger.error("mismatch: " + export.getSurvey().getId() + " : " + id);
+            logger.error("mismatch: {} : {}", export.getSurvey().getId(), id);
 			return null;
 		}
 
@@ -4774,7 +4735,7 @@ public class ManagementController extends BasicController {
 		return results;
 	}
 
-	@RequestMapping(value = "/preparestatisticsquiz/{id}/{exportId}", method = { RequestMethod.GET,
+	@RequestMapping(value = "/{shortname}/management/preparestatisticsquiz/{id}/{exportId}", method = { RequestMethod.GET,
 			RequestMethod.HEAD })
 	public ModelAndView preparestatisticsquiz(@PathVariable String id, @PathVariable String exportId, Locale locale,
 			HttpServletRequest request) throws Exception {
@@ -4817,12 +4778,12 @@ public class ManagementController extends BasicController {
 		return results;
 	}
 
-	@RequestMapping(value = "/prepareECFIndividualResults/{id}/{exportId}", method = {RequestMethod.GET, RequestMethod.HEAD})
+	@RequestMapping(value = "/{shortname}/management/prepareECFIndividualResults/{id}/{exportId}", method = {RequestMethod.GET, RequestMethod.HEAD})
 	public ModelAndView prepareECFIndividualResults(@PathVariable String id, @PathVariable String exportId, Locale locale, HttpServletRequest request) throws Exception {
 		return null;
 	}
 
-	@RequestMapping(value = "/access", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/access", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public ModelAndView access(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, InvalidURLException,
 			ForbiddenURLException {
@@ -4917,7 +4878,7 @@ public class ManagementController extends BasicController {
 		return result;
 	}
 	
-	@RequestMapping(value = "/resultAccessesJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/resultAccessesJSON", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody List<ResultAccess> resultAccessesJSON(@PathVariable String shortname, HttpServletRequest request, Locale locale) throws NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, ForbiddenURLException, InvalidURLException {
 		User u = sessionService.getCurrentUser(request);
 		
@@ -4959,7 +4920,7 @@ public class ManagementController extends BasicController {
 		return result;
 	}
 	
-	@PostMapping(value = "/updateResultAccessTypeJSON")
+	@PostMapping(value = "/{shortname}/management/updateResultAccessTypeJSON")
 	public @ResponseBody boolean updateResultAccessTypeJSON(@PathVariable String shortname, HttpServletRequest request) throws NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException, ForbiddenURLException {
 		User u = sessionService.getCurrentUser(request);
 				
@@ -4969,7 +4930,7 @@ public class ManagementController extends BasicController {
 		ResultAccess access = surveyService.getResultAccess(Integer.parseInt(id));
 		
 		if (access == null) {
-			logger.error("ResultAccess with id " + id + " not found.");
+            logger.error("ResultAccess with id {} not found.", id);
 			return false;
 		}
 		
@@ -4986,7 +4947,7 @@ public class ManagementController extends BasicController {
 		return true;
 	}	
 	
-	@PostMapping(value = "/updateResultFilter")
+	@PostMapping(value = "/{shortname}/management/updateResultFilter")
 	public ModelAndView updateResultFilter(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws Exception {
 		
@@ -5044,21 +5005,26 @@ public class ManagementController extends BasicController {
 		return access(shortname, request, locale);
 	}
 
-	@PostMapping(value = "/access")
+	@PostMapping(value = "/{shortname}/management/access")
 	public ModelAndView accessPOST(@PathVariable String shortname, HttpServletRequest request, Locale locale)
 			throws Exception {
 
 		String target = request.getParameter("target");
 		if (target != null) {
-			if (target.equals("addUser")) {
-				return addUser(shortname, request.getParameter("login"), request.getParameter("ecas"), request, locale);
-			} else if (target.equals("addUserEmail")) {
-				return addUserEmail(shortname, request.getParameter("emails"), request, locale);
-			} else if (target.equals("removeUser")) {
-				return removeUser(shortname, request.getParameter("id"), request, locale);
-			} else if (target.equals("addGroup")) {
-				return addGroup(shortname, request.getParameter("groupname"), request, locale);
-			}
+            switch (target) {
+                case "addUser" -> {
+                    return addUser(shortname, request.getParameter("login"), request.getParameter("ecas"), request, locale);
+                }
+                case "addUserEmail" -> {
+                    return addUserEmail(shortname, request.getParameter("emails"), request, locale);
+                }
+                case "removeUser" -> {
+                    return removeUser(shortname, request.getParameter("id"), request, locale);
+                }
+                case "addGroup" -> {
+                    return addGroup(shortname, request.getParameter("groupname"), request, locale);
+                }
+            }
 		}
 
 		String id = request.getParameter("id");
@@ -5241,7 +5207,7 @@ public class ManagementController extends BasicController {
 		}
 
 		try {
-			splittedEmails = new HashSet<String>(Arrays.asList(splittedEmails)).toArray(new String[0]);
+			splittedEmails = new HashSet<>(Arrays.asList(splittedEmails)).toArray(new String[0]);
 			for(String email : splittedEmails) {
 				//validate mail with same regex as in frontend
 				if (MailService.isValidEmailAddress(email)) {
@@ -5421,7 +5387,7 @@ public class ManagementController extends BasicController {
 		}
 	}
 
-	@RequestMapping(value = "/searchAndReplace", method = { RequestMethod.GET, RequestMethod.HEAD })
+	@RequestMapping(value = "/{shortname}/management/searchAndReplace", method = { RequestMethod.GET, RequestMethod.HEAD })
 	public @ResponseBody SearchAndReplaceResult forms(@PathVariable String shortname, HttpServletRequest request,
 			HttpServletResponse response, Locale locale, Model model) {
 		try {
@@ -5442,15 +5408,15 @@ public class ManagementController extends BasicController {
 
 			Map<String, String[]> parameterMap = Ucs2Utf8.requestToHashMap(request);
 			String search = parameterMap.get("search")[0];
-			search = java.net.URLDecoder.decode(search, "UTF-8");
+			search = java.net.URLDecoder.decode(search, StandardCharsets.UTF_8);
 			String replace = parameterMap.get("replace")[0];
-			replace = java.net.URLDecoder.decode(replace, "UTF-8");
+			replace = java.net.URLDecoder.decode(replace, StandardCharsets.UTF_8);
 
 			String translationId = request.getParameter("translationId");
 
 			int id = Integer.parseInt(translationId);
 
-			Translations translations = null;
+			Translations translations;
 
 			if (id == 0) {
 				translations = TranslationsHelper.getTranslations(form.getSurvey(), false);
@@ -5494,13 +5460,13 @@ public class ManagementController extends BasicController {
 		return null;
 	}
 
-	@GetMapping(value = "/closeCurrentForm")
+	@GetMapping(value = "/{shortname}/management/closeCurrentForm")
 	public ModelAndView closeCurrentForm(HttpServletRequest request, Locale locale) {
 		request.getSession().removeAttribute("sessioninfo");
 		return new ModelAndView("redirect:/forms");
 	}
 
-	@GetMapping(value = "/pendingChangesForPublishing", headers = "Accept=*/*")
+	@GetMapping(value = "/{shortname}/management/pendingChangesForPublishing", headers = "Accept=*/*")
 	public @ResponseBody boolean pendingChangesForPublishing(@PathVariable String shortname, HttpServletRequest request,
 			HttpServletResponse response) {
 		Survey draft = surveyService.getSurvey(shortname, true, false, false, false, null, true, false);
@@ -5508,7 +5474,7 @@ public class ManagementController extends BasicController {
 		return !changes.isEmpty();
 	}
 
-	@PostMapping(value = "/requestCodaDashboard")
+	@PostMapping(value = "/{shortname}/management/requestCodaDashboard")
 	public @ResponseBody boolean requestCodaDashboard(@PathVariable String shortname, HttpServletRequest request) throws Exception {
 		User u = sessionService.getCurrentUser(request);
 
@@ -5516,7 +5482,7 @@ public class ManagementController extends BasicController {
 
 		if (survey != null && survey.getOwner().getId().equals(u.getId())){
 
-			if (codaCreateDashboardLink == null || survey.getCodaWaiting() || (survey.getCodaLink() != null && survey.getCodaLink().length() > 0)){
+			if (codaCreateDashboardLink == null || survey.getCodaWaiting() || (survey.getCodaLink() != null && !survey.getCodaLink().isEmpty())){
 				return false;
 			}
 
@@ -5578,37 +5544,38 @@ public class ManagementController extends BasicController {
 
 			ObjectMapper mapper = new ObjectMapper();
 			String stringResult = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonMap);
-			
+
 			logger.info(stringResult);
 
-			StringEntity jsonEntity = new StringEntity(stringResult);
-			jsonEntity.setContentType("application/json");
+			StringEntity jsonEntity = new StringEntity(stringResult, ContentType.APPLICATION_JSON);
 			httpPost.addHeader("Content-type", "application/json");
 			httpPost.setEntity(jsonEntity);
 
 			try {
-			
-				HttpResponse response = httpClient.execute(httpPost);
+				// The execute method now takes a lambda/handler
+				boolean success = httpClient.execute(httpPost, response -> {
+					// response is an instance of ClassicHttpResponse
+					int code = response.getCode();
+                    logger.info("CODA response code: {}", code);
 
-				if (response != null) {
-					int code = response.getStatusLine().getStatusCode();
-					logger.info("CODA response code: " + code);
-					
 					HttpEntity entity = response.getEntity();
-
 					if (entity != null) {
-						String strResponse = EntityUtils.toString(entity, "UTF-8");
+						// Use StandardCharsets instead of a String "UTF-8"
+						String strResponse = EntityUtils.toString(entity, StandardCharsets.UTF_8);
 						logger.info(strResponse);
 					}
-					
-					if (code >= 200 && code < 300){
-						surveyService.setCodaWaiting(survey.getUniqueId(), true);
-						return true;
-					}
+
+					// Return the boolean result from the handler
+					return (code >= 200 && code < 300);
+				});
+
+				if (success) {
+					surveyService.setCodaWaiting(survey.getUniqueId(), true);
+					return true;
 				}
-			
+
 			} catch (IOException e) {
-				logger.error(e.getLocalizedMessage(), e);				
+				logger.error(e.getLocalizedMessage(), e);
 			}
 		}
 

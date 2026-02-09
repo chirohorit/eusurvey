@@ -1,18 +1,14 @@
 package com.ec.survey.model;
 
 import java.util.Date;
-import java.util.List;
-
-import javax.persistence.*;
-
+import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
-
 import com.ec.survey.tools.ConversionTools;
 
 @Entity
 @Table(name = "ANSWERS_COMMENTS", indexes = {@Index(name = "ANSWERCOMMENT_IDX", columnList = "ANSWER_SET_ID, QUESTION_UID")})
 public class AnswerComment implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+	
 
 	private Integer id;
 	private String uniqueCode; // the code of the answerSet of the creator of the comment

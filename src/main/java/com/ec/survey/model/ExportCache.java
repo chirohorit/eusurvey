@@ -1,6 +1,6 @@
 package com.ec.survey.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name="EXPORTCACHE")

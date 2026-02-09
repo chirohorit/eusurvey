@@ -2,16 +2,16 @@ package com.ec.survey.model.selfassessment;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -22,10 +22,9 @@ import org.hibernate.annotations.FetchMode;
 @Table(name = "SASCORECARDS", uniqueConstraints = {
 		@UniqueConstraint(columnNames = { "SASCORECARD_DATASETID" }, name = "DATASET_SCORE") })
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class SAScoreCard implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
 	private int id;
 	private int datasetID;
 	
@@ -53,7 +52,7 @@ public class SAScoreCard implements java.io.Serializable {
 
 	@OneToMany(targetEntity = SAScore.class, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "scoreCard")
 	@Fetch(value = FetchMode.SELECT)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<SAScore> getScores() {
 		return scores;
 	}

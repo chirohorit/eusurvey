@@ -1,6 +1,7 @@
 package com.ec.survey.model.delphi;
 
-import com.ec.survey.model.survey.DelphiChartType;
+import com.ec.survey.enumerator.DelphiChartType;
+import com.ec.survey.enumerator.DelphiQuestionType;
 
 public abstract class AbstractDelphiGraphData {
     private DelphiChartType chartType;

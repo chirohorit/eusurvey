@@ -10,7 +10,7 @@ import com.ec.survey.tools.ConversionTools;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Represents a abuse information for
@@ -19,7 +19,7 @@ import javax.persistence.*;
 @Entity
 @Table(name = "SURABUSE", indexes = {@Index(name="IDX_SURABUSE",columnList = "SURABUSE_SURVEY, SURABUSE_DATE")})
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Abuse {
 	
 	private int id;
@@ -38,6 +38,10 @@ public class Abuse {
 		this.text = text;
 		this.email = email;
 		this.created = new Date();
+	}
+
+	public Abuse() {
+
 	}
 
 	@Id

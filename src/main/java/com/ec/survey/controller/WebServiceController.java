@@ -1,20 +1,20 @@
 package com.ec.survey.controller;
 
+import com.ec.survey.enumerator.ParticipationGroupType;
+import com.ec.survey.enumerator.WebserviceTaskType;
 import com.ec.survey.exception.InvalidURLException;
 import com.ec.survey.model.*;
-import com.ec.survey.model.administration.LocalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.attendees.Invitation;
-import com.ec.survey.model.chargeback.OrganisationCharge;
 import com.ec.survey.model.survey.*;
 import com.ec.survey.model.survey.base.File;
 import com.ec.survey.service.*;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.MissingAnswersForReadonlyMandatoryQuestionException;
-import com.ec.survey.tools.SurveyHelper;
+import com.ec.survey.exception.MissingAnswersForReadonlyMandatoryQuestionException;
+import com.ec.survey.handler.SurveyHelper;
 import com.ec.survey.tools.Tools;
-import com.ec.survey.tools.Ucs2Utf8;
 import com.ec.survey.tools.export.XmlExportCreator;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
@@ -32,15 +32,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.net.URLDecoder;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/webservice")
@@ -85,7 +83,7 @@ public class WebServiceController extends BasicController {
 	private User getUser(HttpServletRequest request, HttpServletResponse response, boolean checkrequests) {
 		KeyValue credentials = getLoginAndPassword(request, response);
 		if (credentials != null) {
-			User user = null;
+			User user;
 			try {
 				user = administrationService.getUserForLogin(credentials.getKey(), false);
 			} catch (Exception e) {
@@ -629,7 +627,7 @@ public class WebServiceController extends BasicController {
 
 				File file = fileService.get(task.getResult());
 
-				java.io.File f = null;
+				java.io.File f;
 
 				if (task.getSurveyUid() != null) {
 					f = fileService.getSurveyExportFile(task.getSurveyUid(), file.getUid());
@@ -1350,7 +1348,7 @@ public class WebServiceController extends BasicController {
 			return "no token found";
 		}
 
-		Invitation invitation = null;
+		Invitation invitation;
 		try {
 			invitation = attendeeService.getInvitationByUniqueId(token);
 		} catch (Exception e) {
@@ -1841,7 +1839,7 @@ public class WebServiceController extends BasicController {
 				return "";
 
 			Survey published = surveyService.getSurvey(alias, false, false, false, false, null, true, false);
-			java.io.File file = null;
+			java.io.File file;
 			if (published != null) {
 				file = pdfService.createSurveyPDF(published, published.getLanguage().getCode(),
 						new java.io.File(archiveFileDir + published.getUniqueId() + ".pdf"));
@@ -1875,7 +1873,7 @@ public class WebServiceController extends BasicController {
 
 	private String getBody(HttpServletRequest request, HttpServletResponse response) {
 		StringBuilder jb = new StringBuilder();
-		String line = null;
+		String line;
 		try {
 			BufferedReader reader = request.getReader();
 			while ((line = reader.readLine()) != null)

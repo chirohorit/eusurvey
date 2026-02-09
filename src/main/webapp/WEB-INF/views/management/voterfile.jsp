@@ -1,11 +1,11 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
 <div id="newvoterfile" data-bind="visible: Page() == 6">
 	<div id="action-bar" class="container-fluid action-bar">
 		<div class="row">
 			<div class="col-md-2" style="text-align: left">
-				<a href="${contextpath}/noform/management/participants"><spring:message code="label.Participants" /></a> <span class="glyphicon glyphicon-menu-right" style="font-size: 90%"></span> 
+				<a href="${contextpath}/noform/management/participants"><spring:message code="label.Participants" /></a> <span class="glyphicon glyphicon-menu-right" style="font-size: 90%"></span>
 				<!-- ko if: selectedGroup() != null && selectedGroup().id() == 0 -->
 				<spring:message code="label.CreateNewVoterFile" />
 				<!-- /ko -->

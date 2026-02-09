@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://java.sun.com/xml/ns/javaee"
-        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
-  <session-config>
-      <session-timeout>60</session-timeout>
-      <!--<cookie-config>
-          <http-only>true</http-only>
-          <secure>false</secure>
-      </cookie-config>
-      <tracking-mode>COOKIE</tracking-mode>-->
-  </session-config>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
   <filter>
     <filter-name>hibernateFilterChain</filter-name>
     <filter-class>org.springframework.orm.hibernate5.support.OpenSessionInViewFilter</filter-class>
@@ -28,14 +20,14 @@
     <filter-name>springSecurityFilterChain</filter-name>
     <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
   </filter>
-  <!--<filter>
+  <filter>
     <filter-name>monitoring</filter-name>
     <filter-class>net.bull.javamelody.MonitoringFilter</filter-class>
     <init-param>
       <param-name>log</param-name>
       <param-value>true</param-value>
     </init-param>
-  </filter>-->
+  </filter>
   <filter>
     <filter-name>encodingFilter</filter-name>
     <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
@@ -56,23 +48,27 @@
     <filter-name>springSecurityFilterChain</filter-name>
     <url-pattern>/*</url-pattern>
     <dispatcher>REQUEST</dispatcher>
-    <dispatcher>FORWARD</dispatcher>
+    <!--<dispatcher>FORWARD</dispatcher>-->
   </filter-mapping>
-  <!--<filter-mapping>
+  <filter-mapping>
     <filter-name>monitoring</filter-name>
     <url-pattern>/*</url-pattern>
-  </filter-mapping>-->
+  </filter-mapping>
+
+
 
   <context-param>
     <param-name>contextConfigLocation</param-name>
-    <param-value>/WEB-INF/spring/mvc-dispatcher-servlet.xml</param-value>
+    <param-value>
+			/WEB-INF/spring/mvc-dispatcher-servlet.xml
+		</param-value>
   </context-param>
   <listener>
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
   </listener>
-  <!--<listener>
+  <listener>
     <listener-class>net.bull.javamelody.SessionListener</listener-class>
-  </listener>-->
+  </listener>
   <listener>
     <listener-class>com.ec.survey.ShutdownListener</listener-class>
   </listener>
@@ -93,6 +89,12 @@
     <servlet-name>mvc-dispatcher</servlet-name>
     <url-pattern>/</url-pattern>
   </servlet-mapping>
+  <session-config>
+    <cookie-config>
+      <http-only>true</http-only>
+    </cookie-config>
+  	<tracking-mode>COOKIE</tracking-mode>
+  </session-config>
   <error-page>
     <error-code>403</error-code>
     <location>/errors/403.html</location>
@@ -112,11 +114,11 @@
   <error-page>
   	<exception-type>org.springframework.security.web.firewall.RequestRejectedException</exception-type>
   	<location>/errors/request-rejected</location>
-  </error-page>
-  <jsp-config>
+	</error-page>
+<jsp-config>
     <taglib>
-      <taglib-uri>http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API</taglib-uri>
-      <taglib-location>/WEB-INF/classes/esapi.tld</taglib-location>
+      <taglib-uri>https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API</taglib-uri>
+      <taglib-location>/META-INF/esapi.tld</taglib-location>
     </taglib>
 	<jsp-property-group>
 	    <url-pattern>*.jsp</url-pattern>

@@ -6,7 +6,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -18,10 +18,10 @@ import java.util.Set;
 @Entity
 @Table(name = "ACTIVITYFILTER")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ActivityFilter implements java.io.Serializable {
 	
-	private static final long serialVersionUID = 1L;
+	
 	private int id;
 	private int userId;
 	private String surveyUid;

@@ -4,7 +4,7 @@ import com.ec.survey.model.selfassessment.SATargetDataset;
 import com.ec.survey.model.survey.Element;
 import org.springframework.beans.factory.annotation.Configurable;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.Map;
 @Configurable

@@ -1,6 +1,6 @@
 package com.ec.survey.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +8,6 @@ import java.util.List;
 @Table(name = "DEPARTMENTS")
 public class Department implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private String name;
 	private String domainCode;

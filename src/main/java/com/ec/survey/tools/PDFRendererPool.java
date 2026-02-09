@@ -1,6 +1,7 @@
 package com.ec.survey.tools;
 
 import com.ec.survey.service.SessionService;
+import com.ec.survey.handler.PDFRenderer;
 
 public class PDFRendererPool extends ObjectPool<PDFRenderer> {
 

@@ -1,7 +1,7 @@
 package com.ec.survey.controller;
 
 import com.ec.survey.model.*;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.SurveyService;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.naming.NamingException;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Locale;
 
@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Controller
 @RequestMapping("/forms")
 public class SurveyController extends BasicController {
-	
+
 	@Autowired
 	protected PaginationMapper paginationMapper;       
 		

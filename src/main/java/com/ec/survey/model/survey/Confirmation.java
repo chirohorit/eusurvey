@@ -7,7 +7,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.owasp.esapi.errors.ValidationException;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,11 +16,11 @@ import java.util.List;
  */
 @Entity
 @DiscriminatorValue("CONFIRMATION")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Confirmation extends Question {
 	
-	private static final long serialVersionUID = 1L;
+	
 	
 	public static final String TEXT = "CONFIRMATIONTEXT";
 	public static final String LABEL = "CONFIRMATIONLABEL";
@@ -76,13 +76,12 @@ public class Confirmation extends Question {
 	
 	@SuppressWarnings("deprecation")
 	@ManyToMany(targetEntity=File.class, cascade = CascadeType.ALL )
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="ELEMENTS_FILES",
 			inverseJoinColumns = @JoinColumn(name = "files_FILE_ID"),
 			joinColumns = @JoinColumn(name = "ELEMENTS_ID"))
-	@org.hibernate.annotations.ForeignKey(name = "none")
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
-
+	////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<File> getFiles() {
 		return files;
 	}

@@ -7,9 +7,9 @@ import com.ec.survey.model.WebserviceTask;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.ExportsRemover;
-import com.ec.survey.tools.ResultsCreator;
-import com.ec.survey.tools.TokenCreator;
+import com.ec.survey.handler.worker.ExportsRemover;
+import com.ec.survey.handler.worker.ResultsCreator;
+import com.ec.survey.handler.worker.TokenCreator;
 import com.ec.survey.tools.Tools;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -42,7 +42,7 @@ public class WebserviceService extends BasicService {
 	public void delete(WebserviceTask task)
 	{
 		Session session = sessionFactory.getCurrentSession();
-		session.delete(task);
+		session.remove(task);
 	}
 	
 	@Transactional
@@ -58,7 +58,7 @@ public class WebserviceService extends BasicService {
 				saved = true;
 			} catch (org.hibernate.exception.LockAcquisitionException ex)
 			{
-				logger.info("lock on WebserviceTask table catched; retry counter: " + counter);
+                logger.info("lock on WebserviceTask table catched; retry counter: {}", counter);
 				counter++;
 								
 				if (counter > 60)
@@ -78,7 +78,7 @@ public class WebserviceService extends BasicService {
 		
 		if (error.length() > 250) error = error.substring(0, 250);
 		
-		NativeQuery query = session.createNativeQuery("UPDATE WEBSERVICETASK t SET t.WST_DONE = true, t.WST_ERROR = :error WHERE t.WST_ID = :id");
+		NativeQuery query = session.createNativeQuery("UPDATE WEBSERVICE_TASKS t SET t.WST_DONE = true, t.WST_ERROR = :error WHERE t.WST_ID = :id");
 		query.setParameter(Constants.ERROR, error);
 		query.setParameter("id", task);
 			
@@ -96,7 +96,7 @@ public class WebserviceService extends BasicService {
 				return internalSetStarted(taskid);
 			} catch (org.hibernate.exception.LockAcquisitionException ex)
 			{
-				logger.info("lock on WebserviceTask table catched; retry counter: " + counter);
+                logger.info("lock on WebserviceTask table catched; retry counter: {}", counter);
 				counter++;
 								
 				if (counter > 60)
@@ -116,7 +116,7 @@ public class WebserviceService extends BasicService {
 		
 		Date started = new Date();
 		
-		NativeQuery query = session.createNativeQuery("UPDATE WEBSERVICETASK t SET t.WST_STARTED = :now WHERE t.WST_ID = :id");
+		NativeQuery query = session.createNativeQuery("UPDATE WEBSERVICE_TASKS t SET t.WST_STARTED = :now WHERE t.WST_ID = :id");
 		query.setParameter("now", started);
 		query.setParameter("id", taskid);
 		
@@ -140,7 +140,7 @@ public class WebserviceService extends BasicService {
 				saved = true;
 			} catch (org.hibernate.exception.LockAcquisitionException ex)
 			{
-				logger.info("lock on WebserviceTask table catched; retry counter: " + counter);
+                logger.info("lock on WebserviceTask table catched; retry counter: {}", counter);
 				counter++;
 								
 				if (counter > 60)
@@ -158,7 +158,7 @@ public class WebserviceService extends BasicService {
 		Session session;
 		session = sessionFactory.getCurrentSession();
 		
-		NativeQuery query = session.createNativeQuery("UPDATE WEBSERVICETASK t SET t.WST_DONE = true, t.WST_RESULT = :result WHERE t.WST_ID = :id");
+		NativeQuery query = session.createNativeQuery("UPDATE WEBSERVICE_TASKS t SET t.WST_DONE = true, t.WST_RESULT = :result WHERE t.WST_ID = :id");
 		query.setParameter("result", task.getResult());
 		query.setParameter("id", task.getId());
 		
@@ -179,7 +179,7 @@ public class WebserviceService extends BasicService {
 				saved = true;
 			} catch (org.hibernate.exception.LockAcquisitionException ex)
 			{
-				logger.info("lock on WebserviceTask table catched; retry counter: " + counter);
+                logger.info("lock on WebserviceTask table catched; retry counter: {}", counter);
 				counter++;
 								
 				if (counter > 60)
@@ -195,7 +195,7 @@ public class WebserviceService extends BasicService {
 	
 	private void internalSave(WebserviceTask task) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(task);
+		session.merge(task);
 		session.flush();
 	}
 	
@@ -204,7 +204,7 @@ public class WebserviceService extends BasicService {
 			
 			if (useworkerserver.equalsIgnoreCase("true") && isworkerserver.equalsIgnoreCase("false"))
 			{
-				logger.info("calling worker server for webservice task " + task.getId());
+                logger.info("calling worker server for webservice task {}", task.getId());
 				
 				try {				
 					URL workerurl = new URL(workerserverurl + "worker/startwebservice/" + task.getId());
@@ -220,7 +220,7 @@ public class WebserviceService extends BasicService {
 					{
 						return true;
 					} else {
-						logger.error("calling worker server for webservice task " + task.getId() + " returned" + result);
+                        logger.error("calling worker server for webservice task {} returned{}", task.getId(), result);
 						return false;
 					}
 				
@@ -228,8 +228,8 @@ public class WebserviceService extends BasicService {
 					logger.error(e.getLocalizedMessage(), e);
 				}
 			}
-			
-			logger.info("Starting task " + task.getId());
+
+            logger.info("Starting task {}", task.getId());
 			
 			switch (task.getType()) {
 				case CreateTokens: 
@@ -237,17 +237,12 @@ public class WebserviceService extends BasicService {
 					tokenCreator.init(task.getId());
 					getTokenPool().execute(tokenCreator);	
 					break;
-				case CreateResults:
+				case CreateResults, CreateResult:
 					ResultsCreator resultsCreator = (ResultsCreator) context.getBean("resultsCreator");
 					resultsCreator.init(task.getId(), resources, locale);
 					getPool().execute(resultsCreator);	
 					break;
-				case CreateResult:
-					ResultsCreator resultsCreator2 = (ResultsCreator) context.getBean("resultsCreator");
-					resultsCreator2.init(task.getId(), resources, locale);
-					getPool().execute(resultsCreator2);	
-					break;
-				case DeleteOldExports:
+                case DeleteOldExports:
 					ExportsRemover exportsRemover = (ExportsRemover) context.getBean("exportsRemover");
 					exportsRemover.init(task.getId());
 					getPool().execute(exportsRemover);	
@@ -256,24 +251,24 @@ public class WebserviceService extends BasicService {
 					throw new MessageException("Task type not supported");
 			}
 				
-			logger.info(String.format("Task %s started successfully", task.getId()));
+			logger.info("Task {} started successfully", task.getId());
 			return true;
 		} catch (Exception ex) {
-			logger.error(ex.getLocalizedMessage());
-			logger.error(String.format("Task %s could not be started.", task.getId()));
+			logger.error(String.valueOf(ex));
+			logger.error("Task {} could not be started.", task.getId());
 			return false;
 		}
 	}
 	
 	@Transactional
-	public boolean restartTask(WebserviceTask task) {	
-		logger.info("Starting task " + task.getId());
+	public boolean restartTask(WebserviceTask task) {
+        logger.info("Starting task {}", task.getId());
 		
 		try {
 			
 			if (useworkerserver.equalsIgnoreCase("true") && isworkerserver.equalsIgnoreCase("false"))
 			{
-				logger.info("calling worker server for restarting webservice task " + task.getId());
+                logger.info("calling worker server for restarting webservice task {}", task.getId());
 				
 				try {
 					URL workerurl = new URL(workerserverurl + "worker/restartwebservice/" + task.getId());
@@ -289,7 +284,7 @@ public class WebserviceService extends BasicService {
 					{
 						return true;
 					} else {
-						logger.error("calling worker server for restarting webservice task " + task.getId() + " returned" + result);
+                        logger.error("calling worker server for restarting webservice task {} returned{}", task.getId(), result);
 						return false;
 					}
 				} catch (ConnectException e) {
@@ -300,7 +295,7 @@ public class WebserviceService extends BasicService {
 			task.setCounter(task.getCounter()+1);			
 		
 			Session session = sessionFactory.getCurrentSession();
-			session.saveOrUpdate(task);
+			session.merge(task);
 			
 			switch (task.getType()) {
 				case CreateTokens: 
@@ -308,25 +303,20 @@ public class WebserviceService extends BasicService {
 					tokenCreator.init(task.getId());
 					getTokenPool().execute(tokenCreator);	
 					break;
-				case CreateResults:
+				case CreateResults, CreateResult:
 					ResultsCreator resultsCreator = (ResultsCreator) context.getBean("resultsCreator");
 					resultsCreator.init(task.getId(), resources, null);
 					getPool().execute(resultsCreator);	
 					break;
-				case CreateResult:
-					ResultsCreator resultsCreator2 = (ResultsCreator) context.getBean("resultsCreator");
-					resultsCreator2.init(task.getId(), resources, null);
-					getPool().execute(resultsCreator2);
-					break;
-				default:
+                default:
 					throw new MessageException("Task type not supported");
 			}
 			
-			logger.info(String.format("Task %s started successfully", task.getId()));
+			logger.info("Task {} started successfully", task.getId());
 			return true;
 		} catch (Exception ex) {
-			logger.error(ex.getLocalizedMessage());
-			logger.error(String.format("Task %s could not be started.", task.getId()));
+			logger.error(String.valueOf(ex));
+			logger.error("Task {} could not be started.", task.getId());
 			return false;
 		}
 	}
@@ -376,13 +366,13 @@ public class WebserviceService extends BasicService {
 		}
 		
 		req.setCounter(req.getCounter()+1);
-		session.saveOrUpdate(req);
+		session.merge(req);
 	}
 
 	@Transactional
 	public int getWaitingTokens(ParticipationGroup group) {
 		Session session = sessionFactory.getCurrentSession();
-		String sql = "SELECT SUM(WST_NUM) FROM WEBSERVICETASK WHERE WST_GROUP = :id AND WST_DONE = 0 AND type = 0";
+		String sql = "SELECT SUM(WST_NUM) FROM WEBSERVICE_TASKS WHERE WST_GROUP = :id AND WST_DONE = 0 AND WST_TYPE = 0";
 		Query query = session.createNativeQuery(sql).setParameter("id", group.getId());
 		return ConversionTools.getValue(query.uniqueResult());
 	}

@@ -15,7 +15,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import java.util.*;
 
@@ -33,7 +33,6 @@ public class AnswerSet implements java.io.Serializable {
 		public List<File> files = new ArrayList<>();
 	}
 
-	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private String invitationId;
 	private Date date;
@@ -174,7 +173,7 @@ public class AnswerSet implements java.io.Serializable {
 
 	@OneToMany(targetEntity = Answer.class, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "answerSet")
 	@Fetch(value = FetchMode.SELECT)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Answer> getAnswers() {
 		return answers;
 	}

@@ -1,8 +1,9 @@
 package com.ec.survey.model;
 
+import com.ec.survey.enumerator.WebserviceTaskType;
 import com.ec.survey.model.administration.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity

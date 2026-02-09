@@ -1,7 +1,7 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -129,7 +129,7 @@
 				<c:if test="${caseidforchangecontribution != null}">			
 					<c:choose>
 						<c:when test="${responsive != null}">
-							<a style="text-decoration: none" href="${contextpath}/editcontribution/${caseidforchangecontribution}" class="btn btn-lg btn-default"><spring:message code="label.EditContribution" /></a>		
+							<a style="text-decoration: none" href="${contextpath}/editcontribution/${caseidforchangecontribution}" class="btn btn-lg btn-default"><spring:message code="label.EditContribution" /></a>
 						</c:when>
 						<c:otherwise>
 							<a href="${contextpath}/editcontribution/${caseidforchangecontribution}" class="btn btn-default"><spring:message code="label.EditContribution" /></a>

@@ -3,14 +3,14 @@ package com.ec.survey.model.survey;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import javax.persistence.Cacheable;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("PROPERTY")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class PropertiesElement extends Element {
 	
 	private boolean orderChanged = false;
@@ -18,7 +18,7 @@ public class PropertiesElement extends Element {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 
 	public PropertiesElement() {
 	}

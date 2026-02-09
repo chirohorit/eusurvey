@@ -5,8 +5,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import com.ec.survey.tools.Tools;
 
-import javax.persistence.*;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import java.util.Date;
 import java.util.UUID;
 
@@ -16,10 +16,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "SCORINGITEMS")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ScoringItem implements java.io.Serializable {
-	
-	private static final long serialVersionUID = 1L;
+
 	private Integer id;
 	private String uid = UUID.randomUUID().toString();
 	private Integer sourceId;

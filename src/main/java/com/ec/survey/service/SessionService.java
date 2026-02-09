@@ -6,18 +6,18 @@ import com.ec.survey.exception.InternalServerErrorException;
 import com.ec.survey.exception.InvalidURLException;
 import com.ec.survey.exception.NoFormLoadedException;
 import com.ec.survey.model.*;
-import com.ec.survey.model.administration.GlobalPrivilege;
-import com.ec.survey.model.administration.LocalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Element;
 import com.ec.survey.model.survey.Question;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
 import com.ec.survey.tools.Tools;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.exception.WeakAuthenticationException;
 
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.apache.commons.lang3.StringUtils;
@@ -27,8 +27,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.net.*;
 import java.util.*;
@@ -75,17 +75,17 @@ public class SessionService extends BasicService {
 
 		if (user != null) {
 			Session session = sessionFactory.getCurrentSession();
-			user = (User) session.merge(user);
+			user = session.merge(user);
 
 			String weakAuthenticationDisabled = settingsService.get(Setting.WeakAuthenticationDisabled);
 
 			if (weakAuthenticationDisabled.equalsIgnoreCase("true") && checkWeakAuthentication
-					&& user.getType().equalsIgnoreCase(User.ECAS) && user.isExternal() && weakAuthentication) {
+					&& user.getType().equalsIgnoreCase(User.ECAS) && weakAuthentication) {	//&& user.isExternal()
 				throw new WeakAuthenticationException();
 			}
 
 			String disabled = settingsService.get(Setting.CreateSurveysForExternalsDisabled);
-			if (disabled.equalsIgnoreCase("true") && user.isExternal()) {
+			if (disabled.equalsIgnoreCase("true")) { //&& user.isExternal()
 				user.setCanCreateSurveys(false);
 			}
 		}
@@ -310,13 +310,10 @@ public class SessionService extends BasicService {
 			// User's email is the same
 			return true;
 		}
-		if (answerSet != null && answerSet.getSurvey() != null && answerSet.getSurvey().getOwner() != null
-				&& answerSet.getSurvey().getOwner().getId().equals(user.getId())) {
-			// User is same ID
-			return true;
-		}
-		return false;
-	}
+        // User is same ID
+        return answerSet != null && answerSet.getSurvey() != null && answerSet.getSurvey().getOwner() != null
+                && answerSet.getSurvey().getOwner().getId().equals(user.getId());
+    }
 
 	public boolean userIsFormManager(Survey survey, User user, HttpServletRequest request) {
 		if (survey.getOwner().getId().equals(user.getId()))
@@ -341,7 +338,7 @@ public class SessionService extends BasicService {
 		
 		user.setResultAccess(null);	
 
-		Access access = null;
+		Access access;
 		if (!survey.getOwner().getId().equals(user.getId())) {
 			if (user.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) < 2) {
 				boolean allowed = false;
@@ -537,7 +534,7 @@ public class SessionService extends BasicService {
 				filter.removeSurveyType("selfassessment");
 			}
 
-			if (request.getParameter("tags") != null && request.getParameter("tags") != "") {
+			if (request.getParameter("tags") != null && !Objects.equals(request.getParameter("tags"), "")) {
 				filter.setTags(List.of(request.getParameter("tags").split(";")));
 			}
 
@@ -574,15 +571,17 @@ public class SessionService extends BasicService {
 		return filter;
 	}
 
+	@Transactional
 	public ResultFilter getLastResultFilter(HttpServletRequest request) {
 		return getLastResultFilter(request, 0, 0);
 	}
 
+	@Transactional
 	public ResultFilter getLastResultFilter(HttpServletRequest request, int userid, int surveyid) {
 		if (request == null)
 			return null;
 
-		ResultFilter filter = null;
+		ResultFilter filter;
 
 		if (userid > 0 && surveyid > 0) {
 			filter = getResultFilter(userid, surveyid, true);
@@ -615,9 +614,7 @@ public class SessionService extends BasicService {
 				filter.getVisibleQuestions().remove(id);
 			}			
 			for (String id : ids) {
-				if (!filter.getVisibleQuestions().contains(id)) {
-					filter.getVisibleQuestions().add(id);
-				}
+                filter.getVisibleQuestions().add(id);
 			}
 			
 			idsToRemove = new ArrayList<>();
@@ -630,9 +627,7 @@ public class SessionService extends BasicService {
 				filter.getExportedQuestions().remove(id);
 			}
 			for (String id : allids) {
-				if (!filter.getExportedQuestions().contains(id)) {
-					filter.getExportedQuestions().add(id);
-				}
+                filter.getExportedQuestions().add(id);
 			}
 
 			if (!idsToRemove.isEmpty()) {
@@ -703,7 +698,7 @@ public class SessionService extends BasicService {
 					internalSetLastResultFilter(filter, user, survey);
 					saved = true;
 				} catch (org.hibernate.exception.LockAcquisitionException ex) {
-					logger.info("lock on RESULTFILTER table catched; retry counter: " + counter);
+                    logger.info("lock on RESULT_FILTERS table catched; retry counter: {}", counter);
 					counter++;
 
 					if (counter > 60) {
@@ -734,7 +729,7 @@ public class SessionService extends BasicService {
 		filter.merge(existing);
 
 		session.evict(filter);
-		session.saveOrUpdate(existing);
+		session.merge(existing);
 	}
 
 	public void updateFilterValueIds(ResultFilter filter){
@@ -803,7 +798,7 @@ public class SessionService extends BasicService {
 		filter.setUnbanned(
 				request.getParameter("unbanned") != null && request.getParameter("unbanned").equalsIgnoreCase("true"));
 
-		String roles[] = request.getParameterValues("roles");
+		String[] roles = request.getParameterValues("roles");
 		if (roles != null && roles.length > 0) {
 			filter.setRoles(roles);
 		}
@@ -833,8 +828,8 @@ public class SessionService extends BasicService {
 		}
 
 		System.setProperty("nonProxyHosts", proxyNonProxyHosts);
-		
-		logger.info("SessionService set Non proxy Host " + proxyNonProxyHosts);
+
+        logger.info("SessionService set Non proxy Host {}", proxyNonProxyHosts);
 		System.getProperties().setProperty("http.nonProxyHosts", proxyNonProxyHosts);
 
 		Authenticator.setDefault(new Authenticator() {

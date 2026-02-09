@@ -1,5 +1,7 @@
 package com.ec.survey.model.delphi;
 
+import com.ec.survey.enumerator.DelphiQuestionType;
+
 import java.util.ArrayList;
 import java.util.List;
 

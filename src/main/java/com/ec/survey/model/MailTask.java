@@ -3,9 +3,9 @@ package com.ec.survey.model;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,10 +13,10 @@ import java.util.Map;
 @Entity
 @Table(name = "MAILTASKS", indexes = {@Index(name = "IDX_MAILTASKS", columnList = "MAILTASK_SURVEY, MAILTASK_NOT, MAILTASK_STATE")})
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class MailTask implements java.io.Serializable {
 	
-	private static final long serialVersionUID = 1L;
+	
 	
 	private Integer id;
 	private String selectedAttendee;

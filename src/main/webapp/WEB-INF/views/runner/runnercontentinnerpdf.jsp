@@ -2,10 +2,10 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="com.ec.survey.model.Form" %>
 <%@ page trimDirectiveWhitespaces="true" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>	
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 
 	<input type="hidden" id="preventGoingBack" value="${form.survey.preventGoingBack}" />
 	<input type="hidden" id="validatedPerPage" value="${form.survey.validatedPerPage}" />
@@ -716,7 +716,7 @@
 														</div>
 														<a>																	
 															<fmt:formatNumber var="widthRounded" value="${(600 - 20 - (element.columns*30))/element.columns}" maxFractionDigits="0" />
-															<img class="gallery-image" alt="<esapi:encodeForHTMLAttribute>${file.cleanComment}</esapi:encodeForHTMLAttribute>" src="${contextpath}/files/${form.survey.uniqueId}/${file.uid}" data-width="${file.width}" data-original-width="${widthRounded}" width="${widthRounded}px" style="width: ${widthRounded}px; max-width: none;" />	
+															<img class="gallery-image" alt="<esapi:encodeForHTMLAttribute>${file.cleanComment}</esapi:encodeForHTMLAttribute>" src="${contextpath}/files/${form.survey.uniqueId}/${file.uid}" data-width="${file.width}" data-original-width="${widthRounded}" width="${widthRounded}px" style="width: ${widthRounded}px; max-width: none;" />
 														</a>
 														<div class="comment">${file.comment}</div>							
 													</td>

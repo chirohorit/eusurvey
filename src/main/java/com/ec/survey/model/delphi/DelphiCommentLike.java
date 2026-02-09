@@ -1,12 +1,11 @@
 package com.ec.survey.model.delphi;
 
-import javax.persistence.*;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "COMMENT_LIKES", indexes = {@Index(name = "COMMENTLIKE_IDX", columnList = "ANSWER_COMMENT_ID, ANSWER_SET_CODE")})
 public class DelphiCommentLike implements java.io.Serializable  {
-    private static final long serialVersionUID = 1L;
     private Integer id;
     private Integer answerCommentId;    //which comment was liked
     private String uniqueCode;      //the code of the answerSet of the person that liked this comment

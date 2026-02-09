@@ -1,4 +1,4 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -171,7 +171,7 @@
 					<a id="docQuickStartGuide" target="_blank" class="boxlink" href="https://circabc.europa.eu/sd/a/2e8fd5cf-4095-4413-9aa4-d46bf706aafc/EUSurvey_Quick_Start_Guide.pdf" style="background-image:url('${contextpath}/resources/images/icons/64/flash_on.png');"><spring:message code="label.QuickstartGuide" /></a>
 				</c:when>
 				<c:otherwise>
-					<a id="docQuickStartGuide" target="_blank" class="boxlink" href="${contextpath}/resources/documents/eusurvey_oss_quickstart_guide.pdf" style="background-image:url('${contextpath}/resources/images/icons/64/right_4.png');"><spring:message code="label.QuickstartGuide" /></a>				
+					<a id="docQuickStartGuide" target="_blank" class="boxlink" href="${contextpath}/resources/documents/eusurvey_oss_quickstart_guide.pdf" style="background-image:url('${contextpath}/resources/images/icons/64/right_4.png');"><spring:message code="label.QuickstartGuide" /></a>
 				</c:otherwise>
 			</c:choose>
 					
@@ -186,7 +186,7 @@
 					<a id="docBestPractices" target="_blank" class="boxlink" href="https://circabc.europa.eu/sd/d/281e626e-279e-45df-8581-1f6e04feff51/BestPractices-EUSurvey.pdf" style="background-image:url('${contextpath}/resources/images/icons/64/right_4.png');"><spring:message code="label.BestPractices" /></a>
 				</c:when>
 				<c:otherwise>
-					<a id="docBestPractices" target="_blank" class="boxlink" href="${contextpath}/resources/documents/eusurvey_oss_best_practices.pdf" style="background-image:url('${contextpath}/resources/images/icons/64/right_4.png');"><spring:message code="label.BestPractices" /></a>				
+					<a id="docBestPractices" target="_blank" class="boxlink" href="${contextpath}/resources/documents/eusurvey_oss_best_practices.pdf" style="background-image:url('${contextpath}/resources/images/icons/64/right_4.png');"><spring:message code="label.BestPractices" /></a>
 				</c:otherwise>
 			</c:choose>
 					

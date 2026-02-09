@@ -4,17 +4,16 @@ import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.machinetranslation.RequestTranslationMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,9 +89,9 @@ public class ETranslationService extends BasicService {
 		try {
 			sessionService.initializeProxy();
 
-			CredentialsProvider provider = new BasicCredentialsProvider();
-			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(this.username, this.password);
-			provider.setCredentials(AuthScope.ANY, credentials);
+			BasicCredentialsProvider provider = new BasicCredentialsProvider();
+			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(this.username, this.password.toCharArray());
+			provider.setCredentials(new AuthScope(null, -1), credentials);
 
 			//CloseableHttpClient httpclient = HttpClients.createSystem();
 
@@ -109,12 +108,12 @@ public class ETranslationService extends BasicService {
 				logger.info("json:" + json);
 				logger.info("url" + this.url);
 			}
-			post.setEntity(new StringEntity(json, "UTF-8"));
+			post.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
 
 			HttpResponse response = client.execute(post);
 			if (logger.isInfoEnabled()) {
-				logger.info("response status line " + response.getStatusLine().toString());
-				logger.info("response status code " + response.getStatusLine().getStatusCode());
+				logger.info("response status line " + response.getReasonPhrase());
+				logger.info("response status code " + response.getCode());
 			}
 		} catch (Exception e) {
 			if (logger.isErrorEnabled()) {

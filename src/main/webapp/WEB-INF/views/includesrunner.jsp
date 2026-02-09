@@ -1,14 +1,7 @@
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
 <meta charset="utf-8"></meta>
 <meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
-<c:choose>
-	<c:when test="${ismobile != null}">
-		<meta name="viewport" content="width=device-width, initial-scale = 1.0, maximum-scale=1.0, user-scalable=no" />
-	</c:when>
-	<c:otherwise>
-		<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
-	</c:otherwise>
-</c:choose>
+<meta name="viewport" content="width=device-width, initial-scale=1"></meta>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
 <meta http-equiv="Pragma" content="no-cache, no-store"></meta>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"></meta>
@@ -26,13 +19,7 @@
 <link href="${contextpath}/resources/css/jquery-ui.theme.min.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css"></link>
 <link href="${contextpath}/resources/css/common.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css"></link>
 <link href="${contextpath}/resources/css/bootstrap-slider.min.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css"></link>
-
 <link href="${contextpath}/resources/css/Chart.min.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css"></link>
-
-<c:if test="${ismobile != null}">
-	<link href="${contextpath}/resources/css/commonmobile.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css"></link>
-</c:if>
-
 <c:choose>
 	<c:when test="${forpdf == null}">
 		<link href="${contextpath}/resources/css/bootstrap.css?version=<%@include file="version.txt" %>" rel="stylesheet" type="text/css"></link>
@@ -105,7 +92,7 @@
 	var isresponsive = ${responsive != null};
 	var isdelphi = ${form != null && form.survey.getIsDelphi()};
 	var isevote = ${form != null && form.survey.getIsEVote()};
-	var delphiStartPageUrl = '<c:out value='${pageContext.request.getAttribute("javax.servlet.forward.request_uri")}?${pageContext.request.getQueryString().replace("startDelphi=true&", "").replace("startDelphi=true", "?")}' />';
+	var delphiStartPageUrl = '<c:out value='${pageContext.request.getAttribute("jakarta.servlet.forward.request_uri")}?${pageContext.request.getQueryString().replace("startDelphi=true&", "").replace("startDelphi=true", "?")}' />';
 
 	var maxEVoteCandidates = "${form.survey.maxPrefVotes}"
 
@@ -481,7 +468,7 @@
 
 <c:choose>
 	<c:when test="${runnermode != null && form != null && form.language != null}">
-		<script type="text/javascript" src="${contextpath}/resources/js/jqueryui/i18n/datepicker-${form.language.code.toLowerCase()}.js?version=<%@include file="version.txt" %>"></script>	
+		<script type="text/javascript" src="${contextpath}/resources/js/jqueryui/i18n/datepicker-${form.language.code.toLowerCase()}.js?version=<%@include file="version.txt" %>"></script>
 		
 		<script type="text/javascript">
 			$(function() {
@@ -491,7 +478,7 @@
 		</script>		
 	</c:when>
 	<c:otherwise>
-		<script type="text/javascript" src="${contextpath}/resources/js/jqueryui/i18n/datepicker-${pageContext.response.locale}.js?version=<%@include file="version.txt" %>"></script>	
+		<script type="text/javascript" src="${contextpath}/resources/js/jqueryui/i18n/datepicker-${pageContext.response.locale}.js?version=<%@include file="version.txt" %>"></script>
 		
 		<script type="text/javascript">
 			$(function() {

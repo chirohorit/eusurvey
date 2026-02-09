@@ -1,34 +1,36 @@
 package com.ec.survey.service;
 
+import com.ec.survey.enumerator.GlobalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
+import com.ec.survey.exception.FrozenCredentialsException;
 import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.*;
 import com.ec.survey.model.administration.*;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.LoginAlreadyExistsException;
+import com.ec.survey.exception.LoginAlreadyExistsException;
 import com.ec.survey.tools.Tools;
 
 import org.apache.commons.io.IOUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.query.Query;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.transform.ResultTransformer;
-
 import org.hibernate.Session;
-import org.hibernate.criterion.CriteriaSpecification;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.springframework.util.StringUtils;
 
@@ -64,12 +66,41 @@ public class AdministrationService extends BasicService {
 		return stresspassword;
 	}
 
+	/**
+	 * Consolidates authentication logic into one single database connection.
+	 * Marks as read-only to optimize database interaction.
+	 */
+	@Transactional(readOnly = true)
+	public User authenticateUser(String username, String password) throws MessageException {
+		// 1. Get User
+		User user = getUserForLogin(username, false);
+		if (user == null) {
+			return null; // Username not found
+		}
+
+		// Checking for legacy hashed code
+		checkUserPassword(user, password);
+
+		// 2. Check Password
+		// Note: Replace with your actual password verification logic
+		if (!Tools.isPasswordValid(user.getPassword(), password + user.getPasswordSalt())) {
+			return null; // Password mismatch
+		}
+
+		// 3. Check Banned/Frozen Status
+		if (!checkEmailsNotBanned(user.getAllEmailAddresses())) {
+			throw new FrozenCredentialsException("User is banned!");
+		}
+
+		return user;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = true)
 	public List<Role> getAllRoles() {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createQuery("FROM Role");
-		return (List<Role>) query.list();
+		Query query = session.createQuery("FROM Role");
+		return query.list();
 	}
 
 	@Transactional(readOnly = true)
@@ -85,7 +116,7 @@ public class AdministrationService extends BasicService {
 	@Transactional(readOnly = true)
 	public Role getRole(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (Role) session.get(Role.class, id);
+		return session.get(Role.class, id);
 	}
 
 	@Transactional(readOnly = true)
@@ -105,65 +136,63 @@ public class AdministrationService extends BasicService {
 	@Transactional
 	public void createRole(Role role) {
 		Session session = sessionFactory.getCurrentSession();
-		session.save(role);
+		session.persist(role);
 	}
 
 	@Transactional
 	public void updateRole(Role role) {
 		Session session = sessionFactory.getCurrentSession();
-		session.update(role);
+		session.merge(role);
 	}
 
 	@Transactional
 	public void deleteRole(int id) {
 		Role role = getRole(id);
 		Session session = sessionFactory.getCurrentSession();
-		session.delete(role);
+		session.remove(role);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = true)
 	public List<User> getAllUsers() {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createQuery("FROM User");
-		return (List<User>) query.list();
+		Query query = session.createQuery("FROM User");
+		return query.list();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = true)
 	public List<Integer> getAllUserIDs() {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createQuery("SELECT u.id FROM User u");
-		return (List<Integer>) query.list();
+		Query query = session.createQuery("SELECT u.id FROM User u");
+		return query.list();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = true)
 	public List<User> getUsers(UserFilter filter, SqlPagination sqlPagination) throws Exception {
 		Session session = sessionFactory.getCurrentSession();
-
 		HashMap<String, Object> parameters = new HashMap<>();
-		Query<?> query = session.createQuery(getHql(filter, parameters, false));
-		sqlQueryService.setParameters(query, parameters);
-
-
-        //return query.setResultListTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY.transformList(query.setFirstResult(sqlPagination.getFirstResult()).setMaxResults(sqlPagination.getMaxResult()).list()));
-        return (List<User>) query.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).setFirstResult(sqlPagination.getFirstResult()).setMaxResults(sqlPagination.getMaxResult()).list();
-
-    }
+		// Creating the query with the specific return type is preferred in Hibernate 6
+		Query<User> query = session.createQuery(getHql(filter, parameters, false), User.class);
+		// Modern setParameters: You can iterate or use a helper, but manual casting is largely unnecessary
+		parameters.forEach(query::setParameter);
+		return query.setFirstResult(sqlPagination.getFirstResult())
+				.setMaxResults(sqlPagination.getMaxResult())
+				.getResultList(); // 'list()' is still available but 'getResultList()' is the JPA standard
+	}
 
 	@Transactional(readOnly = true)
 	public User getUser(UserFilter filter) throws Exception {
 		Session session = sessionFactory.getCurrentSession();
 
 		HashMap<String, Object> parameters = new HashMap<>();
-		Query<?> query = session.createQuery(getHql(filter, parameters, false));
+		Query query = session.createQuery(getHql(filter, parameters, false));
 		sqlQueryService.setParameters(query, parameters);
 
 		@SuppressWarnings("unchecked")
-		List<User> list = (List<User>) query.setReadOnly(true).setMaxResults(1).list();
+		List<User> list = query.setReadOnly(true).setMaxResults(1).list();
 
-		if (list.size()>=1) {
+		if (!list.isEmpty()) {
 			return list.get(0);
 		}
 		return null;
@@ -172,29 +201,29 @@ public class AdministrationService extends BasicService {
 	@Transactional(readOnly = true)
 	public User getUser(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (User) session.get(User.class, id);
+		return session.get(User.class, id);
 	}
 
 	@Transactional
 	public void createUser(User user) throws LoginAlreadyExistsException {
 		Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createQuery("FROM User u where u.login = :login").setParameter("login", (String) user.getLogin());
+		Query query = session.createQuery("FROM User u where u.login = :login").setParameter("login", user.getLogin());
 		@SuppressWarnings("unchecked")
-		List<User> list = (List<User>) query.list();
+		List<User> list = query.list();
 
 		if (!list.isEmpty())
 		{
 			throw new LoginAlreadyExistsException();
 		}
 		
-		session.save(user);
+		session.persist(user);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void updateUser(User user) {
 		Session session = sessionFactory.getCurrentSession();
-		user = (User) session.merge(user);
+		user = session.merge(user);
 
 		String disabled = settingsService.get(Setting.CreateSurveysForExternalsDisabled);
 		if (disabled.equalsIgnoreCase("true") && user.getGlobalPrivileges().get(GlobalPrivilege.ECAccess) == 0) {
@@ -202,7 +231,7 @@ public class AdministrationService extends BasicService {
 		}
 
 		session.setReadOnly(user, false);
-		session.update(user);
+		session.merge(user);
 	}
 
 	@Transactional
@@ -214,7 +243,7 @@ public class AdministrationService extends BasicService {
 			Session session = sessionFactory.getCurrentSession();
 			user.setPasswordSalt(Tools.newSalt());
 			user.setPassword(Tools.hash(rawPassword + user.getPasswordSalt()));
-			session.update(user);
+			session.merge(user);
 			return true;
 		}
 
@@ -224,34 +253,33 @@ public class AdministrationService extends BasicService {
 	@Transactional
 	public String setUserDeleteRequested(int id) throws IOException, MessageException {
 		Session session = sessionFactory.getCurrentSession();
-		User user = (User) session.get(User.class, id);
+		User user = session.get(User.class, id);
 		String login = user.getLogin();
 		String code = UUID.randomUUID().toString();
 		
 		String url = host + "deleteaccount/" + user.getId() + Constants.PATH_DELIMITER + code;
-		
-		StringBuilder body = new StringBuilder();
-		body.append("Dear ").append(user.getName()).append(",<br /><br />Please confirm the deletion of your account by clicking the following link:<br /><br/>");
-		body.append("<a href='").append(url).append("'>").append(url).append("</a><br /><br />");
-		body.append("This link will remain valid for three days. If the deletion is not finalised in this time, your account will remain active.");
-		body.append("<br /><br /><div style='text-align: center; border-top: 1px solid #999; border-bottom: 1px solid #999; padding: 10px; margin-top: 20px; margin-bottom: 10px; color: #999'>Please do not reply to this email</div>");
+
+        String body = "Dear " + user.getName() + ",<br /><br />Please confirm the deletion of your account by clicking the following link:<br /><br/>" +
+                "<a href='" + url + "'>" + url + "</a><br /><br />" +
+                "This link will remain valid for three days. If the deletion is not finalised in this time, your account will remain active." +
+                "<br /><br /><div style='text-align: center; border-top: 1px solid #999; border-bottom: 1px solid #999; padding: 10px; margin-top: 20px; margin-bottom: 10px; color: #999'>Please do not reply to this email</div>";
 		
 		InputStream inputStream = servletContext.getResourceAsStream("/WEB-INF/Content/mailtemplateeusurvey.html");
-		String text = IOUtils.toString(inputStream, "UTF-8").replace("[CONTENT]", body.toString()).replace("[HOST]",host);
+		String text = IOUtils.toString(inputStream, StandardCharsets.UTF_8).replace("[CONTENT]", body).replace("[HOST]",host);
 		
 		mailService.SendHtmlMail(user.getEmail(), sender, sender, "Please confirm the deletion of your EUSurvey account", text, null, null, null, false);
 
 		user.setDeleteCode(code);
 		user.setDeleteDate(new Date());
 		user.setDeleteRequested(true);		
-		session.update(user);
+		session.merge(user);
 		return login;
 	}
 	
 	@Transactional
 	public void confirmUserDeleteRequest(int id, String code) throws MessageException {
 		Session session = sessionFactory.getCurrentSession();
-		User user = (User) session.get(User.class, id);
+		User user = session.get(User.class, id);
 		
 		if (user == null)
 		{
@@ -274,13 +302,13 @@ public class AdministrationService extends BasicService {
 		}
 		
 		user.setDeleted(true);		
-		session.update(user);
+		session.merge(user);
 	}
 	
 	@Transactional
 	public List<Integer> getUserAccountsForDeletion() {
 		Session session = sessionFactory.getCurrentSession();
-		NativeQuery<?> query = session.createNativeQuery("SELECT USER_ID FROM USERS WHERE USER_DELETED = 1 AND USER_DELDATE < NOW() - INTERVAL 7 DAY");
+		NativeQuery query = session.createNativeQuery("SELECT USER_ID FROM USERS WHERE USER_DELETED = 1 AND USER_DELDATE < NOW() - INTERVAL 7 DAY");
 		
 		@SuppressWarnings("rawtypes")
 		List users = query.list();
@@ -297,16 +325,16 @@ public class AdministrationService extends BasicService {
 	@Transactional
 	public String deleteUser(int id, boolean onlySetFlag) {
 		Session session = sessionFactory.getCurrentSession();
-		User user = (User) session.get(User.class, id);
+		User user = session.get(User.class, id);
 		String login = user.getLogin();
 		
 		if (onlySetFlag) {
 			user.setDeleteDate(new Date());
 			user.setDeleteRequested(true);	
 			user.setDeleted(true);		
-			session.update(user);
+			session.merge(user);
 		} else {
-			session.delete(user);
+			session.remove(user);
 		}
 		
 		return login;
@@ -316,18 +344,18 @@ public class AdministrationService extends BasicService {
 	public String[] getLoginsForPrefix(String term, String emailterm, boolean forPrivileges, int maxResults) {
 		Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = null;
+		Query query;
 		if (term.length() > 0 && (emailterm != null && emailterm.length() > 0)) {
-			query = session.createQuery("FROM User u where u.login like :login and u.email like :email and u.type = :type order by u.login asc").setParameter("type", (String) User.SYSTEM)
-					.setParameter("login", (String) ("%" + term + "%")).setParameter(Constants.EMAIL, (String) ("%" + emailterm + "%"));
+			query = session.createQuery("FROM User u where u.login like :login and u.email like :email and u.type = :type order by u.login asc").setParameter("type", User.SYSTEM)
+					.setParameter("login", "%" + term + "%").setParameter(Constants.EMAIL, "%" + emailterm + "%");
 		} else if (emailterm != null && emailterm.length() > 0) {
-			query = session.createQuery("FROM User u where u.email like :email and u.type = :type order by u.login asc").setParameter("type", (String) User.SYSTEM).setParameter((String) Constants.EMAIL, (String) ("%" + emailterm + "%"));
+			query = session.createQuery("FROM User u where u.email like :email and u.type = :type order by u.login asc").setParameter("type", User.SYSTEM).setParameter(Constants.EMAIL, "%" + emailterm + "%");
 		} else {
-			query = session.createQuery("FROM User u where u.login like :login and u.type = :type order by u.login asc").setParameter("type", (String) User.SYSTEM).setParameter("login", (String) ("%" + term + "%"));
+			query = session.createQuery("FROM User u where u.login like :login and u.type = :type order by u.login asc").setParameter("type", User.SYSTEM).setParameter("login", "%" + term + "%");
 		}
 
 		@SuppressWarnings("unchecked")
-		List<User> list = (List<User>) query.setMaxResults(maxResults).list();
+		List<User> list = query.setMaxResults(maxResults).list();
 		String[] result = new String[list.size()];
 		int counter = 0;
 		for (User user : list) {
@@ -350,13 +378,13 @@ public class AdministrationService extends BasicService {
 			e = "%" + e + "%";
 		}
 
-		Query<?> query = null;
-		if (emails != null && emails.size() > 0) {
+		Query query = null;
+		if (emails != null && !emails.isEmpty()) {
 			query = session.createQuery("FROM User u where u.email IN :email order by u.login asc").setParameter(Constants.EMAIL, emails);
 		}
 
 		@SuppressWarnings("unchecked")
-		List<User> list = (List<User>) query.setMaxResults(5).list();
+		List<User> list = query.setMaxResults(5).list();
 		String[] result = new String[list.size()];
 		int counter = 0;
 		for (User user : list) {
@@ -372,10 +400,10 @@ public class AdministrationService extends BasicService {
 
 		String hql = "FROM User u where u.login = :login";
 
-		Query<?> query = session.createQuery(hql).setParameter("login", (String) login);
+		Query query = session.createQuery(hql).setParameter("login", login);
 
 		@SuppressWarnings("unchecked")
-		List<User> list = (List<User>) query.list();
+		List<User> list = query.list();
 
 		if (!list.isEmpty())
 		{
@@ -389,7 +417,7 @@ public class AdministrationService extends BasicService {
 	public Map<String, String> getECASUserLoginsByEmail() {
 		Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createNativeQuery("SELECT USER_EMAIL, USER_LOGIN FROM USERS WHERE USER_TYPE = 'ECAS'");
+		Query query = session.createNativeQuery("SELECT USER_EMAIL, USER_LOGIN FROM USERS WHERE USER_TYPE = 'ECAS'");
 
 		@SuppressWarnings("rawtypes")
 		List res = query.list();
@@ -422,16 +450,16 @@ public class AdministrationService extends BasicService {
 
 		String hql = "FROM User u where u.login = :login  AND u.type = :type";
 
-		Query<?> query = session.createQuery(hql).setParameter("login", (String) login);
+		Query query = session.createQuery(hql).setParameter("login", login);
 
 		if (ecas) {
-			query.setParameter("type", (String) User.ECAS);
+			query.setParameter("type", User.ECAS);
 		} else {
-			query.setParameter("type", (String) User.SYSTEM);
+			query.setParameter("type", User.SYSTEM);
 		}
 
 		@SuppressWarnings("unchecked")
-		List<User> list = (List<User>) query.list();
+		List<User> list = query.list();
 
 		if (list.isEmpty())
 			throw new MessageException("No user found for login " + login);
@@ -445,23 +473,23 @@ public class AdministrationService extends BasicService {
 	public List<User> getUserLoginsByEmail(String email, int limit) {
 			Session session = sessionFactory.getCurrentSession();
 			email = "%" + email + "%";
-			Query<?> query = session.createQuery("FROM User u where u.email like :email order by u.login asc").setParameter(Constants.EMAIL, email);
-			return (List<User>) query.setMaxResults(limit).list();
+			Query<User> query = session.createQuery("FROM User u where u.email like :email order by u.login asc", User.class).setParameter(Constants.EMAIL, email);
+			return query.setMaxResults(limit).list();
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void save(UsersConfiguration userConfiguration) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(userConfiguration);
+		session.merge(userConfiguration);
 	}
 
 	@Transactional(readOnly = true)
 	public UsersConfiguration getUsersConfiguration(int userId) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createQuery("FROM UsersConfiguration c where c.userId = :userId").setParameter("userId", (Integer) userId);
+		Query query = session.createQuery("FROM UsersConfiguration c where c.userId = :userId").setParameter("userId", userId);
 
 		@SuppressWarnings("unchecked")
-		List<UsersConfiguration> list = (List<UsersConfiguration>) query.list();
+		List<UsersConfiguration> list = query.list();
 		if (list.isEmpty())
 		{
 			return null;
@@ -469,13 +497,13 @@ public class AdministrationService extends BasicService {
 		return list.get(0);
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void sendValidationEmail(User user) throws Exception {
 		Session session = sessionFactory.getCurrentSession();
 
 		user.setValidationCode(UUID.randomUUID().toString());
 		user.setValidationCodeGeneration(new Date());
-		session.update(user);
+		session.merge(user);
 
 		String link = host + "validate/" + user.getId() + Constants.PATH_DELIMITER + user.getValidationCode();
 
@@ -484,20 +512,20 @@ public class AdministrationService extends BasicService {
 		mailService.SendHtmlMail(user.getEmail(), sender, sender, "EUSurvey Registration", body, null);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public boolean sendNewEmailAdressValidationEmail(User user) {
 		try {
 			Session session = sessionFactory.getCurrentSession();
 			user.setValidationCode(UUID.randomUUID().toString());
 			user.setValidationCodeGeneration(new Date());
-			session.update(user);
+			session.merge(user);
 
 			String link = host + "validateNewEmail/" + user.getId() + Constants.PATH_DELIMITER + user.getValidationCode();
 
 			String body = "Dear " + user.getLogin() + ",<br /><br />Please confirm your email change by clicking the link below: <br /><br /> <a href=\"" + link + "\">" + link + "</a>";
 
 			InputStream inputStream = servletContext.getResourceAsStream("/WEB-INF/Content/mailtemplateeusurvey.html");
-			String text = IOUtils.toString(inputStream, "UTF-8").replace("[CONTENT]", body).replace("[HOST]", host);
+			String text = IOUtils.toString(inputStream, StandardCharsets.UTF_8).replace("[CONTENT]", body).replace("[HOST]", host);
 
 			mailService.SendHtmlMail(user.getEmailToValidate(), sender, sender, "EUSurvey Confirmation", text, null);
 		} catch (Exception ex) {
@@ -507,14 +535,14 @@ public class AdministrationService extends BasicService {
 		return true;
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public boolean validateUser(int id, String code) {
 		Session session = sessionFactory.getCurrentSession();
-		User user = (User) session.get(User.class, id);
+		User user = session.get(User.class, id);
 
 		if (user != null && user.getValidationCode() != null && user.getValidationCode().equalsIgnoreCase(code)) {
 			user.setValidated(true);
-			session.update(user);
+			session.merge(user);
 
 			return true;
 		}
@@ -522,10 +550,10 @@ public class AdministrationService extends BasicService {
 		return false;
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public boolean validateNewEmail(HttpServletRequest request, int id, String code) {
 		Session session = sessionFactory.getCurrentSession();
-		User user = (User) session.get(User.class, id);
+		User user = session.get(User.class, id);
 
 		if (user != null && user.getValidationCode() != null && user.getValidationCode().equalsIgnoreCase(code) && user.getEmailToValidate() != null) {
 			String oldEmail = user.getEmail();
@@ -542,7 +570,7 @@ public class AdministrationService extends BasicService {
 			user.setEmail(user.getEmailToValidate());
 			user.setEmailToValidate(null);
 			user.setValidationCode(null);
-			session.update(user);
+			session.merge(user);
 			sessionService.setCurrentUser(request, user);
 			return true;
 		}
@@ -550,11 +578,11 @@ public class AdministrationService extends BasicService {
 		return false;
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public OneTimePasswordResetCode createOneTimePasswordResetCode(User user) {
 		OneTimePasswordResetCode code = new OneTimePasswordResetCode(user);
 		Session session = sessionFactory.getCurrentSession();
-		session.save(code);
+		session.persist(code);
 		return code;
 	}
 
@@ -562,9 +590,9 @@ public class AdministrationService extends BasicService {
 	public OneTimePasswordResetCode getOneTimePasswordResetCode(String code) throws MessageException {
 		Session session = sessionFactory.getCurrentSession();
 
-		Query<?> query = session.createQuery("FROM OneTimePasswordResetCode c where c.code = :code").setParameter("code", (String) code);
+		Query query = session.createQuery("FROM OneTimePasswordResetCode c where c.code = :code").setParameter("code", code);
 		@SuppressWarnings("unchecked")
-		List<OneTimePasswordResetCode> list = (List<OneTimePasswordResetCode>) query.list();
+		List<OneTimePasswordResetCode> list = query.list();
 		if (list.isEmpty())
 		{
 			throw new MessageException("No item found for code " + code);
@@ -577,37 +605,37 @@ public class AdministrationService extends BasicService {
 		return list.get(0);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void add(EcasUser eu) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(eu);
+		session.merge(eu);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void removeUserGroups(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery("DELETE FROM  ECASGROUPS  where  eg_id = :id").setParameter("id", (Integer) id);
+		Query query = session.createNativeQuery("DELETE FROM  ECASGROUPS  where  eg_id = :id").setParameter("id", id);
 		query.executeUpdate();
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void deactivateEcasUser(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createQuery("UPDATE EcasUser u SET u.deactivated = true WHERE u.id = :id").setParameter("id", (Integer) id);
+		Query query = session.createQuery("UPDATE EcasUser u SET u.deactivated = true WHERE u.id = :id").setParameter("id", id);
 		query.executeUpdate();
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void deactivateEcasUsers(List<Integer> ids) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createQuery("UPDATE EcasUser u SET u.deactivated = true WHERE u.id = :id");
+		Query query = session.createQuery("UPDATE EcasUser u SET u.deactivated = true WHERE u.id = :id");
 		int counter = 0;
 		for (int id : ids) {
-			query.setParameter("id", (Integer) id);
+			query.setParameter("id", id);
 			query.executeUpdate();
 			counter += 1;
 			if (counter % 10000 == 0) {
-				logger.info(counter + " EcasUsers deactivated");
+                logger.info("{} EcasUsers deactivated", counter);
 			}
 		}
 	}
@@ -617,20 +645,16 @@ public class AdministrationService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 
 		HashMap<String, Object> parameters = new HashMap<>();
-		Query<?> query = session.createQuery(getHql(filter, parameters, true));
+		// Ensure getHql returns a count query (e.g., "select count(u) from User u...")
+		Query<Long> query = session.createQuery(getHql(filter, parameters, true), Long.class);
 
-		for (Entry<String, Object> entry : parameters.entrySet()) {
-			Object value = entry.getValue();
-			if (value instanceof String) {
-				query.setParameter(entry.getKey(), (String) value);
-			} else if (value instanceof Integer) {
-				query.setParameter(entry.getKey(), (Integer) value);
-			} else if (value instanceof Date) {
-				query.setParameter(entry.getKey(), (Date) value);
-			}
-		}
+		// Hibernate 6 handles parameter type inference automatically
+		parameters.forEach(query::setParameter);
 
-        return ConversionTools.getValue(query.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).uniqueResult());
+		Long count = query.uniqueResult();
+
+		// Safely convert Long to int for your return type
+		return count != null ? count.intValue() : 0;
 	}
 
 	private String getHql(UserFilter filter, HashMap<String, Object> parameters, boolean doCount) {
@@ -734,7 +758,7 @@ public class AdministrationService extends BasicService {
 		return hql.toString();
 	}
 	
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void createDummyUsers(int users, String shortname) {
 		Session session = sessionFactory.getCurrentSession();
 		
@@ -752,7 +776,7 @@ public class AdministrationService extends BasicService {
 			user.setEmail("dummy@noserver.aa");
 			user.setType(User.SYSTEM);
 			
-			session.save(user);
+			session.persist(user);
 			
 			if (surveyUID != null) {
 				ResultAccess resAccess = new ResultAccess();
@@ -764,7 +788,7 @@ public class AdministrationService extends BasicService {
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void createDummyEcasUsers(int counter) {
 		Session session = sessionFactory.getCurrentSession();
 
@@ -776,11 +800,11 @@ public class AdministrationService extends BasicService {
 			eu.setName("newnamez" + counter + "#" + i);
 			eu.setUserLDAPGroups(new HashSet<>());
 			eu.getUserLDAPGroups().add("Department1");
-			session.saveOrUpdate(eu);
+			session.merge(eu);
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void createDummySurAccess() throws Exception {
 		Session session = sessionFactory.getCurrentSession();
 
@@ -796,7 +820,7 @@ public class AdministrationService extends BasicService {
 			a.setSurvey(survey);
 			a.setUser(user);
 			a.getLocalPrivileges().put(LocalPrivilege.FormManagement, 1);
-			session.saveOrUpdate(a);
+			session.merge(a);
 		}
 	}
 
@@ -804,10 +828,10 @@ public class AdministrationService extends BasicService {
 		return !StringUtils.isEmpty(smtpServer);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public User setLastEditedSurvey(User user, Integer surveyid) {
 		Session session = sessionFactory.getCurrentSession();
-		user = (User) session.merge(user);
+		user = session.merge(user);
 
 		String disabled = settingsService.get(Setting.CreateSurveysForExternalsDisabled);
 		if (disabled.equalsIgnoreCase("true") && user.getGlobalPrivileges().get(GlobalPrivilege.ECAccess) == 0) {
@@ -815,11 +839,11 @@ public class AdministrationService extends BasicService {
 		}
 
 		user.setLastEditedSurvey(surveyid);
-		session.saveOrUpdate(user);
+		session.merge(user);
 		return user;
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void banUser(String userId, String mailText) throws Exception {
 		Session session = sessionFactory.getCurrentSession();
 		User user = getUser(Integer.parseInt(userId));
@@ -829,11 +853,11 @@ public class AdministrationService extends BasicService {
 		}
 
 		user.setFrozen(true);
-		session.saveOrUpdate(user);
+		session.merge(user);
 
 		// send email to user
 		InputStream inputStream = servletContext.getResourceAsStream("/WEB-INF/Content/mailtemplateeusurvey.html");
-		String mailtemplate = IOUtils.toString(inputStream, "UTF-8");
+		String mailtemplate = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 		String mailtext = mailtemplate.replace("[CONTENT]", mailText).replace("[HOST]", host);
 		mailService.SendHtmlMail(user.getEmail(), sender, sender, "Your account has been banned", mailtext, null);
 
@@ -850,7 +874,7 @@ public class AdministrationService extends BasicService {
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void unbanUser(String userId) throws Exception {
 		Session session = sessionFactory.getCurrentSession();
 		User user = getUser(Integer.parseInt(userId));
@@ -860,11 +884,11 @@ public class AdministrationService extends BasicService {
 		}
 
 		user.setFrozen(false);
-		session.saveOrUpdate(user);
+		session.merge(user);
 
 		// send email to user
 		InputStream inputStream = servletContext.getResourceAsStream("/WEB-INF/Content/mailtemplateeusurvey.html");
-		String mailtemplate = IOUtils.toString(inputStream, "UTF-8");
+		String mailtemplate = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 
 		String content = settingsService.get(Setting.FreezeUserTextUnban);
 
@@ -886,13 +910,26 @@ public class AdministrationService extends BasicService {
 
 	@Transactional(readOnly = true)
 	public boolean checkEmailsNotBanned(List<String> allEmailAddresses) {
+		if (allEmailAddresses == null || allEmailAddresses.isEmpty()) return true;
+
+		// 2. Clean the list: Hibernate 6 hates nulls or empty strings in an IN clause
+		List<String> cleanEmails = allEmailAddresses.stream()
+				.filter(e -> e != null && !e.trim().isEmpty())
+				.collect(Collectors.toList());
+
+		if (cleanEmails.isEmpty()) return true;
+
 		Session session = sessionFactory.getCurrentSession();
+		String query = "SELECT COUNT(u.id) FROM User u WHERE u.frozen = :frozen AND u.email IN :emails";
+		// Ensure the 'emails' list is not empty before executing
 
-		Query<?> query = session.createQuery("SELECT COUNT(u.id) FROM User u WHERE u.frozen = true AND u.email IN (:emails)");
-		query.setParameterList("emails", allEmailAddresses);
-		
-		int count = ConversionTools.getValue(query.uniqueResult());		
+		Long count = session.createQuery(query, Long.class)
+				.setParameter("frozen", true)
+				.setParameter("emails", allEmailAddresses)
+				.getSingleResult();
 
+		// If count > 0, it means at least one email IS found in the frozen list.
+		// Therefore, the user IS banned. We return FALSE to trigger the exception.
 		return count == 0;
 	}
 

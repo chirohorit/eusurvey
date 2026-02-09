@@ -6,7 +6,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.ec.survey.tools.ConversionTools;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "ATTENDEE", indexes = {@Index(name="OWNER_HIDDEN",columnList = "OWNER_ID, ATTENDEE_HIDDEN")})
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Attendee {
 	
 	private Integer id;	
@@ -126,7 +126,7 @@ public class Attendee {
 	@OneToMany(cascade={CascadeType.ALL})
 	@Fetch(value = FetchMode.SELECT)
 	@JoinTable(name = "ATTENDEE_ATTRIBUTES", joinColumns = { @JoinColumn(name = "ATTENDEE_ID") }, inverseJoinColumns = { @JoinColumn(name = "ATTRIBUTE_ID") })
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Attribute> getAttributes() {
 		return attributes;
 	}

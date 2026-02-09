@@ -1,6 +1,6 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
 <head>
@@ -336,7 +336,7 @@
 				$('#tbllist-exports tbody').append(row);
 			  }
 			  
-			  if($('#tbllist-exports tbody tr').size()==0)
+			  if($('#tbllist-exports tbody tr').length>=0)
 				{
 					$('#tbllist-empty').show();
 				}

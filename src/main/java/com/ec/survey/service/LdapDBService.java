@@ -24,7 +24,7 @@ public class LdapDBService extends BasicService {
 	@Transactional
 	public void add(Department department) {
 		Session session = sessionFactory.getCurrentSession();		
-		session.save(department);
+		session.persist(department);
 	}
 	
 	@Transactional(timeout=3000)
@@ -42,7 +42,7 @@ public class LdapDBService extends BasicService {
 		{
 			if (!existingDepartments.contains(department))
 			{
-				session.save(new Department(department.getName(),department.getDomainCode()));
+				session.persist(new Department(department.getName(),department.getDomainCode()));
 			}
 		}
 		
@@ -54,8 +54,8 @@ public class LdapDBService extends BasicService {
 			if (!departments.contains(department))
 			{
 				
-				deleteQuery.setParameter("department", (String) department.getName());
-				deleteQuery.setParameter("domainCode", (String) department.getDomainCode());
+				deleteQuery.setParameter("department", department.getName());
+				deleteQuery.setParameter("domainCode", department.getDomainCode());
 				deleteQuery.executeUpdate();
 			}
 		}
@@ -83,12 +83,12 @@ public class LdapDBService extends BasicService {
 			
 			if (!dbDomainCodes.containsKey(ldapDomain.getKey()))
 			{
-				session.save(new Domain(ldapDomain.getKey(),ldapDomain.getValue()));
+				session.persist(new Domain(ldapDomain.getKey(),ldapDomain.getValue()));
 			} else if (!dbDomainCodes.get(ldapDomain.getKey()).getDescription().equals(ldapDomain.getValue()))
 			{
 				Domain domain = dbDomainCodes.get(ldapDomain.getKey());
 				domain.setDescription(ldapDomain.getValue());
-				session.saveOrUpdate(domain);
+				session.merge(domain);
 			}
 		}
 		
@@ -100,7 +100,7 @@ public class LdapDBService extends BasicService {
 			if (!ldapDomains.containsKey(domain))
 			{
 				query = session.createQuery("delete from Domain d where d.code = :code");
-				query.setParameter("code", (String) domain);
+				query.setParameter("code", domain);
 				query.executeUpdate();
 			}
 		}
@@ -111,7 +111,7 @@ public class LdapDBService extends BasicService {
 	@Transactional(readOnly = true)
 	public String[] getECASLoginsForPrefix(String term) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createQuery("FROM EcasUser d where d.name like :term and d.deactivated != true ORDER by d.name").setParameter("term", (String) ("%" + term + "%"));
+		Query query = session.createQuery("FROM EcasUser d where d.name like :term and d.deactivated != true ORDER by d.name").setParameter("term", "%" + term + "%");
 		@SuppressWarnings("unchecked")
 		List<EcasUser> list = query.setMaxResults(100).list();
 		String[] result = new String[list.size()];
@@ -234,12 +234,12 @@ public class LdapDBService extends BasicService {
 		
 		if (term != null && !prefix)
 		{
-			query = session.createQuery("SELECT DISTINCT d.name FROM Department d WHERE d.name like :name ORDER BY d.name ASC").setParameter("name", (String) term);
+			query = session.createQuery("SELECT DISTINCT d.name FROM Department d WHERE d.name like :name ORDER BY d.name ASC").setParameter("name", term);
 		} else if (term != null)
 		{
-			query = session.createQuery("SELECT DISTINCT d.name FROM Department d WHERE d.name like :nameDot ORDER BY d.name ASC").setParameter("nameDot", (String) (term + ".%"));
+			query = session.createQuery("SELECT DISTINCT d.name FROM Department d WHERE d.name like :nameDot ORDER BY d.name ASC").setParameter("nameDot", term + ".%");
 		} else {
-			query = session.createQuery("SELECT DISTINCT d.name FROM Department d WHERE d.domainCode = :domainCode  ORDER BY d.name ASC").setParameter("domainCode", (String) domain) ;
+			query = session.createQuery("SELECT DISTINCT d.name FROM Department d WHERE d.domainCode = :domainCode  ORDER BY d.name ASC").setParameter("domainCode", domain) ;	
 		}
 		
 		@SuppressWarnings("unchecked")

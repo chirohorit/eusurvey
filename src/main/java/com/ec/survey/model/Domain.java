@@ -1,12 +1,11 @@
 package com.ec.survey.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "DOMAINS",  uniqueConstraints = {@UniqueConstraint(columnNames={"CODE"},name="CODE")})
 public class Domain implements java.io.Serializable {
-	
-	private static final long serialVersionUID = 1L;
+
 	private Integer id;
 	private String code;
 	private String description;

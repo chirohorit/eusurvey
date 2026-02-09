@@ -5,9 +5,9 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import com.ec.survey.tools.ElementHelper;
+import com.ec.survey.handler.ElementHelper;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import java.util.*;
 
@@ -18,9 +18,9 @@ import java.util.*;
  */
 @Entity
 @DiscriminatorValue("CHOICE")
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public abstract class ChoiceQuestion extends Question {
-
-	private static final long serialVersionUID = 1L;
 	private List<PossibleAnswer> possibleAnswers = new ArrayList<>();
 	private List<PossibleAnswer> missingPossibleAnswers = new ArrayList<>();
 	private Integer order;
@@ -41,12 +41,12 @@ public abstract class ChoiceQuestion extends Question {
 	}	
 	
 	@OneToMany(targetEntity=PossibleAnswer.class, cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT),
 			name = "ELEMENTS_ELEMENTS",
 			joinColumns = @JoinColumn(name = "ELEMENTS_ID"),
 			inverseJoinColumns = @JoinColumn(name = "possibleAnswers_ID"))
 	@Fetch(value = FetchMode.SELECT)
-
+	////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	@OrderBy(value = "position asc")
 	public List<PossibleAnswer> getPossibleAnswers() {
 		return possibleAnswers;

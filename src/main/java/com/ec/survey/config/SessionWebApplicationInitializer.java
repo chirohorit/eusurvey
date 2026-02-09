@@ -1,12 +1,13 @@
+/*
 package com.ec.survey.config;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import javax.servlet.FilterRegistration;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
+import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
 
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.filter.DelegatingFilterProxy;
@@ -15,7 +16,8 @@ public class SessionWebApplicationInitializer implements WebApplicationInitializ
 
     @Override
     public void onStartup(ServletContext servletContext) throws ServletException {
-        String redisHost = null;
+        */
+/*String redisHost = null;
         String redisPort = null;
 
         // Load properties from WEB-INF/spring.properties because Spring has not loaded properties yet
@@ -51,6 +53,8 @@ public class SessionWebApplicationInitializer implements WebApplicationInitializ
 //            monitoringFilter.setInitParameter("log", "true");
 //            monitoringFilter.setAsyncSupported(true);
 //            monitoringFilter.addMappingForUrlPatterns(null, false, "/*");
-        }
+        }*//*
+
     }
 }
+*/

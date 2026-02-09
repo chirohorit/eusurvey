@@ -7,7 +7,7 @@ public class SessionInfo implements Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 	private int survey;	
 	private int user;
 	private int owner;

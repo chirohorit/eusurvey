@@ -140,14 +140,14 @@ public class SystemService extends BasicService {
 	public void save(Message message)
 	{
 		Session session = sessionFactory.getCurrentSession();		
-		session.saveOrUpdate(message);
+		session.merge(message);
 	}
 	
 	@Transactional
 	public void save(MessageType messageType)
 	{
 		Session session = sessionFactory.getCurrentSession();		
-		session.saveOrUpdate(messageType);
+		session.merge(messageType);
 	}
 
 	@Transactional

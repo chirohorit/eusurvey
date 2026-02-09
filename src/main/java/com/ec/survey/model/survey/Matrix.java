@@ -6,7 +6,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.owasp.esapi.errors.ValidationException;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import java.text.Collator;
 import java.util.*;
@@ -16,11 +16,11 @@ import java.util.*;
  */
 @Entity
 @DiscriminatorValue("MATRIX")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Matrix extends MatrixOrTable {
 	
-	private static final long serialVersionUID = 1L;
+	
 	private boolean isSingleChoice;
 	private Boolean isInterdependent;
 	private boolean useRadioButtons;
@@ -49,12 +49,12 @@ public class Matrix extends MatrixOrTable {
 	}	
 	
 	@OneToMany(targetEntity=DependencyItem.class, cascade=CascadeType.ALL, orphanRemoval = true)
-	@JoinTable(name = "MATRIX_DEP", foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name = "MATRIX_DEP", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT),
 			inverseJoinColumns = @JoinColumn(name = "dependentElements_ID"),
 			joinColumns = @JoinColumn(name = "ELEMENTS_ID"))
 	@Fetch(value = FetchMode.SELECT)
-	@javax.persistence.OrderColumn(name="MATDEP_ID")
-
+	@OrderColumn(name="MATDEP_ID")
+	////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<DependencyItem> getDependentElements() {
 		return dependentElements;
 	}

@@ -9,9 +9,10 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
-import javax.annotation.Resource;
+import com.ec.survey.handler.worker.*;
+import jakarta.annotation.Resource;
 
-import com.ec.survey.replacements.Pair;
+import com.ec.survey.tools.Pair;
 import com.ec.survey.tools.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Configurable;

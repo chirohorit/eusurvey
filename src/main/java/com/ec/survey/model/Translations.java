@@ -6,20 +6,20 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.springframework.cache.annotation.Cacheable;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.*;
 
 @Entity
 @Table(name = "TRANSLATIONS", uniqueConstraints = {
 		@UniqueConstraint(columnNames = { "SURVEY_ID", "TRANSLATIONS_ID" }, name = "LANGUAGE_SURVEY") })
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Translations implements java.io.Serializable {
 	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 	private Integer id;
 	private Integer surveyId;
 	private String surveyUid;
@@ -102,7 +102,7 @@ public class Translations implements java.io.Serializable {
 	@OneToMany(targetEntity=Translation.class, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy="translations" )  
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy("id")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Translation> getTranslations() {
 		return translations;
 	}

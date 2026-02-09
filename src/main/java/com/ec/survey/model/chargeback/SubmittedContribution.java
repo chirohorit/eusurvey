@@ -3,14 +3,13 @@ package com.ec.survey.model.chargeback;
 import com.ec.survey.tools.ConversionTools;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
 @Table(name = "SUBMITTEDCONTRIBUTION", indexes = {@Index(name = "SC_D_SUID", columnList = "SUBMITTEDCONTRIBUTION_SUBMITTED, SUBMITTEDCONTRIBUTION_SURVEY_UID")}, uniqueConstraints = {@UniqueConstraint(columnNames={"SUBMITTEDCONTRIBUTION_SURVEY_UID", "SUBMITTEDCONTRIBUTION_AS_ID"}, name="SC_SUID_ASID")})
 public class SubmittedContribution implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private Integer answerSetID;
 	private String surveyUID;

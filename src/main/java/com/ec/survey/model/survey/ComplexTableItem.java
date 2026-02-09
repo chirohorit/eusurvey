@@ -5,7 +5,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -13,7 +13,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.owasp.esapi.errors.ValidationException;
 
-import com.ec.survey.tools.ElementHelper;
+import com.ec.survey.handler.ElementHelper;
 import com.ec.survey.tools.Tools;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.mysql.cj.util.StringUtils;
@@ -23,8 +23,8 @@ import com.mysql.cj.util.StringUtils;
  */
 @Entity
 @DiscriminatorValue("COMPLEXTABLEITEM")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ComplexTableItem extends Question {
 
     public enum CellType {
@@ -41,8 +41,6 @@ public class ComplexTableItem extends Question {
             return ordinal();
         }
     }
-
-    private static final long serialVersionUID = 1L;
     private CellType cellType;
     private int row;
     private int column;
@@ -166,12 +164,11 @@ public class ComplexTableItem extends Question {
     }
 
     @OneToMany(targetEntity = PossibleAnswer.class, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
-            name = "ELEMENTS_ELEMENTS",
+    @JoinTable(name = "ELEMENTS_ELEMENTS",
             joinColumns = @JoinColumn(name = "ELEMENTS_ID"),
             inverseJoinColumns = @JoinColumn(name = "possibleAnswers_ID"))
     @Fetch(value = FetchMode.SELECT)
-
+    ////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @OrderBy(value = "position asc")
     public List<PossibleAnswer> getPossibleAnswers() {
         return possibleAnswers;

@@ -1,10 +1,11 @@
 package com.ec.survey.controller;
 
+import com.ec.survey.enumerator.ParticipationGroupType;
 import com.ec.survey.exception.*;
 import com.ec.survey.model.*;
 import com.ec.survey.model.administration.EcasUser;
-import com.ec.survey.model.administration.GlobalPrivilege;
-import com.ec.survey.model.administration.LocalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.administration.Voter;
 import com.ec.survey.model.attendees.*;
@@ -34,10 +35,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import javax.naming.NamingException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -88,7 +89,7 @@ public class ParticipantsController extends BasicController {
 		form.setSurvey(survey);
 
 		sessionService.upgradePrivileges(form.getSurvey(), u, request);
-		int accessPrivilege = 0;
+		int accessPrivilege;
 		if (form.getSurvey().getOwner().getId().equals(u.getId())) {
 			accessPrivilege = 2;
 		} else if (u.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -173,7 +174,7 @@ public class ParticipantsController extends BasicController {
 			User u = sessionService.getCurrentUser(request);
 			sessionService.upgradePrivileges(survey, u, request);
 
-			int accessPrivilege = 0;
+			int accessPrivilege;
 			if (survey.getOwner().getId().equals(u.getId())) {
 				accessPrivilege = 2;
 			} else if (u.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -233,7 +234,7 @@ public class ParticipantsController extends BasicController {
 		}
 
 		sessionService.upgradePrivileges(survey, u, request);
-		int accessPrivilege = 0;
+		int accessPrivilege;
 		if (survey.getOwner().getId().equals(u.getId())) {
 			accessPrivilege = 2;
 		} else if (u.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -326,7 +327,7 @@ public class ParticipantsController extends BasicController {
 			ParticipationGroup participationGroup = new ParticipationGroup(form.getSurvey().getUniqueId());
 
 			sessionService.upgradePrivileges(form.getSurvey(), user, request);
-			int accessPrivilege = 0;
+			int accessPrivilege;
 			if (form.getSurvey().getOwner().getId().equals(user.getId())) {
 				accessPrivilege = 2;
 			} else if (user.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -361,33 +362,32 @@ public class ParticipantsController extends BasicController {
 				ArrayList<LinkedHashMap> attendees = (ArrayList) json.get("attendees");
 				attendeeIDs = new ArrayList<>();
 
-				if (user.isExternal()) {
 
-					if (form.getSurvey().getValidator() != null && form.getSurvey().getValidated() && form.getSurvey().getOrganisation() != null) {
-						logger.info("limits of external users skipped as the survey was created on behalf of an institution");
-					} else {
 
-						String limit = settingsService.get(Setting.ContactGuestlistLimitForExternals);
-						if (limit != null && Tools.isInteger(limit)) {
-							if (id == 0 && participationService.getContactGuestlistCount(form.getSurvey().getUniqueId()) >= Integer.parseInt(limit)) {
-								return "External users can only create a maximum of " + limit + " contact guest lists.";
-							}
+				if (form.getSurvey().getValidator() != null && form.getSurvey().getValidated() && form.getSurvey().getOrganisation() != null) {
+					logger.info("limits of external users skipped as the survey was created on behalf of an institution");
+				} else {
+
+					String limit = settingsService.get(Setting.ContactGuestlistLimitForExternals);
+					if (limit != null && Tools.isInteger(limit)) {
+						if (id == 0 && participationService.getContactGuestlistCount(form.getSurvey().getUniqueId()) >= Integer.parseInt(limit)) {
+							return "External users can only create a maximum of " + limit + " contact guest lists.";
 						}
-
-						limit = settingsService.get(Setting.ContactGuestlistSizeLimitForExternals);
-						if (limit != null && Tools.isInteger(limit)) {
-							if (attendees.size() > Integer.parseInt(limit)) {
-								return "External users can only create contact guest list with a maximum of " + limit + " contacts.";
-							}
-						}
-
 					}
+
+					limit = settingsService.get(Setting.ContactGuestlistSizeLimitForExternals);
+					if (limit != null && Tools.isInteger(limit)) {
+						if (attendees.size() > Integer.parseInt(limit)) {
+							return "External users can only create contact guest list with a maximum of " + limit + " contacts.";
+						}
+					}
+
 				}
 
-				for (int i = 0; i < attendees.size(); i++) {
-					LinkedHashMap attendee = attendees.get(i);
-					attendeeIDs.add((int) attendee.get("id"));
-				}
+
+                for (LinkedHashMap attendee : attendees) {
+                    attendeeIDs.add((int) attendee.get("id"));
+                }
 
 				size = attendeeIDs.size();
 
@@ -395,22 +395,20 @@ public class ParticipantsController extends BasicController {
 				ArrayList<LinkedHashMap> invitations = (ArrayList) json.get("tokens");
 				tokens = new ArrayList<>();
 				deactivatedTokens = new ArrayList<>();
-				for (int i = 0; i < invitations.size(); i++) {
-					LinkedHashMap token = invitations.get(i);
-					tokens.add(token.get("uniqueId").toString());
-					
-					if (token.get("deactivated").toString().equalsIgnoreCase("true")) {
-						deactivatedTokens.add(token.get("uniqueId").toString());
-					}
-				}
+                for (LinkedHashMap token : invitations) {
+                    tokens.add(token.get("uniqueId").toString());
+
+                    if (token.get("deactivated").toString().equalsIgnoreCase("true")) {
+                        deactivatedTokens.add(token.get("uniqueId").toString());
+                    }
+                }
 				size = tokens.size();
 			} else if (participationGroup.getType() == ParticipationGroupType.ECMembers) {
 				ArrayList<LinkedHashMap> users = (ArrayList) json.get("users");
 				userIDs = new ArrayList<>();
-				for (int i = 0; i < users.size(); i++) {
-					LinkedHashMap ecasuser = users.get(i);
-					userIDs.add((int) ecasuser.get("id"));
-				}
+                for (LinkedHashMap ecasuser : users) {
+                    userIDs.add((int) ecasuser.get("id"));
+                }
 				size = userIDs.size();
 			}
 			participationGroup.setOwnerId(user.getId());
@@ -489,7 +487,7 @@ public class ParticipantsController extends BasicController {
 		List<String> groups = new ArrayList<>();
 
 		String ids = request.getParameter("ids");
-		if (ids != null && ids.length() > 0 && ids.contains(";")) {
+		if (ids != null && ids.contains(";")) {
 			String[] arrIDs = ids.split("\\;");
 			for (String id : arrIDs) {
 				if (id != null && id.length() > 0) {
@@ -522,7 +520,7 @@ public class ParticipantsController extends BasicController {
 
 		String ids = request.getParameter("ids");
 		String surveyUid = request.getParameter("surveyUid");
-		if (ids != null && ids.length() > 0 && ids.contains(";")) {
+		if (ids != null && ids.contains(";")) {
 			List<Integer> running = mailService.getParticipationGroupsWithRunningMail(surveyUid);
 
 			String[] arrIDs = ids.split("\\;");
@@ -547,7 +545,7 @@ public class ParticipantsController extends BasicController {
 
 		String group = request.getParameter("group");
 
-		if (group == null || !StringUtils.isNumeric(group)) {
+		if (!StringUtils.isNumeric(group)) {
 			return new ArrayList<>();
 		}
 
@@ -562,7 +560,7 @@ public class ParticipantsController extends BasicController {
 		}
 		User u = sessionService.getCurrentUser(request);
 		sessionService.upgradePrivileges(survey, u, request);
-		int accessPrivilege = 0;
+		int accessPrivilege;
 		if (survey.getOwner().getId().equals(u.getId())) {
 			accessPrivilege = 2;
 		} else if (u.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -620,7 +618,7 @@ public class ParticipantsController extends BasicController {
 
 		User user = sessionService.getCurrentUser(request);
 		sessionService.upgradePrivileges(form.getSurvey(), user, request);
-		int accessPrivilege = 0;
+		int accessPrivilege;
 		if (form.getSurvey().getOwner().getId().equals(user.getId())) {
 			accessPrivilege = 2;
 		} else if (user.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -665,14 +663,15 @@ public class ParticipantsController extends BasicController {
 		result.addObject("participationGroup", participationGroup);
 		result.addObject("usertexts", participationService.getTemplates(user.getId()));
 
-		var canSendLinks = !user.isExternal();
+		/*var canSendLinks = !user.isExternal();
 		if (!canSendLinks) {
 			result.addObject("noInviteLinks", true);
-		}
+		}*/
+		result.addObject("noInviteLinks", false);
 
-		if (user.getECPrivilege() > 0) {
+		/*if (user.getECPrivilege() > 0) {
 			result.addObject("allowSenderAddress", true);
-		}
+		}*/
 
 		return result;
 	}
@@ -742,7 +741,7 @@ public class ParticipantsController extends BasicController {
 
 		User user = sessionService.getCurrentUser(request);
 		sessionService.upgradePrivileges(form.getSurvey(), user, request);
-		int accessPrivilege = 0;
+		int accessPrivilege;
 		if (form.getSurvey().getOwner().getId().equals(user.getId())) {
 			accessPrivilege = 2;
 		} else if (user.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -760,18 +759,17 @@ public class ParticipantsController extends BasicController {
 		String mailtext = request.getParameter("mailtext");
 
 		String selectedAttendee = request.getParameter("selectedAttendee");
-		String senderAddress = Tools.escapeHTML(request.getParameter("senderAddress"));
+        Tools.escapeHTML(request.getParameter("senderAddress"));
+        String senderAddress;
 		String senderSubject = Tools.escapeHTML(request.getParameter("senderSubject"));
 
-		if (user.getECPrivilege() == 0) {
-			senderAddress = user.getEmail();
-		}
+		senderAddress = user.getEmail();
 
 		if (senderSubject == null || senderSubject.trim().length() == 0) {
 			senderSubject = "Invitation";
 		}
 
-		var canSendLinks = !user.isExternal();
+		var canSendLinks = true;
 
 		String text1 = Tools.filterHTML(request.getParameter("text1"), canSendLinks);
 		String text2 = Tools.filterHTML(request.getParameter("text2"), canSendLinks);
@@ -842,7 +840,7 @@ public class ParticipantsController extends BasicController {
 		Survey survey = surveyService.getSurveyByShortname(shortname, true, user, request, false, false, false, false);
 		sessionService.upgradePrivileges(survey, user, request);
 
-		int accessPrivilege = 0;
+		int accessPrivilege;
 		if (survey.getOwner().getId().equals(user.getId())) {
 			accessPrivilege = 2;
 		} else if (user.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -894,7 +892,7 @@ public class ParticipantsController extends BasicController {
 		Form form = sessionService.getFormFromSessionInfo(request);
 
 		sessionService.upgradePrivileges(form.getSurvey(), user, request);
-		int accessPrivilege = 0;
+		int accessPrivilege;
 		if (form.getSurvey().getOwner().getId().equals(user.getId())) {
 			accessPrivilege = 2;
 		} else if (user.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {
@@ -1147,7 +1145,7 @@ public class ParticipantsController extends BasicController {
 		User user = sessionService.getCurrentUser(request);
 
 		sessionService.upgradePrivileges(form.getSurvey(), user, request);
-		int accessPrivilege = 0;
+		int accessPrivilege;
 		if (form.getSurvey().getOwner().getId().equals(user.getId())) {
 			accessPrivilege = 2;
 		} else if (user.getGlobalPrivileges().get(GlobalPrivilege.FormManagement) == 2) {

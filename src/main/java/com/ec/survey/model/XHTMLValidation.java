@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class XHTMLValidation implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	
 	private boolean invalid;
 	private String text;
 	

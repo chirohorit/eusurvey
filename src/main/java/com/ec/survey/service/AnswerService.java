@@ -1,5 +1,6 @@
 package com.ec.survey.service;
 
+import com.ec.survey.enumerator.ParticipationGroupType;
 import com.ec.survey.exception.MessageException;
 import com.ec.survey.exception.SmtpServerNotConfiguredException;
 import com.ec.survey.exception.TooManyFiltersException;
@@ -20,14 +21,14 @@ import com.ec.survey.model.survey.base.File;
 import com.ec.survey.service.ReportingService.ToDo;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.InvalidEmailException;
+import com.ec.survey.exception.InvalidEmailException;
 import com.ec.survey.tools.MathUtils;
-import com.ec.survey.tools.MissingAnswersForReadonlyMandatoryQuestionException;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
-import com.ec.survey.tools.SurveyHelper;
+import com.ec.survey.exception.MissingAnswersForReadonlyMandatoryQuestionException;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
+import com.ec.survey.handler.SurveyHelper;
 import com.ec.survey.tools.Tools;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.exception.WeakAuthenticationException;
 import com.ec.survey.tools.activity.ActivityRegistry;
 import com.ec.survey.tools.export.StatisticsCreator;
 
@@ -43,8 +44,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -62,11 +63,8 @@ public class AnswerService extends BasicService {
 	@Autowired
 	private SqlQueryService sqlQueryService;
 
-	@Resource(name = "validCodesService")
-	private ValidCodesService validCodesService;
-	
-	@Resource(name = "selfassessmentService")
-	protected SelfAssessmentService selfassessmentService;
+    @Resource(name = "selfAssessmentService")
+	protected SelfAssessmentService selfAssessmentService;
 	
 	@Transactional(propagation = Propagation.REQUIRED)
 	public void internalSaveAnswerSet(AnswerSet answerSet, String fileDir, String draftid,
@@ -111,17 +109,17 @@ public class AnswerService extends BasicService {
 			}
 
 			for (Answer answer : answerSet.getAnswers()) {
-				if (answer.getQuestionUniqueId() == nameQuestion) {
+				if (Objects.equals(answer.getQuestionUniqueId(), nameQuestion)) {
 					user.setLogin(answer.getValue());
-				} else if (answer.getQuestionUniqueId() == emailQuestion) {
+				} else if (Objects.equals(answer.getQuestionUniqueId(), emailQuestion)) {
 					user.setEmail(answer.getValue());
-				} else if (answer.getQuestionUniqueId() == firstNameQuestion) {
+				} else if (Objects.equals(answer.getQuestionUniqueId(), firstNameQuestion)) {
 					user.setGivenName(answer.getValue());
-				} else if (answer.getQuestionUniqueId() == lastNameQuestion) {
+				} else if (Objects.equals(answer.getQuestionUniqueId(), lastNameQuestion)) {
 					user.setSurName(answer.getValue());
-				} else if (answer.getQuestionUniqueId() == passwordQuestion) {
+				} else if (Objects.equals(answer.getQuestionUniqueId(), passwordQuestion)) {
 					user.setPassword(Tools.hash(answer.getValue() + user.getPasswordSalt()));
-				} else if (answer.getQuestionUniqueId() == languageQuestion) {
+				} else if (Objects.equals(answer.getQuestionUniqueId(), languageQuestion)) {
 					for (PossibleAnswer possibleAnswer : languageQuestionElement.getPossibleAnswers()) {
 						if (possibleAnswer.getId().toString().equalsIgnoreCase(answer.getValue())) {
 							user.setLanguage(possibleAnswer.getShortname().toUpperCase());
@@ -158,9 +156,8 @@ public class AnswerService extends BasicService {
 				Draft draft = getDraft(draftid);
 				if (draft != null) {
 					for (Element element : answerSet.getSurvey().getElements()) {
-						if (element instanceof FreeTextQuestion) {
-							FreeTextQuestion q = (FreeTextQuestion) element;
-							if (q.getIsPassword()) {
+						if (element instanceof FreeTextQuestion q) {
+                            if (q.getIsPassword()) {
 								List<Answer> originalAnswers = draft.getAnswerSet().getAnswers(q.getUniqueId());
 								if (!originalAnswers.isEmpty()) {
 									List<Answer> currentPasswordAnswers = answerSet.getAnswers(q.getUniqueId());
@@ -185,7 +182,7 @@ public class AnswerService extends BasicService {
 				this.ecfService.setAnswerSetECFComponents(answerSet.getSurvey(), answerSet);
 			}
 			
-			session.saveOrUpdate(answerSet);
+			session.merge(answerSet);
 			session.flush();
 			
 			if (answerSet.getSurvey().getIsDelphi()) {
@@ -274,10 +271,9 @@ public class AnswerService extends BasicService {
 
 							a.setAttributeName(attributeName);
 
-							if (question instanceof ChoiceQuestion) {
+							if (question instanceof ChoiceQuestion choiceQuestion) {
 								// replace ID by label of the answer
-								ChoiceQuestion choiceQuestion = (ChoiceQuestion) question;
-								PossibleAnswer possibleAnswer = choiceQuestion
+                                PossibleAnswer possibleAnswer = choiceQuestion
 										.getPossibleAnswerByUniqueId(answer.getPossibleAnswerUniqueId());
 								a.setValue(possibleAnswer.getTitle());
 							} else {
@@ -297,13 +293,13 @@ public class AnswerService extends BasicService {
 	@Transactional(readOnly = true)
 	public AnswerSet get(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (AnswerSet) session.get(AnswerSet.class, id);
+		return session.get(AnswerSet.class, id);
 	}
 
 	@Transactional(readOnly = true)
 	public AnswerSet get(int id, boolean initializeFiles) {
 		Session session = sessionFactory.getCurrentSession();
-		AnswerSet answerSet = (AnswerSet) session.get(AnswerSet.class, id);
+		AnswerSet answerSet = session.get(AnswerSet.class, id);
 		if (initializeFiles) {
 			for (Answer answer : answerSet.getAnswers()) {
 				Hibernate.initialize(answer.getFiles());
@@ -380,9 +376,9 @@ public class AnswerService extends BasicService {
 		if (useDraftSurveysTable)
 			joinSurveys += " JOIN SURVEYS d ON d.SURVEY_UID = s.SURVEY_UID AND d.ISDRAFT = 1";
 
-		sql = "SELECT ans.ANSWER_SET_ID FROM ANSWERS_SET ans " + joinSurveys + " WHERE " + where.toString()
+		sql = "SELECT ans.ANSWER_SET_ID FROM ANSWERS_SET ans " + joinSurveys + " WHERE " + where
 				+ " AND  ans.ISDRAFT = 1 AND ans.UNIQUECODE NOT IN (SELECT ans.UNIQUECODE FROM ANSWERS_SET ans WHERE "
-				+ where.toString() + " AND ans.ISDRAFT = 0) ORDER BY ans.ANSWER_SET_UPDATE DESC";
+				+ where + " AND ans.ISDRAFT = 0) ORDER BY ans.ANSWER_SET_UPDATE DESC";
 
 		if (filter.getUser().indexOf(';') > 0) {
 			parameters.put("emails", filter.getUser().trim().split(";"));
@@ -401,7 +397,7 @@ public class AnswerService extends BasicService {
 
 		for (Object o : res) {
 			Integer i = ConversionTools.getValue(o);
-			AnswerSet answerSet = (AnswerSet) session.get(AnswerSet.class, i);
+			AnswerSet answerSet = session.get(AnswerSet.class, i);
 			result.add(answerSet);
 		}
 
@@ -439,7 +435,7 @@ public class AnswerService extends BasicService {
 		if (loadDraftIds) {
 			sql = "select max(ans.ANSWER_SET_ID), max(d.DRAFT_UID), min(ans.ISDRAFT) from ANSWERS_SET ans LEFT JOIN ANSWERS_SET ans2 ON ans.UNIQUECODE = ans2.UNIQUECODE LEFT JOIN DRAFTS d ON ans2.ANSWER_SET_ID = d.answerSet_ANSWER_SET_ID LEFT JOIN SURVEYS s ON ans2.SURVEY_ID = s.SURVEY_ID where ans.ANSWER_SET_ID IN ("
 					+ getSql(null, survey == null ? -1 : survey.getId(), filter, parameters, true)
-					+ ") GROUP BY ans.UNIQUECODE ORDER BY ans.ANSWER_SET_DATE ASC";
+					+ ") GROUP BY ans.UNIQUECODE, ans.ANSWER_SET_DATE ORDER BY ans.ANSWER_SET_DATE ";
 		} else {
 			sql = getSql(null, survey == null ? -1 : survey.getId(), filter, parameters, true);
 		}
@@ -455,7 +451,7 @@ public class AnswerService extends BasicService {
 
 		for (Object o : res) {
 			Integer i = ConversionTools.getValue(o);
-			AnswerSet answerSet = (AnswerSet) session.get(AnswerSet.class, i);
+			AnswerSet answerSet = session.get(AnswerSet.class, i);
 
 			if (loadDraftIds && answerSet.getIsDraft()) {
 				AnswerSet contribution = get(answerSet.getUniqueCode());
@@ -495,7 +491,7 @@ public class AnswerService extends BasicService {
 			prefix = "SELECT DISTINCT ans.ANSWER_SET_ID";
 		}
 
-		StringBuilder sql = null;
+		StringBuilder sql;
 		StringBuilder where;
 		int joincounter = 0;
 		boolean useSurveysTable = false;
@@ -1129,7 +1125,7 @@ public class AnswerService extends BasicService {
 		String sql = "SELECT f.FILE_ID, f.FILE_NAME, f.FILE_UID, af.ANSWERS_ANSWER_ID, a.QUESTION_UID FROM FILES f JOIN ANSWERS_FILES af ON f.FILE_ID = af.files_FILE_ID JOIN ANSWERS a ON af.ANSWERS_ANSWER_ID = a.ANSWER_ID WHERE a.AS_ID = :id";
 
 		NativeQuery query = session.createNativeQuery(sql);
-		query.setParameter("id", (Integer) answersetId);
+		query.setParameter("id", answersetId);
 
 		@SuppressWarnings("rawtypes")
 		List res = query.list();
@@ -1157,12 +1153,11 @@ public class AnswerService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 
 		for (Question q : survey.getQuestions()) {
-			if (q instanceof ChoiceQuestion) {
-				ChoiceQuestion choice = (ChoiceQuestion) q;
-				for (PossibleAnswer a : choice.getPossibleAnswers()) {
+			if (q instanceof ChoiceQuestion choice) {
+                for (PossibleAnswer a : choice.getPossibleAnswers()) {
 					NativeQuery query = session
 							.createNativeQuery("SELECT NUM FROM LIVESTATISTICS WHERE PAID = :possibleAnswerId");
-					query.setParameter("possibleAnswerId", (Integer) a.getId());
+					query.setParameter("possibleAnswerId", a.getId());
 					Object num = query.uniqueResult();
 					int result = 0;
 					if (num != null)
@@ -1175,14 +1170,13 @@ public class AnswerService extends BasicService {
 						}
 					map.put(a.getId(), result);
 				}
-			} else if (q instanceof Matrix) {
-				Matrix matrix = (Matrix) q;
-				for (Element matrixQuestion : matrix.getQuestions()) {
+			} else if (q instanceof Matrix matrix) {
+                for (Element matrixQuestion : matrix.getQuestions()) {
 					for (Element matrixAnswer : matrix.getAnswers()) {
 						NativeQuery query = session.createNativeQuery(
 								"SELECT NUM FROM LIVESTATISTICS WHERE PAID = :possibleAnswerId AND QID = :questionId");
-						query.setParameter("possibleAnswerId", (Integer) matrixAnswer.getId());
-						query.setParameter("questionId", (Integer) matrixQuestion.getId());
+						query.setParameter("possibleAnswerId", matrixAnswer.getId());
+						query.setParameter("questionId", matrixQuestion.getId());
 
 						Object num = query.uniqueResult();
 						int result = 0;
@@ -1219,13 +1213,13 @@ public class AnswerService extends BasicService {
 
 			NativeQuery query = session.createNativeQuery(
 					"SELECT count(ANSWERS_SET.ANSWER_SET_ID) FROM ANSWERS_SET inner join SURVEYS s on  ANSWERS_SET.SURVEY_ID = s.SURVEY_ID where ANSWERS_SET.ISDRAFT = 0 AND s.SURVEY_UID = :uid AND s.ISDRAFT = 0");
-			query.setParameter("uid", (String) uid);
+			query.setParameter("uid", uid);
 
 			return ConversionTools.getValue(query.uniqueResult());
 		} else {
 			NativeQuery query = session.createNativeQuery(
 					"SELECT count(ANSWERS_SET.ANSWER_SET_ID) FROM ANSWERS_SET inner join SURVEYS s on  ANSWERS_SET.SURVEY_ID = s.SURVEY_ID where ANSWERS_SET.ISDRAFT = 0 AND  s.SURVEYNAME = :surveyname AND s.ISDRAFT = 0");
-			query.setParameter("surveyname", (String) surveyname);
+			query.setParameter("surveyname", surveyname);
 
 			return ConversionTools.getValue(query.uniqueResult());
 		}
@@ -1272,9 +1266,9 @@ public class AnswerService extends BasicService {
 
 		NativeQuery query = session.createNativeQuery(
 				"SELECT count(an.ANSWER_SET_ID) FROM ANSWERS_SET an inner join SURVEYS s on an.SURVEY_ID = s.SURVEY_ID where an.ISDRAFT = 0 AND s.SURVEY_UID = :uid AND s.ISDRAFT = 0 AND an.ANSWER_SET_DATE > :start AND an.ANSWER_SET_DATE < :end");
-		query.setParameter("uid", (String) uid);
-		query.setParameter("start", (Date) start);
-		query.setParameter("end", (Date) end);
+		query.setParameter("uid", uid);
+		query.setParameter("start", start);
+		query.setParameter("end", end);
 
 		return ConversionTools.getValue(query.uniqueResult());
 	}
@@ -1285,8 +1279,8 @@ public class AnswerService extends BasicService {
 
 		String queryString = "SELECT count(ans.ANSWER_SET_ID) from ANSWERS_SET ans inner join SURVEYS s on ans.SURVEY_ID = s.SURVEY_ID WHERE s.SURVEY_UID = :uid AND s.ISDRAFT = 0 AND ans.ISDRAFT = 0 AND (ans.RESPONDER_EMAIL = :mail1 OR ans.RESPONDER_EMAIL = :mail2)";
 		NativeQuery query = session.createNativeQuery(queryString);
-		query.setParameter("uid", (String) survey.getUniqueId()).setParameter("mail1", (String) user.getEmail()).setParameter("mail2",
-                (String) Tools.md5hash(user.getEmail()));
+		query.setParameter("uid", survey.getUniqueId()).setParameter("mail1", user.getEmail()).setParameter("mail2",
+				Tools.md5hash(user.getEmail()));
 
 		return ConversionTools.getValue(query.uniqueResult());
 	}
@@ -1297,15 +1291,15 @@ public class AnswerService extends BasicService {
 
 		String queryString = "SELECT ans.ANSWER_SET_ID from ANSWERS_SET ans inner join SURVEYS s on ans.SURVEY_ID = s.SURVEY_ID WHERE s.SURVEY_UID = :uid AND s.ISDRAFT = 0 AND ans.ISDRAFT = 0 AND (ans.RESPONDER_EMAIL = :mail1 OR ans.RESPONDER_EMAIL = :mail2)";
 		NativeQuery query = session.createNativeQuery(queryString);
-		query.setParameter("uid", (String) survey.getUniqueId()).setParameter("mail1", (String) user.getEmail()).setParameter("mail2",
-                (String) Tools.md5hash(user.getEmail()));
+		query.setParameter("uid", survey.getUniqueId()).setParameter("mail1", user.getEmail()).setParameter("mail2",
+				Tools.md5hash(user.getEmail()));
 
 		@SuppressWarnings("rawtypes")
 		List res = query.setMaxResults(1).list();
 		
 		for (Object o : res) {
 			Integer i = ConversionTools.getValue(o);
-			AnswerSet answerSet = (AnswerSet) session.get(AnswerSet.class, i);
+			AnswerSet answerSet = session.get(AnswerSet.class, i);
 			return answerSet;
 		}
 
@@ -1321,7 +1315,7 @@ public class AnswerService extends BasicService {
 
 		HashMap<String, Object> parameters = new HashMap<>();
 
-		String queryString = "";
+		String queryString;
 
 		queryString = getSql("SELECT count(DISTINCT a1.AS_ID)", survey.getId(), filter, parameters, true);
 
@@ -1382,16 +1376,16 @@ public class AnswerService extends BasicService {
 			deletedContribution.setSurveyUid(answerSet.getSurvey().getUniqueId());
 			deletedContribution.setCreationDate(answerSet.getDate());
 			deletedContribution.setDeletionDate(new Date());
-			session.save(deletedContribution);
+			session.persist(deletedContribution);
 		}
 		
-		session.delete(answerSet);
+		session.remove(answerSet);
 		
 		if (!answerSet.getIsDraft()) {
 			//also delete draft
 			Draft draft = getDraftByAnswerUID(answerSet.getUniqueCode());
 			if (draft != null) {
-				session.delete(draft);
+				session.remove(draft);
 			}
 		}
 	}
@@ -1426,7 +1420,7 @@ public class AnswerService extends BasicService {
 
 		Query query = session.createQuery(
 				"SELECT a FROM AnswerSet a WHERE (a.date < :maxDate) and (a.IP IS NOT NULL) order by date ASC");
-		query.setParameter("maxDate", (Date) maxDate);
+		query.setParameter("maxDate", maxDate);				
 		query.setMaxResults(max);
 
 		@SuppressWarnings("unchecked")
@@ -1443,7 +1437,7 @@ public class AnswerService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.createQuery(
 				"SELECT a FROM AnswerSet a WHERE a.isDraft = false AND a.uniqueCode = :uniqueCode order by date DESC")
-				.setParameter(Constants.UNIQUECODE, (String) uniqueCode);
+				.setParameter(Constants.UNIQUECODE, uniqueCode);
 		@SuppressWarnings("unchecked")
 		List<AnswerSet> list = query.list();
 		if (list.isEmpty()) {
@@ -1460,7 +1454,7 @@ public class AnswerService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.createQuery(
 				"SELECT a FROM AnswerSet a WHERE a.isDraft = false AND a.invitationId = :invitationId order by date DESC")
-				.setParameter("invitationId", (String) invitationId);
+				.setParameter("invitationId", invitationId);
 		@SuppressWarnings("unchecked")
 		List<AnswerSet> list = query.list();
 		if (list.isEmpty()) {
@@ -1475,13 +1469,13 @@ public class AnswerService extends BasicService {
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
 	public void save(WrongAttempts w) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(w);
+		session.merge(w);
 	}
 
 	@Transactional
 	public WrongAttempts getWrongAttempts(String ip) throws MessageException {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createQuery("SELECT a FROM WrongAttempts a WHERE a.ip = :ip").setParameter("ip", (String) ip);
+		Query query = session.createQuery("SELECT a FROM WrongAttempts a WHERE a.ip = :ip").setParameter("ip", ip);
 		@SuppressWarnings("unchecked")
 		List<WrongAttempts> list = query.list();
 		if (list.isEmpty()) {
@@ -1502,7 +1496,7 @@ public class AnswerService extends BasicService {
 			if (result.getLockDate().before(yesterday)) {
 				result.setCounter(0);
 				result.setlockDate(null);
-				session.update(result);
+				session.merge(result);
 			}
 		}
 		
@@ -1513,30 +1507,30 @@ public class AnswerService extends BasicService {
 	public void deleteStatisticsForSurvey(int surveyId) {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.createQuery("UPDATE Statistics s SET s.invalid = true WHERE s.surveyId = :surveyId")
-				.setParameter("surveyId", (Integer) surveyId);
+				.setParameter("surveyId", surveyId);
 		query.executeUpdate();
 
 		query = session.createQuery("DELETE FROM ExportCache c WHERE c.surveyId = :surveyId").setParameter("surveyId",
-                (Integer) surveyId);
+				surveyId);
 		query.executeUpdate();
 	}
 
 	@Transactional
 	public StatisticsRequest getStatisticRequest(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (StatisticsRequest) session.get(StatisticsRequest.class, id);
+		return session.get(StatisticsRequest.class, id);
 	}
 
 	@Transactional
 	public void saveStatisticsRequest(StatisticsRequest sr) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(sr);
+		session.merge(sr);
 	}
 
 	@Transactional
 	public void deleteStatisticsRequest(StatisticsRequest statisticsRequest) {
 		Session session = sessionFactory.getCurrentSession();
-		session.delete(statisticsRequest);
+		session.remove(statisticsRequest);
 	}
 
 	@Transactional
@@ -1571,7 +1565,7 @@ public class AnswerService extends BasicService {
 	@Transactional(readOnly = false)
 	public void save(Statistics s) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(s);
+		session.merge(s);
 		session.flush();
 	}
 
@@ -1696,8 +1690,8 @@ public class AnswerService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.createNativeQuery(
 				"select count(*) from ANSWERS a INNER JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = a.AS_ID INNER JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID where s.ISDRAFT = :isdraft AND ans.UNIQUECODE != :ansuid AND (a.QUESTION_UID= :questionUid and a.VALUE= :value and ans.ISDRAFT=0)")
-				.setParameter("isdraft", (Boolean) surveyIsDraft).setParameter("value", (String) value).setParameter("ansuid", (String) answerSetUniqueCode)
-				.setParameter("questionUid", (String) questionUid);
+				.setParameter("isdraft", surveyIsDraft).setParameter("value", value).setParameter("ansuid", answerSetUniqueCode)
+				.setParameter("questionUid", questionUid);
 		return ConversionTools.getValue(query.uniqueResult());
 	}
 	
@@ -1756,19 +1750,19 @@ public class AnswerService extends BasicService {
 
 	private void internalSaveDraft(Draft draft) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(draft);
+		session.merge(draft);
 	}
 
 	@Transactional
 	public Draft getDraft(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (Draft) session.get(Draft.class, id);
+		return session.get(Draft.class, id);
 	}
 
 	@Transactional(readOnly = true)
 	public Draft getDraft(String draftid) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createQuery("FROM Draft d WHERE d.uniqueId = :uniqueId").setParameter("uniqueId", (String) draftid);
+		Query query = session.createQuery("FROM Draft d WHERE d.uniqueId = :uniqueId").setParameter("uniqueId", draftid);
 		@SuppressWarnings("unchecked")
 		List<Draft> list = query.list();
 		if (list.isEmpty()) {
@@ -1786,7 +1780,7 @@ public class AnswerService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session
 				.createQuery("FROM Draft d WHERE d.answerSet.uniqueCode = :uniqueCode order by answerSet.date DESC")
-				.setParameter(Constants.UNIQUECODE, (String) uniqueCode);
+				.setParameter(Constants.UNIQUECODE, uniqueCode);
 		@SuppressWarnings("unchecked")
 		List<Draft> list = query.list();
 		if (list.isEmpty()) {
@@ -1811,7 +1805,7 @@ public class AnswerService extends BasicService {
 		while (true) {
 			try {
 				Query query = session.createQuery("FROM Draft d WHERE d.answerSet.invitationId = :uniqueCode")
-						.setParameter(Constants.UNIQUECODE, (String) uniqueCode);
+						.setParameter(Constants.UNIQUECODE, uniqueCode);
 				@SuppressWarnings("unchecked")
 				List<Draft> list = query.list();
 				if (list.isEmpty()) {
@@ -1843,7 +1837,7 @@ public class AnswerService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		NativeQuery query = session.createNativeQuery(
 				"SELECT ans.UNIQUECODE, f.FILE_UID, f.FILE_NAME FROM FILES f JOIN ANSWERS_FILES af ON f.FILE_ID = af.files_FILE_ID JOIN ANSWERS a ON af.ANSWERS_ANSWER_ID = a.ANSWER_ID JOIN ANSWERS_SET ans ON ans.ANSWER_SET_ID = a.AS_ID AND ans.ISDRAFT = 0 JOIN SURVEYS s ON s.SURVEY_ID = ans.SURVEY_ID WHERE a.QUESTION_UID = :uid AND s.ISDRAFT = :draft");
-		query.setParameter("uid", (String) uid).setParameter("draft", draft ? 1 : 0);
+		query.setParameter("uid", uid).setParameter("draft", draft ? 1 : 0);
 		return query.list();
 	}
 
@@ -1875,7 +1869,7 @@ public class AnswerService extends BasicService {
 
 		Query query = session.createQuery(
 				"SELECT a FROM AnswerSet a WHERE a.isDraft = false AND a.uniqueCode = :uniqueCode order by date DESC")
-				.setParameter(Constants.UNIQUECODE, (String) code);
+				.setParameter(Constants.UNIQUECODE, code);
 		@SuppressWarnings("unchecked")
 		List<AnswerSet> list1 = query.list();
 
@@ -1893,7 +1887,7 @@ public class AnswerService extends BasicService {
 
 			query = session
 					.createQuery("FROM Draft d WHERE d.answerSet.uniqueCode = :uniqueCode order by answerSet.date DESC")
-					.setParameter(Constants.UNIQUECODE, (String) code);
+					.setParameter(Constants.UNIQUECODE, code);
 			@SuppressWarnings("unchecked")
 			List<Draft> list = query.list();
 
@@ -1908,7 +1902,7 @@ public class AnswerService extends BasicService {
 				draft.setUniqueId(uniqueCode);
 				answerSet.setIsDraft(true);
 				draft.setAnswerSet(answerSet);
-				session.saveOrUpdate(draft);
+				session.merge(draft);
 
 				reportingService.addToDo(ToDo.DELETEDCONTRIBUTION, answerSet.getSurvey().getUniqueId(),
 						answerSet.getUniqueCode());
@@ -1918,7 +1912,7 @@ public class AnswerService extends BasicService {
 
 				if (draft != null) {
 					String uid = draft.getUniqueId();
-					session.delete(draft);
+					session.remove(draft);
 					session.flush();
 
 					draft = new Draft();
@@ -1926,7 +1920,7 @@ public class AnswerService extends BasicService {
 					answerSet.setIsDraft(true);
 					draft.setAnswerSet(answerSet);
 
-					session.saveOrUpdate(draft);
+					session.merge(draft);
 					reportingService.addToDo(ToDo.DELETEDCONTRIBUTION, answerSet.getSurvey().getUniqueId(),
 							answerSet.getUniqueCode());
 					return uid;
@@ -1972,7 +1966,7 @@ public class AnswerService extends BasicService {
 		Query query = session.createNativeQuery(
 				"SELECT MIN(SURVEY_CREATED), MAX(SURVEY_CREATED) FROM SURVEYS WHERE SURVEY_UID = :uid AND ISDRAFT = 0");
 		@SuppressWarnings("rawtypes")
-		List result = query.setParameter("uid", (String) survey.getUniqueId()).list();
+		List result = query.setParameter("uid", survey.getUniqueId()).list();
 		if (!result.isEmpty()) {
 			Object[] a = (Object[]) result.get(0);
 			survey.setFirstPublished((Date) a[0]);
@@ -1988,7 +1982,7 @@ public class AnswerService extends BasicService {
 		Query query = session
 				.createNativeQuery("SELECT QUESTION_UID, VALUE FROM ANSWERS WHERE AS_ID = :id ORDER BY ANSWER_ID DESC");
 		@SuppressWarnings("rawtypes")
-		List answers = query.setParameter("id", (Integer) id).list();
+		List answers = query.setParameter("id", id).list();
 
 		for (Object o : answers) {
 			Object[] a = (Object[]) o;
@@ -2003,7 +1997,7 @@ public class AnswerService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		NativeQuery query = session.createNativeQuery(
 				"SELECT ANSWERS_SET.ANSWER_SET_ID FROM ANSWERS_SET inner join SURVEYS s on ANSWERS_SET.SURVEY_ID = s.SURVEY_ID where ANSWERS_SET.ISDRAFT = 0 AND s.SURVEY_UID = :uid AND s.ISDRAFT = 0 LIMIT 1");
-		query.setParameter("uid", (String) uid);
+		query.setParameter("uid", uid);
 
 		@SuppressWarnings("rawtypes")
 		List result = query.list();
@@ -2017,7 +2011,7 @@ public class AnswerService extends BasicService {
 		String sql = "select DISTINCT ANSWER_SET_ID from ANSWERS_SET where SURVEY_ID = :surveyId";
 
 		NativeQuery query = session.createNativeQuery(sql);
-		query.setParameter("surveyId", (Integer) surveyId);
+		query.setParameter("surveyId", surveyId);
 
 		@SuppressWarnings("rawtypes")
 		List res = query.list();
@@ -2026,7 +2020,7 @@ public class AnswerService extends BasicService {
 
 		for (Object o : res) {
 			Integer i = ConversionTools.getValue(o);
-			AnswerSet answerSet = (AnswerSet) session.get(AnswerSet.class, i);
+			AnswerSet answerSet = session.get(AnswerSet.class, i);
 			result.add(answerSet);
 		}
 
@@ -2045,8 +2039,8 @@ public class AnswerService extends BasicService {
 
 		List<Integer> ids = surveyService.getAllSurveyVersions(survey.getId());
 
-		query.setParameter(Constants.EMAIL, (String) user.getEmail());
-		query.setParameter("email2", (String) Tools.md5hash(user.getEmail()));
+		query.setParameter(Constants.EMAIL, user.getEmail());
+		query.setParameter("email2", Tools.md5hash(user.getEmail()));
 		query.setParameterList("ids", ids);
 
 		@SuppressWarnings("unchecked")
@@ -2098,7 +2092,7 @@ public class AnswerService extends BasicService {
 				+ ") AND ISDRAFT = 0 AND ANSWER_SET_DATE > :start GROUP BY DATE(ANSWER_SET_DATE) ORDER BY DATE(ANSWER_SET_DATE)";
 
 		NativeQuery query = session.createNativeQuery(sql);
-		query.setParameter("start", (Date) cal.getTime());
+		query.setParameter("start", cal.getTime());
 
 		@SuppressWarnings("rawtypes")
 		List res = query.list();
@@ -2309,7 +2303,7 @@ public class AnswerService extends BasicService {
 	public int deleteOldDrafts(Date date) throws IOException {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.createQuery("SELECT d.id from Draft d where d.answerSet.updateDate < :date");
-		query.setParameter("date", (Date) date).setMaxResults(1000);
+		query.setParameter("date", date).setMaxResults(1000);
 
 		@SuppressWarnings("unchecked")
 		List<Integer> drafts = query.list();
@@ -2319,7 +2313,7 @@ public class AnswerService extends BasicService {
 
 		int counter = 0;
 		for (Integer draftid : drafts) {
-			Draft draft = (Draft) session.get(Draft.class, draftid);
+			Draft draft = session.get(Draft.class, draftid);
 			
 			if (aliasesToSkip.contains(draft.getAnswerSet().getSurvey().getShortname())) {
 				continue;
@@ -2340,7 +2334,7 @@ public class AnswerService extends BasicService {
 					}
 				}
 			}
-			session.delete(draft);
+			session.remove(draft);
 			counter++;
 		}
 
@@ -2357,8 +2351,8 @@ public class AnswerService extends BasicService {
 
 		int counter = 0;
 		for (Integer statid : statistics) {
-			Statistics stat = (Statistics) session.get(Statistics.class, statid);
-			session.delete(stat);
+			Statistics stat = session.get(Statistics.class, statid);
+			session.remove(stat);
 			counter++;
 		}
 
@@ -2372,7 +2366,7 @@ public class AnswerService extends BasicService {
 		List<AnswerSet> result = new ArrayList<>();
 
 		for (Integer i : answerSetIDs) {
-			AnswerSet answerSet = (AnswerSet) session.get(AnswerSet.class, i);
+			AnswerSet answerSet = session.get(AnswerSet.class, i);
 
 			if (initFiles) {
 				for (Answer answer : answerSet.getAnswers()) {
@@ -2390,7 +2384,7 @@ public class AnswerService extends BasicService {
 	public Date getNewestTestAnswerDate(int surveyId) {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.createQuery(
-				"SELECT max(a.updateDate) FROM AnswerSet a WHERE a.surveyId = " + surveyId + " AND a.isDraft = 0");
+				"SELECT max(a.updateDate) FROM AnswerSet a WHERE a.surveyId = " + surveyId + " AND a.isDraft = false");
 		return (Date) query.uniqueResult();
 	}
 
@@ -2422,7 +2416,7 @@ public class AnswerService extends BasicService {
 		}
 		Session session = sessionFactory.getCurrentSession();
 		session.evict(filter);
-		filter = (ResultFilter) session.merge(filter);
+		filter = session.merge(filter);
 		Hibernate.initialize(filter.getFilterValues());
 		Hibernate.initialize(filter.getExportedQuestions());
 		Hibernate.initialize(filter.getVisibleQuestions());
@@ -2499,9 +2493,9 @@ public class AnswerService extends BasicService {
 		Query query = session.createNativeQuery(sql);
 		
 		if (answerUID != null) {
-			query.setParameter("auid", (String) (questionUID + "#" + answerUID));
+			query.setParameter("auid", questionUID + "#" + answerUID);
 		} else {
-			query.setParameter("quid", (String) questionUID);
+			query.setParameter("quid", questionUID);
 		}
 		
 		return query.executeUpdate();
@@ -2578,9 +2572,9 @@ public class AnswerService extends BasicService {
 		NativeQuery query = session.createNativeQuery(sql);
 		sqlQueryService.setParameters(query, parameters);
 		
-		query.setParameter("surveyUid", (String) survey.getUniqueId());
-		query.setParameter("isDraft", (Boolean) survey.getIsDraft());
-		query.setParameter("questionUid", (String) singleChoiceQuestion.getUniqueId());
+		query.setParameter("surveyUid", survey.getUniqueId());
+		query.setParameter("isDraft", survey.getIsDraft());
+		query.setParameter("questionUid", singleChoiceQuestion.getUniqueId());
 		
 		@SuppressWarnings("rawtypes")
 		List res = query.list();
@@ -2661,9 +2655,9 @@ public class AnswerService extends BasicService {
 		NativeQuery query = session.createNativeQuery(sql);
 		sqlQueryService.setParameters(query, parameters);
 		
-		query.setParameter("surveyUid", (String) survey.getUniqueId());
-		query.setParameter("isDraft", (Boolean) survey.getIsDraft());
-		query.setParameter("questionUid", (String) numberQuestion.getUniqueId());
+		query.setParameter("surveyUid", survey.getUniqueId());
+		query.setParameter("isDraft", survey.getIsDraft());
+		query.setParameter("questionUid", numberQuestion.getUniqueId());
 		
 		@SuppressWarnings("rawtypes")
 		List res = query.list();
@@ -2704,11 +2698,10 @@ public class AnswerService extends BasicService {
 		questionsBySection.put(lastSection, new ArrayList<String>());
 		
 		for (Element element : survey.getQuestionsAndSections()) {
-			if (element instanceof Section) {
+			if (element instanceof Section section) {
 				lastSection = element.getUniqueId();
-				
-				Section section = (Section)element;
-				if (section.getLevel() == 1) {
+
+                if (section.getLevel() == 1) {
 					lastL1section = element.getUniqueId();
 				}
 				
@@ -2716,14 +2709,12 @@ public class AnswerService extends BasicService {
 				questionUidsPerAnswerAndSection.put(lastSection, new HashMap<String, List<String>>());
 			} else if (element.isDelphiElement()) {
 				
-				if (element instanceof MatrixOrTable) {
-					MatrixOrTable matrix = (MatrixOrTable)element;
-					for (Element matrixQuestion : matrix.getQuestions()) {
+				if (element instanceof MatrixOrTable matrix) {
+                    for (Element matrixQuestion : matrix.getQuestions()) {
 						parentByQuestion.put(matrixQuestion.getUniqueId(), element.getUniqueId());
 					}
-				} else if (element instanceof RatingQuestion) {
-					RatingQuestion rating = (RatingQuestion)element;
-					for (Element ratingQuestion : rating.getQuestions()) {
+				} else if (element instanceof RatingQuestion rating) {
+                    for (Element ratingQuestion : rating.getQuestions()) {
 						parentByQuestion.put(ratingQuestion.getUniqueId(), element.getUniqueId());
 					}
 				}
@@ -2881,8 +2872,8 @@ public class AnswerService extends BasicService {
 
 	@Transactional
 	public Map<String, String> getCompletionRates(Survey survey, ResultFilter filter, boolean allanswers) throws Exception {
-		int totalNumberOfContributions = 0;
-		int completedContributions = 0;
+		int totalNumberOfContributions;
+		int completedContributions;
 		Map<String, List<String>> questionsBySection = new HashMap<>();		
 		Map<String, Integer> answersByQuestion = new HashMap<>();
 		Map<String, List<String>> sectionsByQuestion = new HashMap<>();
@@ -2903,26 +2894,22 @@ public class AnswerService extends BasicService {
 			for (Question question : questions) {
 				if (question.isUsedInResults() && filter.getVisibleQuestions().contains(question.getId().toString())) {
 					
-					if (question instanceof Matrix) {
-						MatrixOrTable parent = (MatrixOrTable)question;						
-						for (Element child: parent.getQuestions()) {
+					if (question instanceof Matrix parent) {
+                        for (Element child: parent.getQuestions()) {
 							questionUidsByIndex.put(questionUidsByIndex.size(), child.getUniqueId());
 						}
-					} else if (question instanceof Table) {
-						Table parent = (Table)question;
-						for (Element q: parent.getQuestions()) {
+					} else if (question instanceof Table parent) {
+                        for (Element q: parent.getQuestions()) {
 							for (Element a: parent.getAnswers()) {
 								questionUidsByIndex.put(questionUidsByIndex.size(), q.getUniqueId());
 							}
 						}
-					} else if (question instanceof ComplexTable) {
-						ComplexTable parent = (ComplexTable)question;
-						for (Element child: parent.getQuestionChildElements()) {
+					} else if (question instanceof ComplexTable parent) {
+                        for (Element child: parent.getQuestionChildElements()) {
 							questionUidsByIndex.put(questionUidsByIndex.size(), child.getUniqueId());
 						}
-					} else if (question instanceof RatingQuestion) {
-						RatingQuestion parent = (RatingQuestion)question;
-						for (Element child: parent.getQuestions()) {
+					} else if (question instanceof RatingQuestion parent) {
+                        for (Element child: parent.getQuestions()) {
 							questionUidsByIndex.put(questionUidsByIndex.size(), child.getUniqueId());
 						}						
 					} else {
@@ -2976,7 +2963,7 @@ public class AnswerService extends BasicService {
 		List<Answer> answers = answerSet.getAnswers(targetDatasetQuestion.getUniqueId());
 		if (!answers.isEmpty()) {
 			int dataset = Integer.parseInt(answers.get(0).getValue());
-			SAScoreCard card = selfassessmentService.getScoreCard(dataset);
+			SAScoreCard card = selfAssessmentService.getScoreCard(dataset);
 			List<Integer> hiddenCriteriaIDs = new ArrayList<>();
 			if (card != null) {
 				for (SAScore score : card.getScores()) {
@@ -2987,9 +2974,8 @@ public class AnswerService extends BasicService {
 				
 				if (!hiddenCriteriaIDs.isEmpty()) {
 					for (Question question : answerSet.getSurvey().getQuestions()) {
-						if (question instanceof SingleChoiceQuestion) {
-							SingleChoiceQuestion scq = (SingleChoiceQuestion) question;
-							if (scq.getIsSAQuestion() && scq.getEvaluationCriterion() != null && hiddenCriteriaIDs.contains(scq.getEvaluationCriterion().getId())) {
+						if (question instanceof SingleChoiceQuestion scq) {
+                            if (scq.getIsSAQuestion() && scq.getEvaluationCriterion() != null && hiddenCriteriaIDs.contains(scq.getEvaluationCriterion().getId())) {
 								if (!invisibleElements.contains(scq.getUniqueId())) {
 									invisibleElements.add(scq.getUniqueId());
 								}
@@ -3010,6 +2996,6 @@ public class AnswerService extends BasicService {
 		sc.setSurveyUID(answerSet.getSurvey().getUniqueId());
 		sc.setSubmitted(new Date());
 		sc.setOrganisation(answerSet.getSurvey().getOrganisation());
-		session.save(sc);
+		session.persist(sc);
 	}
 }

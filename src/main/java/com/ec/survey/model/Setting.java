@@ -1,9 +1,9 @@
 package com.ec.survey.model;
 
 import com.ec.survey.tools.activity.ActivityRegistry;
-import edu.emory.mathcs.backport.java.util.Arrays;
+import java.util.Arrays;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,7 +101,7 @@ public class Setting {
 		this.key = key;
 	}
 	
-	@Column(name = "SETTINGS_VALUE", length = 1000)
+	@Column(name = "SETTINGS_VALUE")
 	public String getValue() {
 		return value;
 	}

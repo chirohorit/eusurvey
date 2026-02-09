@@ -1,7 +1,7 @@
 package com.ec.survey.model;
 
 import java.util.Date;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,7 +15,7 @@ import com.ec.survey.tools.ConversionTools;
 @Table(name = "ACTIVITY")
 public class Activity implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+	
 	private Integer id;
 	private Date date;
 	private int logID;

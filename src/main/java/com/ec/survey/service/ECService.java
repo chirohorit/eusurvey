@@ -2,6 +2,7 @@ package com.ec.survey.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.ec.survey.model.KeyValue;
 
-import edu.emory.mathcs.backport.java.util.Collections;
+import java.util.Collections;
 
 @Service("ecService")
 public class ECService extends BasicService {
@@ -27,7 +28,7 @@ public class ECService extends BasicService {
 		linesDGS = new ArrayList<>();
 		
 		try {
-			String text = IOUtils.toString(inputStream, "UTF-8");
+			String text = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 			
 			Scanner scanner = new Scanner(text);
 			while (scanner.hasNextLine()) {
@@ -46,7 +47,7 @@ public class ECService extends BasicService {
 		linesAEX = new ArrayList<>();
 		
 		try {
-			String text = IOUtils.toString(inputStream, "UTF-8");
+			String text = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 			
 			Scanner scanner = new Scanner(text);
 			while (scanner.hasNextLine()) {
@@ -112,8 +113,8 @@ public class ECService extends BasicService {
 		}
 		
 		List<String> result = new ArrayList<>();
-		if (dgs) Collections.addAll(result, linesDGS.toArray());
-		if (aex) Collections.addAll(result, linesAEX.toArray());
+		if (dgs) Collections.addAll(result, linesDGS.toArray(new String[0]));
+		if (aex) Collections.addAll(result, linesAEX.toArray(new String[0]));
 		
 		return result.toArray(new String[0]);
 	}

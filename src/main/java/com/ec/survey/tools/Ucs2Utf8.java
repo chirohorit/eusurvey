@@ -1,6 +1,6 @@
 package com.ec.survey.tools;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.HashMap;

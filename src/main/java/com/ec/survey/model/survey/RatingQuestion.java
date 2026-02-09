@@ -1,21 +1,11 @@
 package com.ec.survey.model.survey;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.owasp.esapi.errors.ValidationException;
-
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.Transient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +15,11 @@ import java.util.List;
  */
 @Entity
 @DiscriminatorValue("RATING")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class RatingQuestion extends Question {
 	
-	private static final long serialVersionUID = 1L;
+	
 	private List<Element> missingQuestions = new ArrayList<>();
 
 	public RatingQuestion() {}
@@ -58,13 +48,11 @@ public class RatingQuestion extends Question {
 		this.iconType = iconType;
 	}
 	
-	@SuppressWarnings("deprecation")
 	@OneToMany(targetEntity=Element.class, cascade = CascadeType.ALL)  
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
-	@JoinColumn(nullable=true, foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT))
-	@org.hibernate.annotations.ForeignKey(name = "none")
-
+	@JoinColumn(nullable=true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+	////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Element> getChildElements() {
 		return childElements;
 	}

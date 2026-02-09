@@ -1,0 +1,343 @@
+package com.ec.survey.handler.worker;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+
+import com.ec.survey.service.*;
+import com.ec.survey.tools.Constants;
+import com.ec.survey.tools.ConversionTools;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.utils.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
+import com.ec.survey.model.Export;
+import com.ec.survey.model.Form;
+import com.ec.survey.model.ResultFilter;
+import com.ec.survey.model.WebserviceTask;
+import com.ec.survey.model.survey.Element;
+import com.ec.survey.model.survey.Survey;
+import com.ec.survey.model.survey.base.File;
+import com.ec.survey.tools.export.XmlExportCreator;
+import com.google.common.io.Files;
+//import com.lowagie.text.pdf.PdfReader;
+
+import com.itextpdf.text.pdf.PdfReader;
+
+@Service("resultsCreator")
+@Scope("prototype")
+public class ResultsCreator implements Runnable {
+	protected static final Logger logger = LoggerFactory.getLogger(ResultsCreator.class);
+
+	@Autowired
+	private FileService fileService;
+
+    @Autowired
+	private WebserviceService webserviceService;
+
+	@Autowired
+	private AnswerService answerService;
+
+	@Autowired
+	private SurveyService surveyService;
+
+    @Autowired
+	private TranslationService translationService;
+
+	@Autowired
+	private PDFService pdfService;
+
+	@Autowired
+	private XmlExportCreator xmlExportCreator;
+
+	@Autowired
+	private BasicService basicService;
+
+	protected @Value("${export.fileDir}") String fileDir;
+
+	private int task;
+
+	public Integer getTask() {
+		return task;
+	}
+
+	public void setTask(int task) {
+		this.task = task;
+	}
+
+	private MessageSource resources;
+	private Locale locale;
+
+	public void init(int task, MessageSource resources, Locale locale) {
+		this.task = task;
+		this.resources = resources;
+		this.locale = locale;
+	}
+
+	@Override
+	public void run() {
+		try {
+			webserviceService.setStarted(task);
+			WebserviceTask webserviceTask = webserviceService.get(task);
+
+			String uid = UUID.randomUUID().toString();
+
+			Form form = new Form(resources);
+
+			Survey survey = null;
+
+			if (webserviceTask.getSurveyUid() != null && !webserviceTask.getSurveyUid().isEmpty()) {
+				survey = surveyService.getSurveyByUniqueId(webserviceTask.getSurveyUid(), true, false);
+			}
+
+			if (survey == null) {
+				survey = surveyService.getSurvey(webserviceTask.getSurveyId(), true, true);
+			}
+
+			if (survey == null) {
+				webserviceService.setError(task, "Survey with id " + webserviceTask.getSurveyId() + " not found");
+				return;
+			}
+
+			List<String> translations = translationService
+					.getTranslationLanguagesForSurvey(webserviceTask.getSurveyId(), false);
+			survey.setTranslations(translations);
+
+			form.setSurvey(survey);
+
+			Export export = new Export();
+			export.setSurvey(survey);
+			export.setDate(new Date());
+
+			ResultFilter filter = new ResultFilter();
+
+			if (webserviceTask.getContributionType() != null
+					&& webserviceTask.getContributionType().equalsIgnoreCase("N")) {
+				filter.setGeneratedFrom(webserviceTask.getStart());
+				filter.setGeneratedTo(webserviceTask.getEnd());
+			} else if (webserviceTask.getContributionType() != null
+					&& webserviceTask.getContributionType().equalsIgnoreCase("U")) {
+				filter.setOnlyReallyUpdated(true);
+				filter.setUpdatedFrom(webserviceTask.getStart());
+				filter.setUpdatedTo(webserviceTask.getEnd());
+			} else { // A
+				filter.setCreatedOrUpdated(true);
+				filter.setUpdatedFrom(webserviceTask.getStart());
+				filter.setUpdatedTo(webserviceTask.getEnd());
+				filter.setGeneratedFrom(webserviceTask.getStart());
+				filter.setGeneratedTo(webserviceTask.getEnd());
+			}
+
+			if (webserviceTask.getToken() != null && !webserviceTask.getToken().isEmpty()) {
+				// this is a single answerSet export
+				filter.setInvitation(webserviceTask.getToken());
+			}
+
+			if (webserviceTask.getUniqueId() != null && !webserviceTask.getUniqueId().isEmpty()) {
+				// this is a single answerSet export
+				filter.setCaseId(webserviceTask.getUniqueId());
+			}
+
+			export.setShowShortnames(webserviceTask.isShowIDs());
+			export.setAddMeta(webserviceTask.isAddMeta());
+			export.setResultFilter(filter);
+
+			java.io.File target = fileService.getSurveyExportFile(webserviceTask.getSurveyUid(), uid);
+			xmlExportCreator.init(0, form, null, target.getAbsolutePath(), resources, locale, "", "");
+
+			if (webserviceTask.getExportType() != null && webserviceTask.getExportType().equals(2)) {
+				xmlExportCreator.simulateExportContent(false, export);
+			} else {
+				xmlExportCreator.exportContent(false, export, true);
+			}
+
+			Map<Integer, String> uniqueCodesById = xmlExportCreator.getExportedUniqueCodes();
+			Map<String, Element> questionsByUniqueId = survey.getElementsByUniqueId();
+
+			if (uniqueCodesById.isEmpty()) {
+				webserviceTask.setEmpty(true);
+			}
+			
+			String uid2 = UUID.randomUUID().toString();
+			File f = new File();
+			f.setUid(uid2);
+			java.io.File temp = fileService.getSurveyExportFile(survey.getUniqueId(), uid2);
+			
+			// results_[type]-<alias>[_<start-date>][_to_<end-date>].zip/xml
+			String fileName = "results";
+			if (webserviceTask.getExportType() != null) {
+				if (webserviceTask.getExportType().equals(1)) {
+					fileName += "_xml";
+				} else if (webserviceTask.getExportType().equals(2)) {
+					fileName += "_pdf";
+				}
+				fileName += "-" + survey.getShortname();
+				if (webserviceTask.getStart() != null) {
+					fileName += "_" + ConversionTools.getFullString4Webservice(webserviceTask.getStart());
+				}
+				if (webserviceTask.getEnd() != null) {
+					fileName += "_" + ConversionTools.getFullString4Webservice(webserviceTask.getEnd());
+				} else {
+					fileName += "_" + ConversionTools.getFullString4Webservice(xmlExportCreator.getExportedNow());
+				}
+			}
+			
+			if (webserviceTask.isXmlOnly()) {
+				f.setName(fileName + ".xml");
+				Files.copy(target, temp);
+			} else {
+				
+				final OutputStream out = new FileOutputStream(temp);
+				final ArchiveOutputStream os = new ArchiveStreamFactory().createArchiveOutputStream("zip", out);
+				
+				f.setName(fileName + ".zip");
+	
+				if (webserviceTask.getExportType() == null || webserviceTask.getExportType().equals(0)
+						|| webserviceTask.getExportType().equals(1) || (webserviceTask.getExportType().equals(3)
+								&& webserviceTask.getFileTypes() != null && webserviceTask.getFileTypes().contains("x"))) {
+					os.putArchiveEntry(new ZipArchiveEntry("result.xml"));
+					IOUtils.copy(new FileInputStream(target), os);
+					os.closeArchiveEntry();
+				}
+	
+				int invalidCounter = 0;
+	
+				for (Integer answerSetId : uniqueCodesById.keySet()) {
+	
+					String uniqueCode = uniqueCodesById.get(answerSetId);
+	
+					// this counter should stop creation of PDFs when there is an obvious problem
+					if ((webserviceTask.getExportType() == null || webserviceTask.getExportType().equals(0)
+							|| webserviceTask.getExportType().equals(2)
+							|| (webserviceTask.getExportType().equals(3) && webserviceTask.getFileTypes() != null
+									&& webserviceTask.getFileTypes().contains("p")))
+							&& invalidCounter < 3) {
+						java.io.File answerPDF = pdfService.createAnswerPDF(answerSetId, uniqueCodesById.get(answerSetId),
+								survey.getUniqueId(), false);
+						if (answerPDF != null) {
+							// check validity of file
+							PdfReader ReadInputPDF;
+	
+							try {
+								ReadInputPDF = new PdfReader(answerPDF.getPath());
+								if (ReadInputPDF.getInfo().containsKey("Subject")) {
+									String subject = ReadInputPDF.getInfo().get("Subject").toString();
+									if (!subject.contains(uniqueCodesById.get(answerSetId))) {
+										// possibly an invalid pdf -> recreate
+										answerPDF.delete();
+										answerPDF = pdfService.createAnswerPDF(answerSetId,
+												uniqueCodesById.get(answerSetId), survey.getUniqueId(), false);
+									}
+								} else {
+									// older file without meta info -> recreate
+									answerPDF.delete();
+									answerPDF = pdfService.createAnswerPDF(answerSetId, uniqueCodesById.get(answerSetId),
+											survey.getUniqueId(), false);
+								}
+								ReadInputPDF.close();
+							} catch (Exception e) {
+								// file seems to be corrupt -> recreate
+								answerPDF.delete();
+								answerPDF = pdfService.createAnswerPDF(answerSetId, uniqueCodesById.get(answerSetId),
+										survey.getUniqueId(), false);
+							}
+	
+							if (answerPDF != null) {
+								os.putArchiveEntry(new ZipArchiveEntry(uniqueCode + Constants.PATH_DELIMITER + uniqueCode + ".pdf"));
+								IOUtils.copy(new FileInputStream(answerPDF), os);
+								os.closeArchiveEntry();
+							} else {
+								os.putArchiveEntry(new ZipArchiveEntry(uniqueCode + Constants.PATH_DELIMITER + uniqueCode + ".error.txt"));
+								os.write("The PDF file could not be generated".getBytes());
+								os.closeArchiveEntry();
+								invalidCounter++;
+	
+								if (invalidCounter == 3) {
+									os.putArchiveEntry(new ZipArchiveEntry("error.txt"));
+									os.write("The PDF creation was stopped as the files could not be generated".getBytes());
+									os.closeArchiveEntry();
+								}
+							}
+						} else {
+							os.putArchiveEntry(new ZipArchiveEntry(uniqueCode + Constants.PATH_DELIMITER + uniqueCode + ".error.txt"));
+							os.write("The PDF file could not be generated".getBytes());
+							os.closeArchiveEntry();
+							invalidCounter++;
+	
+							if (invalidCounter == 3) {
+								os.putArchiveEntry(new ZipArchiveEntry("error.txt"));
+								os.write("The PDF creation was stopped as the files could not be generated".getBytes());
+								os.closeArchiveEntry();
+							}
+						}
+					}
+	
+					if ((webserviceTask.getExportType() != null && !webserviceTask.getExportType().equals(3))
+							|| (webserviceTask.getFileTypes() != null && webserviceTask.getFileTypes().contains("u"))) {
+						List<File> uploadedFiles = answerService.getUploadedFilesForAnswerset(answerSetId);
+						for (File uploadedFile : uploadedFiles) {
+							java.io.File uploadedFileIO = fileService.getSurveyFile(survey.getUniqueId(),
+									uploadedFile.getUid());
+	
+							if (!uploadedFileIO.exists()) {
+								uploadedFileIO = new java.io.File(fileDir + uploadedFile.getUid());
+								if (uploadedFileIO.exists()) {
+									fileService.logOldFileSystemUse(fileDir + uploadedFile.getUid());
+								}
+							}
+	
+							String folderName = uploadedFile.getUid();
+							if (uploadedFile.getAnswerId() != null) {
+								String questionUniqueId = uploadedFile.getQuestionUid();
+								if (questionsByUniqueId.containsKey(questionUniqueId)) {
+									folderName = questionsByUniqueId.get(questionUniqueId).getShortname();
+								}
+							}
+	
+							os.putArchiveEntry(new ZipArchiveEntry(
+									uniqueCode + "/Uploaded Files/" + folderName + Constants.PATH_DELIMITER + uploadedFile.getName()));
+							IOUtils.copy(new FileInputStream(uploadedFileIO), os);
+							os.closeArchiveEntry();
+						}
+					}
+				}
+				os.close();
+			}
+		
+			fileService.add(f);
+			webserviceTask.setResult(uid2);
+
+			webserviceTask.setDone(true);
+			webserviceService.save(webserviceTask);
+			
+			if (webserviceTask.getHook() != null && !webserviceTask.getHook().isEmpty()) {
+				String hook = webserviceTask.getHook().replace("TASKID", webserviceTask.getId().toString());
+				basicService.callHook(hook);
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
+			try {
+				webserviceService.setError(task,
+						e.getLocalizedMessage() != null ? e.getLocalizedMessage() : e.toString());
+			} catch (Exception e1) {
+				logger.error(e1.getLocalizedMessage(), e1);
+			}
+		}
+	}
+
+}

@@ -2,7 +2,7 @@ package com.ec.survey.model.administration;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "VOTERS", uniqueConstraints = {@UniqueConstraint(columnNames={"VOTER_ECMONIKER", "VOTER_SURVEY"}, name="VOTER_ECMONIKER_SURVEY")}, indexes = { @Index(name = "SURVEY_UID_IDX", columnList = "VOTER_SURVEY") })

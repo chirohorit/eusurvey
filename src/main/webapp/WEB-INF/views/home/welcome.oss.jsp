@@ -1,5 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" session="true" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -137,19 +137,19 @@
 					
 			<div id="welcomeContent">
 				<h1 style="text-align:center; margin-bottom:35px;"><spring:message code="home.create2" /></h1>
-				<img src="${contextpath}/resources/images/icons/128/review-128-blue.png" alt="icon review" style="float:left; width:100px; margin-left:100px;margin-top:30px;"/>	
+				<img src="${contextpath}/resources/images/icons/128/review-128-blue.png" alt="icon review" style="float:left; width:100px; margin-left:100px;margin-top:30px;"/>
 				<p style="text-align:right; padding-top:25px; line-height:30px; float:right; clear:right;">
 					<spring:message code="home.create2bis" />
 				</p>
 				
-				<img src="${contextpath}/resources/images/icons/128/searching-128-blue.png" alt="icon review" style="width:100px; margin-right:100px;margin-top:30px; float:right; clear:right;"/>	
+				<img src="${contextpath}/resources/images/icons/128/searching-128-blue.png" alt="icon review" style="width:100px; margin-right:100px;margin-top:30px; float:right; clear:right;"/>
 				<p style="padding-top:45px; line-height:30px; float:left; clear:left;">
 					<span style="font-weight:bold; font-size:110%;"><spring:message code="info.welcome1" />&nbsp;<a href="<c:url value="/home/editcontribution"/>"><spring:message code="info.welcome3" />&nbsp;<img src="${contextpath}/resources/images/icons/24/link.png" alt="link" style="width: 18px;"/></a>.</span>
 					<br />
 					<spring:message code="info.welcome2" />
 				</p>
 				
-				<img src="${contextpath}/resources/images/icons/128/earth-128-blue.png" alt="icon review" style="float:left; width:100px; margin-left:100px;margin-top:30px; clear:left;"/>	
+				<img src="${contextpath}/resources/images/icons/128/earth-128-blue.png" alt="icon review" style="float:left; width:100px; margin-left:100px;margin-top:30px; clear:left;"/>
 				<p style="text-align:right; padding-top:45px; line-height:30px; width:350px; float:right; clear:right;">
 					<spring:message code="info.welcome4new" />
 				</p>

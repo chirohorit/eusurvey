@@ -8,10 +8,10 @@ import com.ec.survey.security.CustomAuthenticationManager;
 import com.ec.survey.security.CustomAuthenticationSuccessHandler;
 import com.ec.survey.service.MailService;
 import com.ec.survey.tools.Constants;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
 import com.ec.survey.tools.Tools;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.exception.WeakAuthenticationException;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,10 +33,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;

@@ -2,8 +2,8 @@ package com.ec.survey.service;
 
 import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.MailTask;
-import com.ec.survey.tools.InvitationMailCreator;
-import com.ec.survey.tools.MailSender;
+import com.ec.survey.handler.worker.InvitationMailCreator;
+import com.ec.survey.handler.worker.MailSender;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -71,7 +71,7 @@ public class MailService extends BasicService {
 		task.setState(MailTask.WAITING);
 		
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(task);
+		session.merge(task);
 		
 		InvitationMailCreator creator = (InvitationMailCreator) context.getBean("invitationMailCreator");
 		creator.init(task);
@@ -84,27 +84,27 @@ public class MailService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();		
 		task = (MailTask) session.merge(task);
 		session.setReadOnly(task, false);		
-		session.saveOrUpdate(task);
+		session.merge(task);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = true)
 	public List<MailTask> get() {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("FROM MailTask");
+		Query query = session.createQuery("FROM MailTask");
 		return query.list();
 	}
 	
 	@SuppressWarnings("unchecked")
 	public List<Integer> getParticipationGroupsWithRunningMail(String surveyUid) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("SELECT m.participationGroupId FROM MailTask m WHERE m.surveyUid = :uid AND m.state = :state").setParameter("uid", (String) surveyUid).setParameter("state", (String) MailTask.WAITING);
+		Query query = session.createQuery("SELECT m.participationGroupId FROM MailTask m WHERE m.surveyUid = :uid AND m.state = :state").setParameter("uid", surveyUid).setParameter("state", MailTask.WAITING);
 		return query.list();
 	}
 
 	public MailTask getFirstFinishedMailTask(String surveyUid) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("FROM MailTask m WHERE m.surveyUid = :uid AND m.notified = false AND m.state != :state").setParameter("uid", (String) surveyUid).setParameter("state", (String) MailTask.WAITING);
+		Query query = session.createQuery("FROM MailTask m WHERE m.surveyUid = :uid AND m.notified = false AND m.state != :state").setParameter("uid", surveyUid).setParameter("state", MailTask.WAITING);
 		List<?> result = query.setMaxResults(1).list();
 		
 		if (!result.isEmpty()) return (MailTask) result.get(0);

@@ -9,7 +9,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.json.simple.JSONObject;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,7 @@ import java.util.Map;
 @Table(name = "ANSWERS", indexes = {@Index(name = "PA_UID_IDX", columnList = "PA_UID, AS_ID ASC"), @Index(name = "Q_UID_IDX", columnList = "QUESTION_UID, AS_ID ASC")})
 public class Answer implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+	
 	private Integer id;
 	private String questionUniqueId;
 	private String possibleAnswerUniqueId;
@@ -126,12 +126,12 @@ public class Answer implements java.io.Serializable {
 	public void setAnswerSet(AnswerSet s) {this.answerSet = s;}  
 
 	@OneToMany(targetEntity=File.class, cascade = CascadeType.ALL  )
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="ANSWERS_FILES",
 			inverseJoinColumns = @JoinColumn(name = "files_FILE_ID"),
 			joinColumns = @JoinColumn(name = "ANSWERS_ANSWER_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "name asc")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<File> getFiles() {
 		return files;
 	}

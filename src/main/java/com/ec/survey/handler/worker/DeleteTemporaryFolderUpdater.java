@@ -1,0 +1,44 @@
+package com.ec.survey.handler.worker;
+
+import com.ec.survey.service.FileService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
+import java.util.Calendar;
+import jakarta.annotation.Resource;
+
+@Service("deleteTemporaryFoldersWorker")
+@Scope("singleton")
+public class DeleteTemporaryFolderUpdater implements Runnable {
+
+	protected static final Logger logger = LoggerFactory.getLogger(DeleteTemporaryFolderUpdater.class);
+	
+	@Resource(name="fileService")
+	private FileService fileService;
+		
+	@Override
+	public void run() {
+		try {
+			logger.info("DeleteTemporaryFolderUpdater started");
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.MONTH, -1);
+			
+			fileService.deleteUploadedFilesFolders(cal.getTime());
+			
+			cal = Calendar.getInstance();
+			cal.add(Calendar.DATE, -7);
+			
+			fileService.deleteOldTempFiles(cal.getTime());			
+			
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
+		}		
+		logger.info("DeleteTemporaryFolderUpdater completed");
+	}
+	
+}

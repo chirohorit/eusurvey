@@ -1,9 +1,10 @@
 package com.ec.survey.tools.export;
 
+import com.ec.survey.enumerator.ParticipationGroupType;
 import com.ec.survey.model.*;
-import com.ec.survey.model.Export.ExportFormat;
+import com.ec.survey.enumerator.ExportFormat;
 import com.ec.survey.model.administration.EcasUser;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.attendees.Attendee;
 import com.ec.survey.model.attendees.AttributeName;
@@ -12,11 +13,13 @@ import com.ec.survey.model.selfassessment.SATargetDataset;
 import com.ec.survey.model.FilesByTypes;
 import com.ec.survey.model.survey.*;
 import com.ec.survey.model.survey.base.File;
+import com.ec.survey.service.BasicService;
 import com.ec.survey.service.SqlQueryService;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
 import com.mysql.cj.util.StringUtils;
 
+import jakarta.annotation.Resource;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -25,7 +28,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.hibernate.*;
 import org.hibernate.query.Query;
-import org.hibernate.query.NativeQuery;
 import org.odftoolkit.odfdom.dom.style.props.OdfParagraphProperties;
 import org.odftoolkit.odfdom.dom.style.props.OdfTableProperties;
 import org.odftoolkit.odfdom.type.Color;
@@ -66,6 +68,9 @@ public class OdfExportCreator extends ExportCreator {
 
 	@Autowired
 	private SqlQueryService sqlQueryService;
+
+    @Resource(name="basicService")
+    private BasicService basicService;
 
 	int CreateChart(SpreadsheetDocument spreadsheet, String title, String[] labels, double[] stats, int xPos) {
 		String[] legends = new String[] { "Percent" };
@@ -328,7 +333,7 @@ public class OdfExportCreator extends ExportCreator {
 
 		Map<String, Map<String, List<File>>> uploadedFilesByCodeAndQuestionUID = new HashMap<>();
 		Map<String, String> uploadQuestionNicenames = new HashMap<>();
-		Map<Integer, String> targetDatasetNames = selfassessmentService.getTargetDatasetNames(survey);
+		Map<Integer, String> targetDatasetNames = selfAssessmentService.getTargetDatasetNames(survey);
 
 		/// here starts the db stuff
 
@@ -414,7 +419,7 @@ public class OdfExportCreator extends ExportCreator {
 					+ answerService.getSql(null, form.getSurvey().getId(), filter, parameters, true)
 					+ ") ORDER BY ans.ANSWER_SET_ID";
 
-			NativeQuery query = session.createNativeQuery(sql);
+			Query query = session.createQuery(sql);
 
 			query.setReadOnly(true);
 			sqlQueryService.setParameters(query, parameters);
@@ -506,7 +511,7 @@ public class OdfExportCreator extends ExportCreator {
 						java.io.File f = fileService.getSurveyFile(survey.getUniqueId(), file.getUid());
 
 						if (!f.exists()) {
-							f = new java.io.File(exportService.getFileDir() + file.getUid());
+							f = new java.io.File(basicService.getFileDir() + file.getUid());
 						}
 
 						if (f.exists()) {
@@ -523,7 +528,7 @@ public class OdfExportCreator extends ExportCreator {
 				java.io.File file = fileService.getSurveyFile(survey.getUniqueId(), explanationFile.getUid());
 
 				if (!file.exists()) {
-					file = new java.io.File(exportService.getFileDir() + explanationFile.getUid());
+					file = new java.io.File(basicService.getFileDir() + explanationFile.getUid());
 				}
 
 				if (file.exists()) {
@@ -1216,7 +1221,7 @@ public class OdfExportCreator extends ExportCreator {
 					if (question instanceof SingleChoiceQuestion) {
 						SingleChoiceQuestion scq = (SingleChoiceQuestion) question;
 						if (scq.getIsTargetDatasetQuestion()) {
-							List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+							List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 							for (SATargetDataset dataset : datasets) {
 								String key = scq.getUniqueId() + "-" + dataset.getId();
 								rowIndex++;
@@ -1966,7 +1971,7 @@ public class OdfExportCreator extends ExportCreator {
 					if (question instanceof SingleChoiceQuestion) {
 						SingleChoiceQuestion scq = (SingleChoiceQuestion) question;
 						if (scq.getIsTargetDatasetQuestion()) {
-							List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+							List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 							for (SATargetDataset dataset : datasets) {
 								String key = scq.getUniqueId() + "-" + dataset.getId();
 								Row row = table.appendRow();

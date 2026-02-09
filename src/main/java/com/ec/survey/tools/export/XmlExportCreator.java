@@ -11,9 +11,10 @@ import com.ec.survey.model.survey.*;
 import com.ec.survey.model.survey.ComplexTableItem.CellType;
 import com.ec.survey.model.survey.base.File;
 import com.ec.survey.model.survey.quiz.QuizResult;
+import com.ec.survey.service.BasicService;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.QuizHelper;
+import com.ec.survey.handler.QuizHelper;
 import com.ec.survey.tools.Tools;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
@@ -22,10 +23,11 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.hibernate.Hibernate;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +45,8 @@ import java.util.Map.Entry;
 @Service("xmlExportCreator")
 @Scope("prototype")
 public class XmlExportCreator extends ExportCreator {
+	@Autowired
+	private BasicService basicService;
 
 	private Map<Integer, String> exportedUniqueCodes = new HashMap<>();
 
@@ -64,7 +68,7 @@ public class XmlExportCreator extends ExportCreator {
 		"languages",
 		"score"
 	};
-	
+
 	@Override
 	@Transactional
 	public void exportContent(boolean sync) throws Exception {
@@ -100,7 +104,7 @@ public class XmlExportCreator extends ExportCreator {
 		}
 
 		form.setSurvey(surveyService.initializeAndMergeSurvey(form.getSurvey()));
-		List<SATargetDataset> datasets = form.getSurvey().getIsSelfAssessment() ? selfassessmentService.getTargetDatasets(form.getSurvey().getUniqueId()) : null;
+		List<SATargetDataset> datasets = form.getSurvey().getIsSelfAssessment() ? selfAssessmentService.getTargetDatasets(form.getSurvey().getUniqueId()) : null;
 
 		if (export != null && export.isAllAnswers() && !form.getSurvey().isMissingElementsChecked()) {
 			surveyService.checkAndRecreateMissingElements(form.getSurvey(), export.getResultFilter());
@@ -531,7 +535,7 @@ public class XmlExportCreator extends ExportCreator {
 							export == null ? null : export.getResultFilter(), values, true)
 					+ ") ORDER BY ans.ANSWER_SET_ID";
 
-			NativeQuery query = makeQuery(sql, session, values);
+			Query query = makeQuery(sql, session, values);
 			ScrollableResults results = query.scroll(ScrollMode.FORWARD_ONLY);
 
 			int lastAnswerSet = 0;
@@ -605,7 +609,7 @@ public class XmlExportCreator extends ExportCreator {
 
 			for (Entry<String, List<File>> entry : uploadedFilesByQuestionUID.entrySet()) {
 				for (File file : entry.getValue()) {
-					java.io.File f = new java.io.File(exportService.getFileDir() + file.getUid());
+					java.io.File f = new java.io.File(basicService.getFileDir() + file.getUid());
 
 					if (f.exists()) {
 						os.putArchiveEntry(
@@ -726,7 +730,7 @@ public class XmlExportCreator extends ExportCreator {
 							values, true)
 					+ ") ORDER BY ans.ANSWER_SET_ID";
 
-			NativeQuery query = makeQuery(sql, session, values);
+			Query query = makeQuery(sql, session, values);
 			ScrollableResults results = query.scroll(ScrollMode.FORWARD_ONLY);
 
 			while (results.next()) {
@@ -739,8 +743,8 @@ public class XmlExportCreator extends ExportCreator {
 		}
 	}
 
-	private NativeQuery makeQuery(String sql, Session session, HashMap<String, Object> values) {
-		NativeQuery query = session.createNativeQuery(sql);
+	private Query makeQuery(String sql, Session session, HashMap<String, Object> values) {
+		Query query = session.createQuery(sql);
 
 		query.setReadOnly(true);
 

@@ -1,6 +1,6 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
 <head>
@@ -10,7 +10,7 @@
 	
 	<script type="text/javascript" src="${contextpath}/resources/js/jquery.stickytableheaders.js?version=<%@include file="../version.txt" %>"></script>
 	<script type="text/javascript" src="${contextpath}/resources/js/configure.js?version=<%@include file="../version.txt" %>"></script>
-	<script type="text/javascript" src="${contextpath}/resources/js/shares.js?version=<%@include file="../version.txt" %>"></script>	
+	<script type="text/javascript" src="${contextpath}/resources/js/shares.js?version=<%@include file="../version.txt" %>"></script>
 	
 	<script type="text/javascript">
 		var usersTooOftenShares = '<spring:message code="error.UsersTooOftenShares" />';
@@ -189,7 +189,7 @@
 			</c:if>
 		</form:form>
 		
-		<form:form id="load-shares" method="POST" action="${contextpath}/settings/shares">		
+		<form:form id="load-shares" method="POST" action="${contextpath}/settings/shares">
 			<input type="hidden" name="delete" id="delete" value="" />
 		</form:form>
 	</div>

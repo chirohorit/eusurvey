@@ -3,14 +3,14 @@ package com.ec.survey.model.attendees;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "ATTENDEEFILTER")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class AttendeeFilter {
 	
 	private int id;
@@ -55,7 +55,7 @@ public class AttendeeFilter {
 	
 	@ManyToMany(cascade={CascadeType.ALL})
     @JoinTable(name = "ATTENDEEFILTER_ATTRIBUTES", joinColumns = { @JoinColumn(name = "ATTENDEEFILTER_ID") }, inverseJoinColumns = { @JoinColumn(name = "ATTRIBUTE_ID") })
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Attribute> getAttributes() {
 		return attributes;
 	}

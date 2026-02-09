@@ -6,22 +6,20 @@ import org.owasp.esapi.errors.ValidationException;
 
 import com.ec.survey.tools.Tools;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
  * Represents a file upload element in a survey
  */
 @Entity
 @DiscriminatorValue("UPLOAD")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Upload extends Question {
-	
-	private static final long serialVersionUID = 1L;
-	
+
 	private String extensions;
 	private int maxFileSize = 1;
 

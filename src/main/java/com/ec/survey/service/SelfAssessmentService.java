@@ -25,9 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-@Service("selfassessmentService")
+@Service("selfAssessmentService")
 public class SelfAssessmentService extends BasicService {
 	
 	@Resource(name = "answerService")
@@ -46,7 +46,7 @@ public class SelfAssessmentService extends BasicService {
 	@Transactional(readOnly = false)
 	public SACriterion addCriterion(SACriterion criterion) throws MessageException {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(criterion);
+		session.merge(criterion);
 		session.flush();
 		return criterion;
 	}
@@ -64,7 +64,7 @@ public class SelfAssessmentService extends BasicService {
 		c.setAcronym(acronym);
 		c.setType(type);
 		
-		session.saveOrUpdate(c);
+		session.merge(c);
 	}
 	
 	@Transactional(readOnly = false)
@@ -76,7 +76,7 @@ public class SelfAssessmentService extends BasicService {
 			throw new MessageException("wrong survey");
 		}
 		
-		session.delete(c);
+		session.remove(c);
 	}
 
 	private void deleteCriteria(String surveyUID) {
@@ -99,7 +99,7 @@ public class SelfAssessmentService extends BasicService {
 	public Map<Integer, String> getTargetDatasetNames(Survey survey) {
 		Map<Integer, String> targetDatasetNames = new HashMap<>();
 		if (survey.getIsSelfAssessment()) {
-			List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+			List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 			for (SATargetDataset dataset : datasets) {
 				targetDatasetNames.put(dataset.getId(), dataset.getName());
 			}
@@ -120,7 +120,7 @@ public class SelfAssessmentService extends BasicService {
 	@Transactional(readOnly = false)
 	public int addTargetDataset(SATargetDataset t) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(t);
+		session.merge(t);
 		session.flush();	
 		return t.getId();
 	}
@@ -142,7 +142,7 @@ public class SelfAssessmentService extends BasicService {
 		
 		ds.setName(name);
 		
-		session.saveOrUpdate(ds);		
+		session.merge(ds);		
 	}
 	
 	@Transactional(readOnly = false)
@@ -154,7 +154,7 @@ public class SelfAssessmentService extends BasicService {
 			throw new MessageException("wrong survey");
 		}
 		
-		session.delete(ds);
+		session.remove(ds);
 	}
 
 	@Transactional(readOnly = true)
@@ -216,7 +216,7 @@ public class SelfAssessmentService extends BasicService {
 		rc.setTargetDatasetSelection(configuration.getTargetDatasetSelection());
 		rc.setTargetScores(configuration.getTargetScores());
 		
-		session.saveOrUpdate(rc);		
+		session.merge(rc);		
 	}
 
 	private void deleteReportConfigurations(String surveyUid) {
@@ -266,7 +266,7 @@ public class SelfAssessmentService extends BasicService {
 				newCard.getScores().add(newScore);
 			}
 			
-			session.saveOrUpdate(newCard);
+			session.merge(newCard);
 			
 		} else {
 			//update existing
@@ -282,7 +282,7 @@ public class SelfAssessmentService extends BasicService {
 				}
 			}
 			
-			session.saveOrUpdate(existing);
+			session.merge(existing);
 		}
 		
 	}
@@ -307,7 +307,7 @@ public class SelfAssessmentService extends BasicService {
 			if (element instanceof SingleChoiceQuestion) {
 				SingleChoiceQuestion sc = (SingleChoiceQuestion)element;
 				if (sc.getIsTargetDatasetQuestion()) {
-					List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+					List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 					for (SATargetDataset dataset : datasets) {
 						sc.getTargetDatasets().add(dataset);
 					}
@@ -318,9 +318,9 @@ public class SelfAssessmentService extends BasicService {
 						}
 					}
 				} else if (!displayAllSAQuestions && sc.getIsSAQuestion() && sc.getEvaluationCriterion() != null) {
-					List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+					List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 					for (SATargetDataset dataset : datasets) {
-						SAScoreCard card = selfassessmentService.getScoreCard(dataset.getId());
+						SAScoreCard card = selfAssessmentService.getScoreCard(dataset.getId());
 						if (card != null) {
 							for (SAScore score : card.getScores()) {
 								if (score.getCriterion() == sc.getEvaluationCriterion().getId()) {
@@ -438,9 +438,9 @@ public class SelfAssessmentService extends BasicService {
 		SAReportConfiguration config = getReportConfiguration(answerSet.getSurvey().getUniqueId());
 		result.setConfiguration(config);		
 				
-		SAScoreCard card = datasetid > 0 ? selfassessmentService.getScoreCard(datasetid) : null;
+		SAScoreCard card = datasetid > 0 ? selfAssessmentService.getScoreCard(datasetid) : null;
 		
-		List<SACriterion> criteria = selfassessmentService.getCriteria(answerSet.getSurvey().getUniqueId());
+		List<SACriterion> criteria = selfAssessmentService.getCriteria(answerSet.getSurvey().getUniqueId());
 		if (card != null) {
 			for (SAScore score : card.getScores()) {
 				for (SACriterion criterion : criteria) {
@@ -613,9 +613,9 @@ public class SelfAssessmentService extends BasicService {
 			SAScoreCard scoreCard = getScoreCard(td.getId());
 			Session session = sessionFactory.getCurrentSession();
 			if (scoreCard != null) {
-				session.delete(scoreCard);
+				session.remove(scoreCard);
 			}
-			session.delete(td);
+			session.remove(td);
 		});
 	}
 }

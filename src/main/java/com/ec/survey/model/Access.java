@@ -1,6 +1,6 @@
 package com.ec.survey.model;
 
-import com.ec.survey.model.administration.LocalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Survey;
 import org.slf4j.Logger;
@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,7 +20,7 @@ import java.util.Map.Entry;
 @Table(name = "SURACCESS", uniqueConstraints = {
 		@UniqueConstraint(columnNames = { "ACCESS_USER", "SURVEY" }, name = "ACCESS_USER") })
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Access {
 
 	private int id;
@@ -52,7 +52,7 @@ public class Access {
 	}
 
 	@ManyToOne
-	@JoinColumn(name = "ACCESS_USER", nullable = true)
+	@JoinColumn(name = "ACCESS_USER")
 	public User getUser() {
 		return user;
 	}
@@ -61,7 +61,7 @@ public class Access {
 		this.user = user;
 	}
 
-	@Column(name = "ACCESS_DEPARTMENT", nullable = true)
+	@Column(name = "ACCESS_DEPARTMENT")
 	public String getDepartment() {
 		return department;
 	}
@@ -105,7 +105,7 @@ public class Access {
 							localPrivileges.get(LocalPrivilege.FormManagement));
 				}
 			} else {
-				logger.info("empty privileges string for access " + id + " found");
+                logger.info("empty privileges string for access {} found", id);
 			}
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage(), e);

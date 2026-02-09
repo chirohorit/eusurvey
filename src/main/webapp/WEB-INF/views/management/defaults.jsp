@@ -108,24 +108,24 @@
 		<tbody>
 			<tr>
 				<td>			
-					<img src="${contextpath}/resources/images/gallery1.jpg" data-width="500" width="246px" style="width:246px">													
+					<img src="${contextpath}/resources/images/gallery1.jpg" data-width="500" width="246px" style="width:246px">
 				</td>		
 				<td>			
-					<img src="${contextpath}/resources/images/gallery2.jpg" data-width="500" width="246px" style="width:246px">													
+					<img src="${contextpath}/resources/images/gallery2.jpg" data-width="500" width="246px" style="width:246px">
 				</td>
 				<td>			
-					<img src="${contextpath}/resources/images/gallery3.jpg" data-width="500" width="246px" style="width:246px">													
+					<img src="${contextpath}/resources/images/gallery3.jpg" data-width="500" width="246px" style="width:246px">
 				</td>				
 			</tr>
 			<tr>
 				<td>			
-					<img src="${contextpath}/resources/images/gallery4.jpg" data-width="500" width="246px" style="width:246px">													
+					<img src="${contextpath}/resources/images/gallery4.jpg" data-width="500" width="246px" style="width:246px">
 				</td>		
 				<td>			
-					<img src="${contextpath}/resources/images/gallery5.jpg" data-width="500" width="246px" style="width:246px">													
+					<img src="${contextpath}/resources/images/gallery5.jpg" data-width="500" width="246px" style="width:246px">
 				</td>
 				<td>			
-					<img src="${contextpath}/resources/images/gallery6.jpg" data-width="500" width="246px" style="width:246px">													
+					<img src="${contextpath}/resources/images/gallery6.jpg" data-width="500" width="246px" style="width:246px">
 				</td>				
 			</tr>
 		</tbody>

@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -21,9 +21,6 @@ import java.util.Map;
 @Controller
 @RequestMapping("/utils")
 public class UtilsController extends BasicController {
-	
-	@Resource(name = "ecService")
-	private ECService ecService;
 
 	@Resource(name = "utilsService")
 	private UtilsService utilsService;
@@ -304,9 +301,7 @@ public class UtilsController extends BasicController {
 		countryList = Tools.sortByComparator(countryList);
 		return countryList;
 	}
-	
-	
-	
+
 	@RequestMapping(value = "/Organisations", method = {RequestMethod.GET, RequestMethod.HEAD})
 	public @ResponseBody Organisations getListOfDomains(HttpServletRequest request, Locale syslocale) {
 		Locale locale = request.getParameter("lang") != null ? new Locale(request.getParameter("lang")) : syslocale;

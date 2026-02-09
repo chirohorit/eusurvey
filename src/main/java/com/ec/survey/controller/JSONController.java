@@ -11,13 +11,13 @@ import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.service.MailService;
 import com.ec.survey.tools.Constants;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
+import com.ec.survey.exception.WeakAuthenticationException;
 
 import javax.naming.NamingException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 
 @Controller
@@ -70,12 +70,12 @@ public class JSONController extends BasicController {
 		if (department != null) department = department.trim();
 		String order = request.getParameter("order");
 		
-		if (u.isExternal()) {
+		/*if (u.isExternal()) {
 			if (type != "external") {
 				response.setStatus(403);
 				return null;
 			}
-		}
+		}*/
 		
 		if (!type.equalsIgnoreCase("system"))
 		{

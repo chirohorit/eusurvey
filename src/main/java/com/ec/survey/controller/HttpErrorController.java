@@ -3,8 +3,8 @@ package com.ec.survey.controller;
 import java.util.Date;
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.firewall.RequestRejectedException;
@@ -26,7 +26,7 @@ public class HttpErrorController extends BasicController {
 	public ModelAndView handle403(HttpServletRequest request, HttpServletResponse response){
 		request.getSession().setAttribute("lastErrorCode", 403);
 		request.getSession().setAttribute("lastErrorTime", new Date());
-		request.getSession().setAttribute("lastErrorURL", request.getAttribute("javax.servlet.error.request_uri"));
+		request.getSession().setAttribute("lastErrorURL", request.getAttribute("jakarta.servlet.error.request_uri"));
 		return new ModelAndView("error/403", Constants.ERROR, 403);
 	}
 	
@@ -37,7 +37,7 @@ public class HttpErrorController extends BasicController {
 		model.addObject("is404", true);
 		request.getSession().setAttribute("lastErrorCode", 404);
 		request.getSession().setAttribute("lastErrorTime", new Date());
-		request.getSession().setAttribute("lastErrorURL", request.getAttribute("javax.servlet.error.request_uri"));
+		request.getSession().setAttribute("lastErrorURL", request.getAttribute("jakarta.servlet.error.request_uri"));
 		return model;
 	}
 	
@@ -46,7 +46,7 @@ public class HttpErrorController extends BasicController {
 	public ModelAndView handle405(HttpServletRequest request){
 		request.getSession().setAttribute("lastErrorCode", 405);
 		request.getSession().setAttribute("lastErrorTime", new Date());
-		request.getSession().setAttribute("lastErrorURL", request.getAttribute("javax.servlet.error.request_uri"));
+		request.getSession().setAttribute("lastErrorURL", request.getAttribute("jakarta.servlet.error.request_uri"));
 		return new ModelAndView("error/405", Constants.ERROR, 405);
 	}
 	
@@ -55,7 +55,7 @@ public class HttpErrorController extends BasicController {
 	public ModelAndView handleException(HttpServletRequest request){
 		request.getSession().setAttribute("lastErrorCode", 500);
 		request.getSession().setAttribute("lastErrorTime", new Date());
-		request.getSession().setAttribute("lastErrorURL", request.getAttribute("javax.servlet.error.request_uri"));
+		request.getSession().setAttribute("lastErrorURL", request.getAttribute("jakarta.servlet.error.request_uri"));
 		return new ModelAndView("error/500",Constants.ERROR,"exception" );
 	}
 	
@@ -119,8 +119,8 @@ public class HttpErrorController extends BasicController {
 	@RequestMapping(value = "/request-rejected")
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ModelAndView handleRequestRejected(
-	        @RequestAttribute("javax.servlet.error.exception") RequestRejectedException ex,
-	        @RequestAttribute("javax.servlet.error.request_uri") String uri, HttpServletRequest request) {
+	        @RequestAttribute("jakarta.servlet.error.exception") RequestRejectedException ex,
+	        @RequestAttribute("jakarta.servlet.error.request_uri") String uri, HttpServletRequest request) {
 				
 	    String msg = ex.getMessage();
 
@@ -128,7 +128,9 @@ public class HttpErrorController extends BasicController {
 
 	    request.getSession().setAttribute("lastErrorCode", 403);
 		request.getSession().setAttribute("lastErrorTime", new Date());
-		request.getSession().setAttribute("lastErrorURL", request.getAttribute("javax.servlet.error.request_uri"));
+		request.getSession().setAttribute("lastErrorURL", request.getAttribute("jakarta.servlet.error.request_uri"));
 		return new ModelAndView("error/403",Constants.ERROR, 403);
 	}
+
+
 }

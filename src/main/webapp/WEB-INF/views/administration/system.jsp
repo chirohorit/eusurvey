@@ -1,7 +1,7 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ page import="com.ec.survey.model.administration.GlobalPrivilege" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ page import="com.ec.survey.enumerator.GlobalPrivilege" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page session="true" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -421,7 +421,7 @@
 				<b><spring:message code="label.ConfigureActivityLogging" /></b>
 			</div>
 			<div class="modal-body">
-				<form:form id="configure-logging-form" method="POST" action="${contextpath}/administration/system/configureLogging" style="height: auto; margin: 0px; padding: 0px;">			
+				<form:form id="configure-logging-form" method="POST" action="${contextpath}/administration/system/configureLogging" style="height: auto; margin: 0px; padding: 0px;">
 					<c:choose>
 						<c:when test='${logging.equals("true")}'>
 							<input onclick="checkLogging();" class="check" type="radio" name="enabled" value="false" /><spring:message code="label.DisableActivityLogging" /><br />
@@ -476,7 +476,7 @@
 				<b><spring:message code="label.ConfigureComplexity" /></b>
 			</div>
 			<div class="modal-body" style="height: 400px; overflow: auto;">
-				<form:form id="configure-complexity-form" method="POST" action="${contextpath}/administration/system/configureComplexity" style="height: auto; margin: 0px; padding: 0px;">			
+				<form:form id="configure-complexity-form" method="POST" action="${contextpath}/administration/system/configureComplexity" style="height: auto; margin: 0px; padding: 0px;">
 					
 					<label for="lowScore"><spring:message code="label.complexity.lowScore"></spring:message></label><br />
 					<input type="text" class="small-form-control complexityInput required number min0" name="lowScore" value="<esapi:encodeForHTMLAttribute>${complexityParameters.lowScore}</esapi:encodeForHTMLAttribute>"/>
@@ -599,7 +599,7 @@
 				<b><spring:message code="label.ConfigureSystemMessage" /></b>
 			</div>
 			<div class="modal-body" style="height: 500px">
-				<form:form id="configure-message-form" method="POST" action="${contextpath}/administration/system/configureMessage" style="height: auto; margin: 0px; padding: 0px;">			
+				<form:form id="configure-message-form" method="POST" action="${contextpath}/administration/system/configureMessage" style="height: auto; margin: 0px; padding: 0px;">
 					<b><spring:message code="label.MessageText" />:</b>
 					<div class="messagetextdiv" style="margin-bottom: 15px;">
 						<textarea id="messagetext" name="text" class="tinymcemessage required freetext max5000"><esapi:encodeForHTML>${message.text}</esapi:encodeForHTML></textarea>	<br />
@@ -751,7 +751,7 @@
 				<b><spring:message code="label.ConfigureSurveyReportMessage" /></b>
 			</div>
 			<div class="modal-body">
-				<form:form id="configure-report-form" method="POST" action="${contextpath}/administration/system/configureReports" style="height: auto; margin: 0px; padding: 0px;">			
+				<form:form id="configure-report-form" method="POST" action="${contextpath}/administration/system/configureReports" style="height: auto; margin: 0px; padding: 0px;">
 					<div>
 						<b><spring:message code="label.MaxNumberReports" />:</b><br />
 						<input name="maxNumber" id="reportMaxNumber" value="${reportMaxNumber}" class="form-control required number min1 max100" style="width: 60px" />
@@ -793,7 +793,7 @@
 				<b><spring:message code="label.ConfigureBanUserMessage" /></b>
 			</div>
 			<div class="modal-body">
-				<form:form id="configure-banuser-form" method="POST" action="${contextpath}/administration/system/configureBanUsers" style="height: auto; margin: 0px; padding: 0px;">			
+				<form:form id="configure-banuser-form" method="POST" action="${contextpath}/administration/system/configureBanUsers" style="height: auto; margin: 0px; padding: 0px;">
 					<table>
 						<tr>
 							<td>
@@ -851,7 +851,7 @@
 				<b><spring:message code="label.TrustIndicatorParameters" /></b>
 			</div>
 			<div class="modal-body">
-				<form:form id="configure-trustindicator-form" method="POST" action="${contextpath}/administration/system/configureTrustIndicator" style="height: auto; margin: 0px; padding: 0px;">			
+				<form:form id="configure-trustindicator-form" method="POST" action="${contextpath}/administration/system/configureTrustIndicator" style="height: auto; margin: 0px; padding: 0px;">
 					<table>
 						<tr>
 							<td>

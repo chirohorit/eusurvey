@@ -7,15 +7,13 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "ANSWERS_EXPLANATIONS", indexes = {@Index(name = "ANSWEREXPLANATION_IDX", columnList = "ANSWER_SET_ID, QUESTION_UID")})
 public class AnswerExplanation implements java.io.Serializable {
-
-	private static final long serialVersionUID = 1L;
 
 	private Integer id;
 	private Integer answerSetId;
@@ -68,12 +66,12 @@ public class AnswerExplanation implements java.io.Serializable {
 	}
 
 	@OneToMany(targetEntity=File.class, cascade = CascadeType.ALL  )
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT),
 			inverseJoinColumns = @JoinColumn(name = "files_FILE_ID"),
 			joinColumns = @JoinColumn(name = "ANSWERS_EXPLANATIONS_ANSWER_EXPLANATION_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "name asc")
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<File> getFiles() {
 		return explanationFiles;
 	}

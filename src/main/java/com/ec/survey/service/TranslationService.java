@@ -3,7 +3,7 @@ package com.ec.survey.service;
 import com.ec.survey.model.Translation;
 import com.ec.survey.model.Translations;
 import com.ec.survey.model.survey.Survey;
-import com.ec.survey.tools.TranslationsHelper;
+import com.ec.survey.handler.TranslationsHelper;
 import org.hibernate.Hibernate;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
@@ -37,20 +37,20 @@ public class TranslationService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Translations translations = getTranslations(surveyId, language);
 		if (translations != null){		
-			session.delete(translations);
+			session.remove(translations);
 		}		
 	}
 	
 	@Transactional
 	public void add(Translations translation) {
 		Session session = sessionFactory.getCurrentSession();
-		session.save(translation);
+		session.persist(translation);
 	}
 	
 	@Transactional
 	public void add(Translations translation, boolean evict) {
 		Session session = sessionFactory.getCurrentSession();
-		session.save(translation);
+		session.persist(translation);
 		if (evict) session.evict(translation);
 	}
 	
@@ -180,7 +180,7 @@ public class TranslationService extends BasicService {
 		for (Translation translation : translations.getTranslations()) {
 			if (translation.getLabel() == null) translation.setLabel("");
 		}
-		session.saveOrUpdate(translations);
+		session.merge(translations);
 		
 		try
 		{
@@ -197,13 +197,13 @@ public class TranslationService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Translations translations = session.get(Translations.class, id);
 		if (translations == null) return false;
-		session.delete(translations);
+		session.remove(translations);
 		return true;
 	}
 
 	@Transactional
 	public void update(Translation translation) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(translation);
+		session.merge(translation);
 	}
 }

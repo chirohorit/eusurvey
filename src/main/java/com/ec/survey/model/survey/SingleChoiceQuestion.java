@@ -1,6 +1,6 @@
 package com.ec.survey.model.survey;
 
-//import org.codehaus.jackson.annotate.JsonIgnore;
+import com.ec.survey.enumerator.SingleChoiceStyle;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -9,7 +9,7 @@ import org.owasp.esapi.errors.ValidationException;
 import com.ec.survey.model.selfassessment.SACriterion;
 import com.ec.survey.model.selfassessment.SATargetDataset;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
@@ -21,14 +21,9 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("SINGLECHOICE")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class SingleChoiceQuestion extends ChoiceQuestion {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 
 	public SingleChoiceQuestion() {
 	}

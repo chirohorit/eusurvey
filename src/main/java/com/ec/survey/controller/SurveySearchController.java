@@ -4,19 +4,20 @@ import com.ec.survey.exception.ForbiddenURLException;
 import com.ec.survey.exception.InvalidURLException;
 import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.*;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.UtilsService;
 import com.ec.survey.service.mapping.PaginationMapper;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
-import com.ec.survey.tools.RestoreExecutor;
-import com.ec.survey.tools.SurveyCreationLimitExceededException;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
+import com.ec.survey.handler.worker.RestoreExecutor;
+import com.ec.survey.exception.SurveyCreationLimitExceededException;
+import com.ec.survey.exception.WeakAuthenticationException;
 
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.FileCopyUtils;
@@ -27,8 +28,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -46,9 +47,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 public class SurveySearchController extends BasicController {
-
-	@Autowired
-	protected PaginationMapper paginationMapper;
 
 	@Autowired
 	protected UtilsService utilsService;

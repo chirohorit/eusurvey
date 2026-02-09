@@ -4,16 +4,16 @@ import com.ec.survey.tools.ConversionTools;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Represents a privilege that a user has to access the results of a survey
@@ -22,7 +22,7 @@ import javax.persistence.*;
 @Table(name = "RESULTACCESS", uniqueConstraints = {
 		@UniqueConstraint(columnNames = { "RESACC_USER", "SURVEY" }, name = "RESACC_USER") })
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ResultAccess {
 
 	private int id;

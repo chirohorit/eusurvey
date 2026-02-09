@@ -6,16 +6,16 @@ import com.ec.survey.model.ArchiveFilter;
 import com.ec.survey.model.Export;
 import com.ec.survey.model.Form;
 import com.ec.survey.model.ResultFilter;
-import com.ec.survey.model.Export.ExportFormat;
-import com.ec.survey.model.Export.ExportState;
-import com.ec.survey.model.Export.ExportType;
+import com.ec.survey.enumerator.ExportFormat;
+import com.ec.survey.enumerator.ExportState;
+import com.ec.survey.enumerator.ExportType;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Element;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
 import com.ec.survey.tools.ImportResult;
-import com.ec.survey.tools.SurveyExportHelper;
+import com.ec.survey.handler.SurveyExportHelper;
 import org.hibernate.query.Query;
 import org.apache.commons.io.FileUtils;
 import org.hibernate.Session;
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,22 +34,18 @@ import java.util.*;
 @Service("archiveService")
 public class ArchiveService extends BasicService {
 
-	@Resource(name = "taskExecutorLong")
-	protected TaskExecutor taskExecutorLong;
-
 	@Autowired
 	private SqlQueryService sqlQueryService;
 	
 	@Resource(name="pdfService")
 	private PDFService pdfService;
-    private Class<Archive> archiveClass;
 
-    @Transactional(readOnly = false)
+	@Transactional(readOnly = false)
 	public void update(Archive archive) {
 		Session session = sessionFactory.getCurrentSession();
 		archive = (Archive) session.merge(archive);
 		session.setReadOnly(archive, false);
-		session.update(archive);
+		session.merge(archive);
 		session.flush();
 	}
 
@@ -59,7 +55,7 @@ public class ArchiveService extends BasicService {
 
 		Session session = sessionFactory.getCurrentSession();
 		archive = (Archive) session.merge(archive);
-		session.delete(archive);
+		session.remove(archive);
 
 		// delete archive files
 		java.io.File file = fileService.getArchiveFile(uid, uid);
@@ -124,7 +120,7 @@ public class ArchiveService extends BasicService {
 	@Transactional(readOnly = false)
 	public void add(Archive archive) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(archive);
+		session.merge(archive);
 		session.flush();
 	}
 
@@ -193,52 +189,50 @@ public class ArchiveService extends BasicService {
 			throws Exception {
 		Session session = sessionFactory.getCurrentSession();
 
-		//String hql = "SELECT * FROM Archive a WHERE a.error IS NULL";
-        String hql = "SELECT * FROM ARCHIVE a WHERE a.ARCHIVE_ERROR IS NULL";
+		String hql = "FROM Archive a WHERE a.error IS NULL";
 
 		if (includingErrors) {
-			//hql = "SELECT * FROM Archive a WHERE a.id > 0";
-            hql = "SELECT * FROM ARCHIVE a WHERE a.ARCHIVE_ID > 0";
+			hql = "FROM Archive a WHERE a.id > 0";
 		}
 
 		Map<String, Object> params = new HashMap<>();
 
 		if (filter.getUniqueId() != null && filter.getUniqueId().trim().length() > 0) {
-			hql += " AND a.ARCHIVE_SUID LIKE :uid";
+			hql += " AND a.surveyUID LIKE :uid";
 			params.put("uid", "%" + filter.getUniqueId() + "%");
 		}
 
 		if (filter.getUserId() > 0) {
-			hql += " AND a.ARCHIVE_USER = :userid";
+			hql += " AND a.userId = :userid";
 			params.put("userid", filter.getUserId());
 		}
 
 		if (filter.getFinished() != null && filter.getFinished()) {
-			hql += " AND a.ARCHIVE_FINISHED = true";
+			hql += " AND a.finished = true";
 		}
 
 		if (filter.getShortname() != null && filter.getShortname().trim().length() > 0) {
-			hql += " AND a.ARCHIVE_SSHORTNAME LIKE :shortname";
+			hql += " AND a.surveyShortname LIKE :shortname";
 			params.put(Constants.SHORTNAME, "%" + filter.getShortname() + "%");
 		}
 
 		if (filter.getTitle() != null && filter.getTitle().trim().length() > 0) {
-			hql += " AND a.ARCHIVE_STITLE LIKE :title";
+			hql += " AND a.surveyTitle LIKE :title";
 			params.put("title", "%" + filter.getTitle() + "%");
 		}
 
 		if (filter.getOwner() != null && filter.getOwner().trim().length() > 0) {
-			hql += " AND a.ARCHIVE_SOWNER LIKE :owner";
+			hql += " AND a.owner LIKE :owner";
 			params.put("owner", "%" + filter.getOwner() + "%");
 		}
 
 		if (filter.getCreatedFrom() != null) {
-			hql += " AND a.ARCHIVE_CREATED >= :createdFrom";
+			hql += " AND a.created >= :createdFrom";
 			params.put("createdFrom", filter.getCreatedFrom());
 		}
 
 		if (filter.getCreatedTo() != null) {
-			hql += " AND a.ARCHIVE_CREATED < :createdTo";
+			hql += " AND a.created < :createdTo";
 
 			Calendar c = Calendar.getInstance();
 			c.setTime(filter.getCreatedTo());
@@ -247,12 +241,12 @@ public class ArchiveService extends BasicService {
 		}
 
 		if (filter.getArchivedFrom() != null) {
-			hql += " AND a.ARCHIVE_DATE >= :archivedFrom";
+			hql += " AND a.archived >= :archivedFrom";
 			params.put("archivedFrom", filter.getArchivedFrom());
 		}
 
 		if (filter.getArchivedTo() != null) {
-			hql += " AND a.ARCHIVE_DATE < :archivedTo";
+			hql += " AND a.archived < :archivedTo";
 
 			Calendar c = Calendar.getInstance();
 			c.setTime(filter.getArchivedTo());
@@ -264,21 +258,19 @@ public class ArchiveService extends BasicService {
 			hql += " ORDER BY a." + filter.getSortKey() + " " + filter.getSortOrder();
 		}
 
-        Query query = session.createNativeQuery(hql);
+		Query query = session.createQuery(hql);
 		sqlQueryService.setParameters(query, params);
 
-        //System.out.println(hql);
-
 		@SuppressWarnings("unchecked")
-		List<Archive> result = (List<Archive>) query.setFirstResult((page > 1 ? page - 1 : 0) * rowsPerPage).setMaxResults(rowsPerPage).list();
+		List<Archive> result = query.setFirstResult((page > 1 ? page - 1 : 0) * rowsPerPage).setMaxResults(rowsPerPage).list();
 		return result;
 	}
 
 	@Transactional(readOnly = true)
 	public int getNumberOfArchives(Integer userId) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery("SELECT COUNT(*) FROM ARCHIVE a WHERE a.ARCHIVE_USER = :userId")
-				.setParameter("userId", (Integer) userId);
+		Query query = session.createQuery("SELECT COUNT(*) FROM Archive a WHERE a.userId = :userId")
+				.setParameter("userId", userId);
 
 		return ConversionTools.getValue(query.uniqueResult());
 	}
@@ -333,12 +325,12 @@ public class ArchiveService extends BasicService {
 	@Transactional
 	public boolean hasArchivingFailed(String shortname) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery(
-				"SELECT id FROM ARCHIVE a WHERE a.ARCHIVE_SSHORTNAME = :shortname and a.ARCHIVE_ERROR IS NOT NULL")
-				.setParameter(Constants.SHORTNAME, (String) shortname);
+		Query query = session.createQuery(
+				"SELECT id FROM Archive a WHERE a.surveyShortname = :shortname and a.error IS NOT NULL")
+				.setParameter(Constants.SHORTNAME, shortname);
 
 		@SuppressWarnings("unchecked")
-		List<Archive> result = (List<Archive>) query.setMaxResults(1).list();
+		List<Archive> result = query.setMaxResults(1).list();
 
 		return !result.isEmpty();
 	}
@@ -346,12 +338,12 @@ public class ArchiveService extends BasicService {
 	@Transactional
 	public Archive getActiveArchive(String shortname) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery(
-				"SELECT * FROM ARCHIVE a WHERE a.ARCHIVE_SSHORTNAME = :shortname and a.ARCHIVE_FINISHED = false AND a.ARCHIVE_ERROR IS NULL")
-				.setParameter(Constants.SHORTNAME, (String) shortname);
+		Query query = session.createQuery(
+				"FROM Archive a WHERE a.surveyShortname = :shortname and a.finished = false AND a.error IS NULL")
+				.setParameter(Constants.SHORTNAME, shortname);
 
 		@SuppressWarnings("unchecked")
-		List<Archive> result = (List<Archive>) query.list();
+		List<Archive> result = query.list();
 
 		if (!result.isEmpty())
 			return result.get(0);
@@ -362,12 +354,12 @@ public class ArchiveService extends BasicService {
 	@Transactional
 	public Archive getArchive(Integer userid, String shortname) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery(
-				"SELECT * FROM ARCHIVE a WHERE a.ARCHIVE_USER = :userId AND a.ARCHIVE_SSHORTNAME = :shortname AND a.ARCHIVE_FINISHED = true AND a.ARCHIVE_ERROR IS NULL")
-				.setParameter("userId", (Integer) userid).setParameter(Constants.SHORTNAME, (String) shortname);
+		Query query = session.createQuery(
+				"FROM Archive a WHERE a.userId = :userId AND a.surveyShortname = :shortname AND a.finished = true AND a.error IS NULL")
+				.setParameter("userId", userid).setParameter(Constants.SHORTNAME, shortname);
 
 		@SuppressWarnings("unchecked")
-		List<Archive> result = (List<Archive>) query.list();
+		List<Archive> result = query.list();
 
 		if (!result.isEmpty())
 			return result.get(0);
@@ -378,20 +370,18 @@ public class ArchiveService extends BasicService {
 	@Transactional
 	public String getSurveyUIDForArchivedSurveyShortname(String shortname) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery("SELECT a.ARCHIVE_SUID FROM ARCHIVE a WHERE a.ARCHIVE_SSHORTNAME = :shortname");
-		query.setParameter(Constants.SHORTNAME, (String) shortname);
+		Query query = session.createQuery("SELECT a.surveyUID FROM Archive a WHERE a.surveyShortname = :shortname");
+		query.setParameter(Constants.SHORTNAME, shortname);
 		return (String) query.uniqueResult();
 	}
 
 	@Transactional
 	public List<Archive> getArchivesForUser(int userid) {
 		Session session = sessionFactory.getCurrentSession();
-		Query<?> query = session.createNativeQuery("SELECT * FROM ARCHIVE a WHERE a.ARCHIVE_USER = :userId AND a.ARCHIVE_FINISHED = true AND a.ARCHIVE_ERROR IS NULL").setParameter("userId", (Integer) userid);
-
-        //System.out.println(query);
+		Query query = session.createQuery("FROM Archive a WHERE a.userId = :userId AND a.finished = true AND a.error IS NULL").setParameter("userId", userid);
 
 		@SuppressWarnings("unchecked")
-		List<Archive> result = (List<Archive>) query.getResultList();
+		List<Archive> result = query.list();
 
 		return result;
 	}
@@ -402,8 +392,8 @@ public class ArchiveService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		logger.info("starting archiving of survey " + survey.getShortname());
 		
-		java.io.File folder = fileService.getArchiveFolder(survey.getUniqueId());
-		java.io.File zip = surveyService.exportSurvey(survey.getShortname(), surveyService, true);
+		java.io.File folder = fileService.getArchiveFolder(survey.getUniqueId());		
+		java.io.File zip = surveyService.exportSurvey(survey.getShortname(), surveyService, true);				
 		java.io.File target = new java.io.File(folder.getPath() + Constants.PATH_DELIMITER + survey.getUniqueId());
 				
 		if (folder.exists())

@@ -2,7 +2,7 @@ package com.ec.survey.model.machinetranslation;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -12,10 +12,6 @@ import com.ec.survey.tools.ConversionTools;
 @Table(name = "MT_RESPONSE")
 public class Response implements java.io.Serializable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private Request request;
 	

@@ -3,22 +3,22 @@ package com.ec.survey.model.survey;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
  * Represents a section element in a survey
  */
 @Entity
 @DiscriminatorValue("SECTION")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Section extends Element {
 	
 	public static final String TABTITLE = "TABTITLE";
-	private static final long serialVersionUID = 1L;
+	
 	private int level = 1;
 	private String tabTitle;
 	private Integer order;

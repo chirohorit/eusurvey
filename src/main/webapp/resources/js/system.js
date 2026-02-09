@@ -18,7 +18,7 @@ $(function() {
 	} catch (e) {};
 
 	const sysMsgTimeout = lastSystemMessageCheck - Date.now() + 5 * 60 * 1000
-	window.setTimeout("checkSystemMessages()", Math.max(sysMsgTimeout, 500));
+	//window.setTimeout("checkSystemMessages()", Math.max(sysMsgTimeout, 500));
 	
 	$("input, textarea, select").change(function() {
 		  lastEditDate = new Date();
@@ -63,7 +63,7 @@ function checkSystemMessages()
 	  error: function(e)
 	  {
 		  //this happens when there is no message
-		  window.setTimeout("checkSystemMessages()", 5 * 60 * 1000);
+		  //window.setTimeout("checkSystemMessages()", 5 * 60 * 1000);
 		 
 		  // refresh if available
 		  if (typeof refreshTimeout === "function") { 
@@ -109,7 +109,7 @@ function checkSystemMessages()
 			  }			  
 		  }
 		  		  
-		  window.setTimeout("checkSystemMessages()", 5 * 60 * 1000);
+		  //window.setTimeout("checkSystemMessages()", 5 * 60 * 1000);
 	  }
 	});
 }

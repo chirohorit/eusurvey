@@ -2,12 +2,12 @@ package com.ec.survey.service;
 
 import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.Export;
-import com.ec.survey.model.Export.ExportFormat;
-import com.ec.survey.model.Export.ExportState;
-import com.ec.survey.model.Export.ExportType;
+import com.ec.survey.enumerator.ExportFormat;
+import com.ec.survey.enumerator.ExportState;
+import com.ec.survey.enumerator.ExportType;
 import com.ec.survey.model.Form;
 import com.ec.survey.model.ParticipationGroup;
-import com.ec.survey.model.ParticipationGroupType;
+import com.ec.survey.enumerator.ParticipationGroupType;
 import com.ec.survey.model.Setting;
 import com.ec.survey.model.WebserviceTask;
 import com.ec.survey.model.administration.User;
@@ -20,7 +20,6 @@ import com.ec.survey.tools.FileUtils;
 import com.ec.survey.tools.activity.ActivityRegistry;
 import com.ec.survey.tools.export.*;
 
-import org.apache.commons.net.ntp.TimeStamp;
 import org.hibernate.Hibernate;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
@@ -39,7 +38,6 @@ import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
-import java.sql.Timestamp;
 import java.util.*;
 
 @Service("exportService")
@@ -51,12 +49,12 @@ public class ExportService extends BasicService {
 	private @Value("${smtp.port}") String smtpPort;
 	private @Value("${sender}") String sender;
 	
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void prepareExport(Form form, Export export) {
 		Session session = sessionFactory.getCurrentSession();
 		if (export.getResultFilter() != null)
 		{
-			session.saveOrUpdate(export.getResultFilter());
+			session.merge(export.getResultFilter());
 			Hibernate.initialize(export.getResultFilter().getExportedQuestions());
 			Hibernate.initialize(export.getResultFilter().getLanguages());
 			Hibernate.initialize(export.getResultFilter().getFilterValues());
@@ -66,7 +64,7 @@ public class ExportService extends BasicService {
 			Hibernate.initialize(export.getResultFilter().getVisibleDiscussions());
 			Hibernate.initialize(export.getResultFilter().getExportedDiscussions());
 		}
-		session.saveOrUpdate(export);
+		session.merge(export);
 		session.flush();		
 		if (form != null && form.getSurvey() != null)
 		{
@@ -198,6 +196,7 @@ public class ExportService extends BasicService {
 		}
 	}
 
+	@Transactional
 	public String getExportFilePath(Export export, String uid) {
 		
 		if (uid != null && uid.length() > 0 && !uid.equals("null"))
@@ -214,8 +213,9 @@ public class ExportService extends BasicService {
 		
 		return getExportFilePath(export.getId(),export.getFormat());
 	}
-	
-	private String getExportFilePath(int id, ExportFormat format)
+
+	@Transactional
+	public String getExportFilePath(int id, ExportFormat format)
 	{
 		Export export = get(id,  false);
 
@@ -295,33 +295,28 @@ public class ExportService extends BasicService {
 		Query<Export> query;
 		if (userId == -1)
 		{
-			var sql = "SELECT e.* FROM EXPORTS AS e LEFT JOIN SURVEYS AS e.survey on e.SURVEY_ID=s.SURVEY_ID WHERE e.USER_ID > 0";
+			var sql = "SELECT e FROM Export e LEFT JOIN e.survey survey WHERE e.userId > 0";
 			if (!includeForArchive) {
-				sql += " AND (e.EXPORT_FORARCHIVING is null or e.EXPORT_FORARCHIVING = false)";
+				sql += " AND (e.forArchiving is null or e.forArchiving = false)";
 			}
 			sql += " ORDER BY e." + sortKey + " " + (ascending? "ASC" : "DESC");
-			query = session.createNativeQuery(sql, Export.class);
-            System.out.println(sql);
-
+			query = session.createQuery(sql, Export.class);
 		} else {
 		
-			String sql = "SELECT e.* FROM EXPORTS AS e LEFT JOIN SURVEYS AS e.survey on e.SURVEY_ID=s.SURVEY_ID WHERE e.USER_ID = :userId";
+			String sql = "SELECT e FROM Export e LEFT JOIN e.survey survey WHERE e.userId = :userId";
 			if (onlyNotNotified)
 			{
-				sql += " AND e.EXPORT_STATE = 2 AND e.EXPORT_NOT = false AND e.survey.ARCHIVED = false";
+				sql += " AND e.state = 2 AND e.notified = false AND e.survey.archived = false";
 			}
 
 
 			if (!includeForArchive) {
-				sql += " AND (e.EXPORT_FORARCHIVING is null or e.EXPORT_FORARCHIVING = false)";
+				sql += " AND (e.forArchiving is null or e.forArchiving = false)";
 			}
 
-            System.out.println(sql);
-			query = session.createNativeQuery(sql + " ORDER BY e." + sortKey + " " + (ascending? "ASC" : "DESC"), Export.class);
-			query.setParameter("userId", (Integer) userId);
+			query = session.createQuery(sql + " ORDER BY e." + sortKey + " " + (ascending? "ASC" : "DESC"), Export.class);
+			query.setParameter("userId", userId);
 		}
-
-
 		
 		List<Export> exports;
 		
@@ -374,7 +369,7 @@ public class ExportService extends BasicService {
 					}
 				}
 
-				User user = (User) session.get(User.class, export.getUserId());
+				User user = session.get(User.class, export.getUserId());
 				if (user != null) {
 					export.setDisplayUsername(user.getName());
 				}
@@ -389,20 +384,20 @@ public class ExportService extends BasicService {
 	@Transactional(readOnly = true)
 	public List<Export> getSurveyExports(int surveyId) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("SELECT e.* FROM EXPORTS e WHERE e.survey.SURVEY_ID = :id");
-		query.setParameter("id", (Integer) surveyId);
+		Query query = session.createQuery("FROM Export e WHERE e.survey.id = :id");
+		query.setParameter("id", surveyId);
 		
 		@SuppressWarnings("unchecked")
 		List<Export> exports = query.list();
 		return exports;
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void deleteSurveyExports(int surveyId) throws IOException {
 		Session session = sessionFactory.getCurrentSession();
 		
-		Query query = session.createNativeQuery("SELECT e.* FROM EXPORTS e WHERE e.survey.SURVEY_ID = :id");
-		query.setParameter("id", (Integer) surveyId);
+		Query query = session.createQuery("FROM Export e WHERE e.survey.id = :id");
+		query.setParameter("id", surveyId);
 		
 		@SuppressWarnings("unchecked")
 		List<Export> exports = query.list();
@@ -411,8 +406,8 @@ public class ExportService extends BasicService {
 			deleteExportFiles(export);
 		}		
 		
-		query = session.createNativeQuery("DELETE FROM EXPORTS e WHERE e.survey.SURVEY_ID = :id");
-		query.setParameter("id", (Integer) surveyId);
+		query = session.createQuery("DELETE FROM Export e WHERE e.survey.id = :id");
+		query.setParameter("id", surveyId);
 		
 		query.executeUpdate();
 	}
@@ -423,7 +418,7 @@ public class ExportService extends BasicService {
 		{
 			Session session = sessionFactory.getCurrentSession();
 			
-			Export export = (Export) session.get(Export.class, exportId);
+			Export export = session.get(Export.class, exportId);
 			
 			determineValidState(export, false);
 			
@@ -452,7 +447,7 @@ public class ExportService extends BasicService {
 		}
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void deleteExport(Export export) {
 		try
 		{
@@ -460,8 +455,8 @@ public class ExportService extends BasicService {
 				
 			Session session = sessionFactory.getCurrentSession();
 			
-			Query query = session.createNativeQuery("DELETE FROM EXPORTS WHERE EXPORT_ID = :id");
-			query.setParameter("id", (Integer) export.getId());
+			Query query = session.createQuery("delete Export e where e.id = :id");
+			query.setParameter("id", export.getId());
 			int rowCount = query.executeUpdate();
 			
 			if (rowCount < 1) logger.error("Deletion of export " + export.getId() +  " not possible!");
@@ -471,8 +466,9 @@ public class ExportService extends BasicService {
 			logger.error(e.getLocalizedMessage(), e);		
 		}
 	}
-		
-	private void deleteExportFiles(Export export) throws IOException {
+
+	@Transactional
+	public void deleteExportFiles(Export export) throws IOException {
 		String filePath = getExportFilePath(export, null);
 
 		File file = new File(filePath);
@@ -516,8 +512,8 @@ public class ExportService extends BasicService {
 						session.evict(export);
 					}
 					
-					Query query = session.createNativeQuery("SELECT MAX(a.ACTIVITY_DATE) FROM ACTIVITY a WHERE a.ACTIVITY_SUID = :surveyUID");
-					query.setParameter("surveyUID", (String) export.getSurvey().getUniqueId());
+					Query query = session.createQuery("SELECT max(a.date) FROM Activity a WHERE a.surveyUID = :surveyUID");
+					query.setParameter("surveyUID", export.getSurvey().getUniqueId());
 					
 					Date max = (Date)query.uniqueResult();
 					
@@ -530,14 +526,14 @@ public class ExportService extends BasicService {
 						session.evict(export);
 					}
 					
-					Query query = session.createNativeQuery("SELECT MAX(a.ANSWER_SET_UPDATE) FROM ANSWERS_SET a WHERE a.SURVEY_ID = :surveyId AND a.ISDRAFT = false");
+					Query query = session.createQuery("SELECT max(a.updateDate) FROM AnswerSet a WHERE a.surveyId = :surveyId AND a.isDraft = false");
 					
 					if (export.getSurvey() != null)
 					{
-						query.setParameter("surveyId", (Integer) export.getSurvey().getId());
+						query.setParameter("surveyId", export.getSurvey().getId());
 					} else if (export.getResultFilter() != null)
 					{
-						query.setParameter("surveyId", (Integer) export.getResultFilter().getSurveyId());
+						query.setParameter("surveyId", export.getResultFilter().getSurveyId());
 					}
 					
 					Date max = (Date)query.uniqueResult();
@@ -561,20 +557,20 @@ public class ExportService extends BasicService {
 	public boolean hasPendingExports(int userID) {
 		
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("SELECT COUNT(*) FROM EXPORTS e WHERE e.USER_ID = :userId and e.EXPORT_STATE = :state and e.EXPORT_NOT is false" );
-		query.setParameter("userId", (Integer) userID);
+		Query query = session.createQuery("SELECT count(*) FROM Export e WHERE e.userId = :userId and e.state = :state and e.notified is false" );
+		query.setParameter("userId", userID);
 		query.setParameter("state", ExportState.Finished);
 		long count = (Long) query.uniqueResult();
 		return count > 0 ;
 	}
 	
-	@Transactional(readOnly = false, propagation=Propagation.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public Export update(Export export) {
 		try {
 			Session session = sessionFactory.getCurrentSession();
-			export = (Export) session.merge(export);
+			export = session.merge(export);
 			session.setReadOnly(export, false);
-			session.saveOrUpdate(export);
+			session.merge(export);
 			session.flush();
 			return export;
 		} catch (Exception e) {
@@ -583,13 +579,13 @@ public class ExportService extends BasicService {
 		return null;
 	}
 
-	@Transactional(readOnly = false, propagation=Propagation.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void invalidate(int surveyId) {
 		Session session = sessionFactory.getCurrentSession();
 		
 		try {		
-			Query query = session.createNativeQuery("UPDATE EXPORTS e SET EXPORT_VALID = false WHERE e.SURVEY_ID = :id AND e.EXPORT_VALID = true");
-			query.setParameter("id", (Integer) surveyId);
+			Query query = session.createQuery("UPDATE Export e SET e.valid = false WHERE e.survey.id = :id AND e.valid = true");
+			query.setParameter("id", surveyId);
 			
 			query.executeUpdate();
 		} catch (Exception e)
@@ -603,8 +599,8 @@ public class ExportService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		
 		try {		
-			Query query = session.createNativeQuery("UPDATE EXPORTS e SET e.EXPORT_NOT = true WHERE e.EXPORT_ID = :id");
-			query.setParameter("id", (Integer) id);
+			Query query = session.createQuery("UPDATE Export e SET e.notified = true WHERE e.id = :id");
+			query.setParameter("id", id);
 			
 			query.executeUpdate();
 		} catch (Exception e)
@@ -617,7 +613,7 @@ public class ExportService extends BasicService {
 	public Export get(int id, boolean refresh) {
 		Session session = sessionFactory.getCurrentSession();
 		
-		Export export = (Export) session.get(Export.class, id);
+		Export export = session.get(Export.class, id);
 		
 		if (refresh)
 		{
@@ -627,6 +623,7 @@ public class ExportService extends BasicService {
 		return export;
 	}
 
+	@Transactional
 	public void recreateExport(Export export, Locale locale, MessageSource resources) throws IOException {
 		deleteExportFiles(export);
 	
@@ -704,7 +701,7 @@ public class ExportService extends BasicService {
 								{
 									int valId = Integer.parseInt(svalId);
 									
-									if (newValues.length() > 0)
+									if (!newValues.isEmpty())
 									{
 										newValues.append(";");
 									}
@@ -734,12 +731,12 @@ public class ExportService extends BasicService {
 	@Transactional
 	public void applyExportTimeout() {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("UPDATE EXPORTS e SET e.EXPORT_STATE = 1 WHERE e.EXPORT_STATE = 0 AND e.EXPORT_DATE <= :date");
+		Query query = session.createQuery("UPDATE Export e SET e.state = 1 WHERE e.state = 0 AND e.date <= :date");
 		
 		Calendar cal = Calendar.getInstance();
 		int days = Integer.parseInt(exporttimeout);
 		cal.add(Calendar.DATE, -1 * days);
-		query.setParameter("date", (Timestamp) cal.getTime());
+		query.setParameter("date", cal.getTime());
 		
 		query.executeUpdate();		
 	}
@@ -861,15 +858,15 @@ public class ExportService extends BasicService {
 		
 		while (currenttime.before(endtime))
 		{
-			Query query = session.createNativeQuery("FROM Export e WHERE e.date < :date");
-			query.setParameter("date", (Timestamp) date).setMaxResults(1000);
+			Query query = session.createQuery("FROM Export e WHERE e.date < :date");
+			query.setParameter("date", date).setMaxResults(1000);
 			@SuppressWarnings("unchecked")
 			List<Export> exports = query.list();
 			
 			for (Export export : exports) {
 				
 				deleteExportFiles(export);
-				session.delete(export);
+				session.remove(export);
 			}
 			
 			if (exports.size() < 1000)
@@ -927,8 +924,8 @@ public class ExportService extends BasicService {
 		
 		while (currenttime.before(endtime))
 		{
-			Query query = session.createNativeQuery("SELECT * FROM WEBSERVICETASK t WHERE t.WST_CREATED < :date");
-			query.setParameter("date", (Timestamp) date).setMaxResults(1000);
+			Query query = session.createQuery("FROM WebserviceTask t WHERE t.created < :date");
+			query.setParameter("date", date).setMaxResults(1000);
 			@SuppressWarnings("unchecked")
 			List<WebserviceTask> tasks = query.list();
 			
@@ -940,7 +937,7 @@ public class ExportService extends BasicService {
 						counter++;
 					}
 				}
-				session.delete(task);
+				session.remove(task);
 			}
 			
 			if (tasks.size() < 1000)
@@ -957,8 +954,8 @@ public class ExportService extends BasicService {
 	@Transactional(readOnly = true)
 	public Export getExportByResultFilterID(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("SELECT * FROM EXPORTS e WHERE e.id_resflt = :id");
-		query.setParameter("id", (Integer) id);
+		Query query = session.createQuery("FROM Export e WHERE e.resultFilter.id = :id");
+		query.setParameter("id", id);
 		@SuppressWarnings("unchecked")
 		List<Export> exports = query.list();
 		if (!exports.isEmpty()) return exports.get(0);

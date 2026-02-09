@@ -1,6 +1,6 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page session="true" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -851,7 +851,7 @@
 		</div>
 	
 		<div class="modal" id="configure-dialog" data-backdrop="static">
-			<form:form id="configure-attributes-form" method="POST" action="${contextpath}/addressbook/configureAttributes" style="height: auto; margin: 0px; padding: 0px;">			
+			<form:form id="configure-attributes-form" method="POST" action="${contextpath}/addressbook/configureAttributes" style="height: auto; margin: 0px; padding: 0px;">
 				<div class="modal-dialog">
 	    		<div class="modal-content">
 				<div class="modal-header">

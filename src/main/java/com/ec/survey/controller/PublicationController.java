@@ -2,6 +2,9 @@ package com.ec.survey.controller;
 
 import com.ec.survey.exception.ForbiddenURLException;
 import com.ec.survey.exception.InvalidURLException;
+import com.ec.survey.handler.SurveyHelper;
+import com.ec.survey.handler.worker.ResultsExecutor;
+import com.ec.survey.handler.worker.StatisticsExecutor;
 import com.ec.survey.model.*;
 import com.ec.survey.model.selfassessment.SATargetDataset;
 import com.ec.survey.model.survey.*;
@@ -18,9 +21,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -32,9 +35,6 @@ public class PublicationController extends BasicController {
 
 	@Resource(name = "taskExecutor")
 	private TaskExecutor taskExecutor;
-
-	@Autowired
-	protected PaginationMapper paginationMapper;
 
 	private @Value("${server.prefix}") String host;
 	private @Value("${smtpserver}") String smtpServer;
@@ -123,7 +123,7 @@ public class PublicationController extends BasicController {
 					paging.moveTo(newPage == null ? "first" : newPage);
 
 					SqlPagination sqlPagination = new SqlPagination(1, itemsPerPage);
-					List<AnswerSet> answerSets = answerService.getAnswers(survey, null, sqlPagination, false, true, active && false);
+					List<AnswerSet> answerSets = answerService.getAnswers(survey, null, sqlPagination, false, true, false);
 					paging.setNumberOfItems(answerSets.size());
 
 					if (lang != null) {
@@ -161,7 +161,7 @@ public class PublicationController extends BasicController {
 					result.addObject("selectedtab", selectedtab == null ? 1 : Integer.parseInt(selectedtab));
 
 					if (survey.getIsSelfAssessment()) {
-						List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+						List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 						result.addObject("targetdatasets", datasets);
 					}
 
@@ -290,7 +290,7 @@ public class PublicationController extends BasicController {
 					Map<String, Element> matrixMapByUid = survey.getMatrixMapByUid();
 
 					for (Answer answer : answerSet.getAnswers()) {
-						Question question = (Question) questionMapByUid.get(answer.getQuestionUniqueId());
+						Question question = questionMapByUid.get(answer.getQuestionUniqueId());
 						
 						if (question instanceof Text
 								&& matrixMapByUid.containsKey(answer.getPossibleAnswerUniqueId())) {
@@ -311,12 +311,11 @@ public class PublicationController extends BasicController {
 							}
 						} else if (question instanceof ChoiceQuestion) {							
 							
-							if (survey.getIsSelfAssessment() && question instanceof SingleChoiceQuestion) {
-								SingleChoiceQuestion scq = (SingleChoiceQuestion)question;
-								
-								if (scq.getIsTargetDatasetQuestion()) {
+							if (survey.getIsSelfAssessment() && question instanceof SingleChoiceQuestion scq) {
+
+                                if (scq.getIsTargetDatasetQuestion()) {
 									
-									SATargetDataset dataset = selfassessmentService.getTargetDataset(Integer.parseInt(answer.getValue()));									
+									SATargetDataset dataset = selfAssessmentService.getTargetDataset(Integer.parseInt(answer.getValue()));									
 									
 									if (result.containsKey(answer.getQuestionUniqueId())) {
 										result.put(answer.getQuestionUniqueId(),
@@ -375,9 +374,8 @@ public class PublicationController extends BasicController {
 								result.put(answer.getQuestionUniqueId(), answerReadable);
 							}
 
-						} else if (question instanceof GalleryQuestion) {
-							GalleryQuestion gallery = (GalleryQuestion) question;
-							for (int i = 0; i < gallery.getFiles().size(); i++) {
+						} else if (question instanceof GalleryQuestion gallery) {
+                            for (int i = 0; i < gallery.getFiles().size(); i++) {
 								if (answer.getValue().equals(Integer.toString(i))) {
 									String name = gallery.getFiles().get(i).getName() + "<br />";
 
@@ -395,10 +393,9 @@ public class PublicationController extends BasicController {
 
 							String uidString = row.toString() + answer.getQuestionUniqueId() + column.toString();
 							result.put(uidString, ConversionTools.escape(answer.getValue()));
-						} else if (question instanceof ComplexTableItem) {
-							ComplexTableItem item = (ComplexTableItem) question;
-							
-							if (item.getCellType() == ComplexTableItem.CellType.SingleChoice || item.getCellType() == ComplexTableItem.CellType.MultipleChoice) {
+						} else if (question instanceof ComplexTableItem item) {
+
+                            if (item.getCellType() == ComplexTableItem.CellType.SingleChoice || item.getCellType() == ComplexTableItem.CellType.MultipleChoice) {
 								String title = item.getPossibleAnswerByUniqueId(answer.getPossibleAnswerUniqueId()) != null
 												? item.getPossibleAnswerByUniqueId(answer.getPossibleAnswerUniqueId())
 												.getStrippedTitle()
@@ -497,7 +494,7 @@ public class PublicationController extends BasicController {
 				taskExecutor.execute(export);
 				return "success";
 			} else {
-				logger.error("try to export published results: " + type + Constants.PATH_DELIMITER + format + Constants.PATH_DELIMITER + id);
+                logger.error("try to export published results: {}" + Constants.PATH_DELIMITER + "{}" + Constants.PATH_DELIMITER + "{}", type, format, id);
 			}
 
 		} catch (Exception e) {

@@ -1,4 +1,4 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
@@ -69,7 +69,7 @@
 														<td class="statRequestedRecordsPercent" data-id="${answer.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[answer.id.toString()]}"/> %</td>		
 													</c:when>
 													<c:otherwise>
-														<td id="awaitingResult" class="statRequestedRecords" data-id="${answer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+														<td id="awaitingResult" class="statRequestedRecords" data-id="${answer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 														<td id="awaitingResultPercent" class="statRequestedRecordsPercent" data-id="${answer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													</c:otherwise>
 												</c:choose>		
@@ -92,7 +92,7 @@
 															<td class="statRequestedRecordsPercent" data-id="${dataset.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.getRequestedRecordsPercentForTargetDataset(question, dataset)}"/> %</td>		
 														</c:when>
 														<c:otherwise>
-															<td id="awaitingResult" class="statRequestedRecords" data-id="${question.uniqueId}-${dataset.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+															<td id="awaitingResult" class="statRequestedRecords" data-id="${question.uniqueId}-${dataset.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 															<td id="awaitingResultPercent" class="statRequestedRecordsPercent" data-id="${question.uniqueId}-${dataset.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 														</c:otherwise>
 													</c:choose>		
@@ -120,7 +120,7 @@
 													<td class="statRequestedRecordsPercent" data-id="${question.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[question.id.toString()]}"/> %</td>		
 												</c:when>
 												<c:otherwise>
-													<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+													<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 												</c:otherwise>
 											</c:choose>										
@@ -186,7 +186,7 @@
 														<td class="statRequestedRecordsPercent" data-id="${question.id}-${file.uid}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.getRequestedRecordsPercentForGallery(question, file.uid)}"/> %</td>		
 													</c:when>
 													<c:otherwise>
-														<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id}-${file.uid}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+														<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id}-${file.uid}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 														<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${question.id}-${file.uid}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													</c:otherwise>
 												</c:choose>		
@@ -213,7 +213,7 @@
 													<td class="statRequestedRecordsPercent" data-id="${question.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[question.id.toString()]}"/> %</td>		
 												</c:when>
 												<c:otherwise>
-													<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+													<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 												</c:otherwise>
 											</c:choose>										
@@ -262,8 +262,8 @@
 															<td class="statRequestedRecordsPercent" data-id="${matrixQuestion.id}${possibleanswer.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.getRequestedRecordsPercentForMatrix(matrixQuestion, possibleanswer)}"/> %</td>	
 														</c:when>
 														<c:otherwise>
-															<td id="awaitingResult" class="statRequestedRecords" data-id="${matrixQuestion.id}${possibleanswer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
-															<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${matrixQuestion.id}${possibleanswer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>	
+															<td id="awaitingResult" class="statRequestedRecords" data-id="${matrixQuestion.id}${possibleanswer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
+															<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${matrixQuestion.id}${possibleanswer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 														</c:otherwise>
 													</c:choose>											
 												</tr>
@@ -291,7 +291,7 @@
 														<td class="statRequestedRecordsPercent" data-id="${matrixQuestion.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[matrixQuestion.id.toString()]}"/> %</td>		
 													</c:when>
 													<c:otherwise>
-														<td id="awaitingResult" class="statRequestedRecords" data-id="${matrixQuestion.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+														<td id="awaitingResult" class="statRequestedRecords" data-id="${matrixQuestion.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 														<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${matrixQuestion.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													</c:otherwise>
 												</c:choose>										
@@ -401,8 +401,8 @@
 															<td class="statRequestedRecordsPercent" data-id="${childQuestion.id}${loop.index}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.getRequestedRecordsPercentForRatingQuestion(childQuestion, loop.index)}"/> %</td>	
 														</c:when>
 														<c:otherwise>
-															<td id="awaitingResult" class="statRequestedRecords" data-id="${childQuestion.id}${loop.index}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
-															<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${childQuestion.id}${loop.index}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>	
+															<td id="awaitingResult" class="statRequestedRecords" data-id="${childQuestion.id}${loop.index}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
+															<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${childQuestion.id}${loop.index}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 														</c:otherwise>
 													</c:choose>											
 												</tr>
@@ -430,7 +430,7 @@
 														<td class="statRequestedRecordsPercent" data-id="${childQuestion.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[childQuestion.id.toString()]}"/> %</td>		
 													</c:when>
 													<c:otherwise>
-														<td id="awaitingResult" class="statRequestedRecords" data-id="${childQuestion.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+														<td id="awaitingResult" class="statRequestedRecords" data-id="${childQuestion.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 														<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${childQuestion.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													</c:otherwise>
 												</c:choose>										
@@ -503,7 +503,7 @@
 														<td class="statRequestedRecordsPercent" data-id="${question.id.toString()}${answer}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[question.getAnswerWithPrefix(answer)]}"/> %</td>		
 													</c:when>
 													<c:otherwise>
-														<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id.toString()}${answer}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+														<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id.toString()}${answer}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 														<td id="awaitingResultPercent" class="statRequestedRecordsPercent" data-id="${question.id.toString()}${answer}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													</c:otherwise>
 												</c:choose>		
@@ -530,7 +530,7 @@
 													<td class="statRequestedRecordsPercent" data-id="${question.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[question.id.toString()]}"/> %</td>		
 												</c:when>
 												<c:otherwise>
-													<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+													<td id="awaitingResult" class="statRequestedRecords" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${question.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 												</c:otherwise>
 											</c:choose>										
@@ -615,7 +615,7 @@
 														</td>			
 													</c:when>
 													<c:otherwise>
-														<td id="awaitingResult" class="statRequestedRecordsRankingScore" data-parent-id="${question.id}" data-id="${child.id}-${status.index}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+														<td id="awaitingResult" class="statRequestedRecordsRankingScore" data-parent-id="${question.id}" data-id="${child.id}-${status.index}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 													</c:otherwise>
 												</c:choose>											
 												
@@ -629,7 +629,7 @@
 													</td>			
 												</c:when>
 												<c:otherwise>
-													<td id="awaitingResult" class="statRequestedRecordsRankingScore" data-parent-id="${question.id}" data-id="${child.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+													<td id="awaitingResult" class="statRequestedRecordsRankingScore" data-parent-id="${question.id}" data-id="${child.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 												</c:otherwise>
 											</c:choose>							
 										</tr>
@@ -717,7 +717,7 @@
 																		<td class="statRequestedRecordsPercent" data-id="${answer.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[answer.id.toString()]}"/> %</td>		
 																	</c:when>
 																	<c:otherwise>
-																		<td id="awaitingResult" class="statRequestedRecords" data-id="${answer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+																		<td id="awaitingResult" class="statRequestedRecords" data-id="${answer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 																		<td id="awaitingResultPercent" class="statRequestedRecordsPercent" data-id="${answer.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 																	</c:otherwise>
 																</c:choose>		
@@ -744,7 +744,7 @@
 																	<td class="statRequestedRecordsPercent" data-id="${child.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[child.id.toString()]}"/> %</td>		
 																</c:when>
 																<c:otherwise>
-																	<td id="awaitingResult" class="statRequestedRecords" data-id="${child.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+																	<td id="awaitingResult" class="statRequestedRecords" data-id="${child.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 																	<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${child.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 																</c:otherwise>
 															</c:choose>										
@@ -842,7 +842,7 @@
 																	<td class="statRequestedRecordsPercent" data-id="${child.id.toString()}${answer}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[child.getAnswerWithPrefix(answer)]}"/> %</td>		
 																</c:when>
 																<c:otherwise>
-																	<td id="awaitingResult" class="statRequestedRecords" data-id="${child.id.toString()}${answer}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+																	<td id="awaitingResult" class="statRequestedRecords" data-id="${child.id.toString()}${answer}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 																	<td id="awaitingResultPercent" class="statRequestedRecordsPercent" data-id="${child.id.toString()}${answer}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 																</c:otherwise>
 															</c:choose>		
@@ -869,7 +869,7 @@
 																<td class="statRequestedRecordsPercent" data-id="${child.id}"><fmt:formatNumber type="number" maxFractionDigits="2" value="${statistics.requestedRecordsPercent[child.id.toString()]}"/> %</td>		
 															</c:when>
 															<c:otherwise>
-																<td id="awaitingResult" class="statRequestedRecords" data-id="${child.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>			
+																<td id="awaitingResult" class="statRequestedRecords" data-id="${child.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 																<td id="awaitingResult" class="statRequestedRecordsPercent" data-id="${child.id}"><img class="ajaxloaderimage" src="${contextpath}/resources/images/ajax-loader.gif" /></td>
 															</c:otherwise>
 														</c:choose>										

@@ -14,21 +14,19 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import javax.persistence.*;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.Index;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
 
 import com.ec.survey.model.*;
 
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 
-import com.ec.survey.model.administration.Role;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.base.File;
 import com.ec.survey.service.SurveyService;
@@ -41,7 +39,6 @@ import org.hibernate.annotations.Cache;
 import org.owasp.esapi.errors.ValidationException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.util.HtmlUtils;
 
 /**
@@ -52,10 +49,9 @@ import org.springframework.web.util.HtmlUtils;
 @Table(name = "SURVEYS", indexes = { @Index(name = "SH_IDX", columnList = "SURVEYNAME"),
 		@Index(name = "DRA_IDX", columnList = "ISDRAFT") })
 @Cacheable("com.ec.survey.model.survey.Survey")
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Survey implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
 	public static final String TITLE = "TITLE";
 	public static final String ESCAPEPAGE = "ESCAPEPAGE";
 	public static final String ESCAPELINK = "ESCAPELINK";
@@ -510,15 +506,12 @@ public class Survey implements java.io.Serializable {
 		this.introduction = introduction;
 	}
 
-	@Column(name = "USEFULLINKS")
-	@ElementCollection()
-	public Map<String, String> getUsefulLinks() {
-		return usefulLinks;
-	}
-
-	public void setUsefulLinks(Map<String, String> usefulLinks) {
-		this.usefulLinks = usefulLinks;
-	}
+	@ElementCollection
+	@CollectionTable(name = "SURVEY_USEFULLINKS", joinColumns = @JoinColumn(name = "survey_survey_id"))
+	@MapKeyColumn(name = "usefulLinks_KEY") // The column name for the Map key (String)
+	@Column(name = "USEFULLINKS")      // The column name for the Map value (String)
+	public Map<String, String> getUsefulLinks() {return usefulLinks;}
+	public void setUsefulLinks(Map<String, String> usefulLinks) {this.usefulLinks = usefulLinks;}
 
 	@Transient
 	public LinkedHashMap<String, String> getAdvancedUsefulLinks() {
@@ -569,8 +562,13 @@ public class Survey implements java.io.Serializable {
 		return result;
 	}
 
-	@Column(name = "BACKGROUNDDOCUMENTS")
-	@ElementCollection()
+	@ElementCollection
+	@CollectionTable(
+			name = "SURVEY_BACKGROUNDDOCUMENTS",
+			joinColumns = @JoinColumn(name = "survey_survey_id")
+	)
+	@MapKeyColumn(name = "backgroundDocuments_KEY") // Name of the column for the Map keys
+	@Column(name = "BACKGROUNDDOCUMENTS")     // Name of the column for the Map values
 	public Map<String, String> getBackgroundDocuments() {
 		return backgroundDocuments;
 	}
@@ -585,7 +583,7 @@ public class Survey implements java.io.Serializable {
 	}
 
 	@OneToMany(targetEntity = Element.class, cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name= "SURVEYS_ELEMENTS",
 			joinColumns = @JoinColumn(name = "SURVEYS_SURVEY_ID"),
 			inverseJoinColumns = @JoinColumn(name = "elements_ID"))
 	@Fetch(value = FetchMode.SELECT)
@@ -607,9 +605,8 @@ public class Survey implements java.io.Serializable {
 		List<Element> currentSectionElements = new ArrayList<>();
 		for (Element element : getElements()) {
 			boolean skip = false;
-			if (element instanceof Section) {
-				Section section = (Section)element;
-				if (section.getLevel().equals(1) && section.getOrder().equals(1)) {
+			if (element instanceof Section section) {
+                if (section.getLevel().equals(1) && section.getOrder().equals(1)) {
 					copyOrderedElements(currentSectionElements, elements);
 										
 					currentSection = section;
@@ -657,10 +654,8 @@ public class Survey implements java.io.Serializable {
 			
 			if (!elementsToRandomize.isEmpty()) {
 				Collections.shuffle(elementsToRandomize);
-				
-				for (Element element : elementsToRandomize) {
-					result.add(element);
-				}
+
+                result.addAll(elementsToRandomize);
 			}
 		}
 	}
@@ -764,9 +759,8 @@ public class Survey implements java.io.Serializable {
 				elementsRecursive.addAll(((RankingQuestion) element).getChildElements());
 				elementsRecursiveWithAnswers.addAll(((RankingQuestion) element).getChildElements());
 			}
-			if (element instanceof ComplexTable) {
-				ComplexTable table = (ComplexTable) element;
-				elementsRecursive.addAll(table.getChildElements());
+			if (element instanceof ComplexTable table) {
+                elementsRecursive.addAll(table.getChildElements());
 				elementsRecursiveWithAnswers.addAll(table.getChildElements());
 				for (ComplexTableItem item : table.getChildElements()) {
 					elementsRecursiveWithAnswers.addAll(item.getPossibleAnswers());
@@ -796,12 +790,10 @@ public class Survey implements java.io.Serializable {
 				}
 
 				List<Element> children = new ArrayList<>();
-				for (Element child : ((ChoiceQuestion) element).getPossibleAnswers()) {
-					children.add(child);
-				}
+                children.addAll(((ChoiceQuestion) element).getPossibleAnswers());
 				result.put(element, children);
 			} else if (element instanceof FreeTextQuestion || element instanceof RegExQuestion || element instanceof NumberQuestion || element instanceof DateQuestion || element instanceof TimeQuestion || element instanceof EmailQuestion) {
-				result.put(element, new ArrayList<Element>());
+				result.put(element, new ArrayList<>());
 			}	
 		}
 		
@@ -1193,22 +1185,19 @@ public class Survey implements java.io.Serializable {
 			if (element instanceof Question) {
 				result.put(element.getUniqueId(), (Question)element);
 			}
-			if (element instanceof MatrixOrTable) {
-				MatrixOrTable matrix = (MatrixOrTable) element;
-				for (Element child : matrix.getChildElements()) {
+			if (element instanceof MatrixOrTable matrix) {
+                for (Element child : matrix.getChildElements()) {
 					if (!(child instanceof EmptyElement))
 						result.put(child.getUniqueId(), (Question)child);
 				}
 			}
-			if (element instanceof RatingQuestion) {
-				RatingQuestion rating = (RatingQuestion) element;
-				for (Element child : rating.getChildElements()) {
+			if (element instanceof RatingQuestion rating) {
+                for (Element child : rating.getChildElements()) {
 					result.put(child.getUniqueId(), (Question)child);
 				}
 			}
-			if (element instanceof ComplexTable) {
-				ComplexTable table = (ComplexTable) element;
-				for (ComplexTableItem child : table.getQuestionChildElements()) {
+			if (element instanceof ComplexTable table) {
+                for (ComplexTableItem child : table.getQuestionChildElements()) {
 					result.put(child.getUniqueId(), child);
 				}
 			}
@@ -1220,18 +1209,16 @@ public class Survey implements java.io.Serializable {
 	public Map<Integer, Element> getMatrixMap() {
 		Map<Integer, Element> result = new HashMap<>();
 		for (Element element : elements) {
-			if (element instanceof Matrix) {
-				Matrix matrix = (Matrix) element;
-				for (Element child : matrix.getAllChildElements()) {
+			if (element instanceof Matrix matrix) {
+                for (Element child : matrix.getAllChildElements()) {
 					if (!(child instanceof EmptyElement))
 						result.put(child.getId(), child);
 				}
 			}
 		}
 		for (Element element : missingElements) {
-			if (element instanceof Matrix) {
-				Matrix matrix = (Matrix) element;
-				for (Element child : matrix.getAllChildElements()) {
+			if (element instanceof Matrix matrix) {
+                for (Element child : matrix.getAllChildElements()) {
 					if (!(child instanceof EmptyElement))
 						result.put(child.getId(), child);
 				}
@@ -1244,18 +1231,16 @@ public class Survey implements java.io.Serializable {
 	public Map<String, Element> getMatrixMapByUid() {
 		Map<String, Element> result = new HashMap<>();
 		for (Element element : elements) {
-			if (element instanceof Matrix) {
-				Matrix matrix = (Matrix) element;
-				for (Element child : matrix.getAllChildElements()) {
+			if (element instanceof Matrix matrix) {
+                for (Element child : matrix.getAllChildElements()) {
 					if (!(child instanceof EmptyElement))
 						result.put(child.getUniqueId(), child);
 				}
 			}
 		}
 		for (Element element : missingElements) {
-			if (element instanceof Matrix) {
-				Matrix matrix = (Matrix) element;
-				for (Element child : matrix.getAllChildElements()) {
+			if (element instanceof Matrix matrix) {
+                for (Element child : matrix.getAllChildElements()) {
 					if (!(child instanceof EmptyElement))
 						result.put(child.getUniqueId(), child);
 				}
@@ -1268,18 +1253,16 @@ public class Survey implements java.io.Serializable {
 	public Map<String, Element> getMatrixMapByAlias() {
 		Map<String, Element> result = new HashMap<>();
 		for (Element element : elements) {
-			if (element instanceof Matrix) {
-				Matrix matrix = (Matrix) element;
-				for (Element child : matrix.getAllChildElements()) {
+			if (element instanceof Matrix matrix) {
+                for (Element child : matrix.getAllChildElements()) {
 					if (!(child instanceof EmptyElement) && !result.containsKey(child.getShortname()))
 						result.put(child.getShortname(), child);
 				}
 			}
 		}
 		for (Element element : missingElements) {
-			if (element instanceof Matrix) {
-				Matrix matrix = (Matrix) element;
-				for (Element child : matrix.getAllChildElements()) {
+			if (element instanceof Matrix matrix) {
+                for (Element child : matrix.getAllChildElements()) {
 					if (!(child instanceof EmptyElement) && !result.containsKey(child.getShortname()))
 						result.put(child.getShortname(), child);
 				}
@@ -1305,7 +1288,7 @@ public class Survey implements java.io.Serializable {
 		}
 
 		// sort collection by position
-		if (missingElements.size() > 0) {
+		if (!missingElements.isEmpty()) {
 			result.sort(newElementByPositionComparator());
 		}
 
@@ -1393,7 +1376,7 @@ public class Survey implements java.io.Serializable {
 
 		for (Element element : missingElements) {
 			if (element instanceof Question || element instanceof Section) {
-				result.add((Question) element);
+				result.add(element);
 			}
 		}
 
@@ -1591,9 +1574,7 @@ public class Survey implements java.io.Serializable {
 				if (!question.getPossibleAnswers().isEmpty()
 						&& question.getPossibleAnswers().get(0).getEcfProfile() != null) {
 					List<PossibleAnswer> possibleAnswers = question.getPossibleAnswers();
-					return possibleAnswers.stream().map(possibleAnswer -> {
-						return possibleAnswer.getEcfProfile();
-					}).collect(Collectors.toSet());
+					return possibleAnswers.stream().map(PossibleAnswer::getEcfProfile).collect(Collectors.toSet());
 				}
 			}
 		}
@@ -1765,7 +1746,7 @@ public class Survey implements java.io.Serializable {
 	}
 
 	@ManyToMany(targetEntity = Tag.class)
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name= "SURVEYS_TAGS",
 			joinColumns = @JoinColumn(name = "SURVEY_SURVEY_ID"),
 			inverseJoinColumns = @JoinColumn(name = "tags_TAG_ID"))
 
@@ -1909,8 +1890,7 @@ public class Survey implements java.io.Serializable {
 		copy.downloadContribution = downloadContribution;
 
 		if (logo != null) {
-			File copyLogo = logo.copy(fileDir);
-			copy.logo = copyLogo;
+            copy.logo = logo.copy(fileDir);
 		}
 		copy.logoInInfo = logoInInfo;
 		copy.logoText = logoText;
@@ -1986,27 +1966,21 @@ public class Survey implements java.io.Serializable {
 		copy.setWebhook(webhook);
 
 		if (copyNumberOfAnswerSets) {
-			int numberOfAnswerSets1 = pnumberOfAnswerSets > -1 ? pnumberOfAnswerSets : numberOfAnswerSetsPublished;
-			copy.numberOfAnswerSets = numberOfAnswerSets1;
-			int numberOfAnswerSetsPublished1 = pnumberOfAnswerSetsPublished > -1 ? pnumberOfAnswerSetsPublished
-					: numberOfAnswerSetsPublished;
-			copy.numberOfAnswerSetsPublished = numberOfAnswerSetsPublished1;
+            copy.numberOfAnswerSets = pnumberOfAnswerSets > -1 ? pnumberOfAnswerSets : numberOfAnswerSetsPublished;
+            copy.numberOfAnswerSetsPublished = pnumberOfAnswerSetsPublished > -1 ? pnumberOfAnswerSetsPublished
+                    : numberOfAnswerSetsPublished;
 		}
 
 		try {
 			if (backgroundDocuments != null)
-				for (Entry<String, String> entry : backgroundDocuments.entrySet()) {
-					copy.backgroundDocuments.put(entry.getKey(), entry.getValue());
-				}
+                copy.backgroundDocuments.putAll(backgroundDocuments);
 		} catch (Exception e) {
 			// ignore
 		}
 
 		try {
 			if (usefulLinks != null)
-				for (Entry<String, String> entry : usefulLinks.entrySet()) {
-					copy.usefulLinks.put(entry.getKey(), entry.getValue());
-				}
+                copy.usefulLinks.putAll(usefulLinks);
 		} catch (Exception e) {
 			// ignore
 		}
@@ -2091,14 +2065,12 @@ public class Survey implements java.io.Serializable {
 				for (PossibleAnswer answer : ((ChoiceQuestion) newElement).getPossibleAnswers()) {
 					elementsBySourceId.put(answer.getSourceId(), answer);
 				}
-			} else if (newElement instanceof MatrixOrTable) {
-				MatrixOrTable t = (MatrixOrTable) newElement;
-				for (Element child : t.getChildElements()) {
+			} else if (newElement instanceof MatrixOrTable t) {
+                for (Element child : t.getChildElements()) {
 					elementsBySourceId.put(child.getSourceId(), child);
 				}
-			} else if (newElement instanceof ComplexTable) {
-				ComplexTable table = (ComplexTable) newElement;
-				for (ComplexTableItem item : table.getChildElements()){
+			} else if (newElement instanceof ComplexTable table) {
+                for (ComplexTableItem item : table.getChildElements()){
 					if (item.isChoice()){
 						for (PossibleAnswer answer : item.getPossibleAnswers()) {
 							elementsBySourceId.put(answer.getSourceId(), answer);
@@ -2110,9 +2082,8 @@ public class Survey implements java.io.Serializable {
 
 		// recreate dependencies
 		for (Element element : elements) {
-			if (element instanceof ChoiceQuestion) {
-				ChoiceQuestion question = (ChoiceQuestion) element;
-				for (PossibleAnswer answer : question.getPossibleAnswers()) {
+			if (element instanceof ChoiceQuestion question) {
+                for (PossibleAnswer answer : question.getPossibleAnswers()) {
 					if (answer.getDependentElements() != null) {
 						// find new possible answer
 						PossibleAnswer newPossibleAnswer = (PossibleAnswer) elementsBySourceId.get(answer.getId());
@@ -2125,10 +2096,9 @@ public class Survey implements java.io.Serializable {
 						}
 					}
 				}
-			} else if (element instanceof Matrix) {
-				Matrix matrix = (Matrix) element;
+			} else if (element instanceof Matrix matrix) {
 
-				// find new matrix
+                // find new matrix
 				Matrix newMatrix = (Matrix) elementsBySourceId.get(matrix.getId());
 
 				newMatrix.setDependentElements(new ArrayList<>());
@@ -2185,7 +2155,7 @@ public class Survey implements java.io.Serializable {
 	@Transient
 	public boolean containsCompleteTranslations(String code) {
 		return completeTranslations != null &&
-				completeTranslations.stream().map(t -> t.getCode()).anyMatch(c -> c.equals(code));
+				completeTranslations.stream().map(Language::getCode).anyMatch(c -> c.equals(code));
 	}
 
 	@Transient
@@ -2209,9 +2179,8 @@ public class Survey implements java.io.Serializable {
 				}
 			}
 
-			if (element instanceof Matrix) {
-				Matrix m = (Matrix) element;
-				if (!m.getDependentElements().isEmpty()) {
+			if (element instanceof Matrix m) {
+                if (!m.getDependentElements().isEmpty()) {
 					List<Element> list;
 					for (DependencyItem d : m.getDependentElements()) {
 						for (Element t : d.getDependentElements()) {
@@ -2495,16 +2464,14 @@ public class Survey implements java.io.Serializable {
 				return false;
 			}
 			
-			if (question instanceof NumberQuestion) {
-				NumberQuestion number = (NumberQuestion) question;
-				if (number.showStatisticsForNumberQuestion()) {
+			if (question instanceof NumberQuestion number) {
+                if (number.showStatisticsForNumberQuestion()) {
 					return false;
 				}
 			}
 			
-			if (question instanceof ComplexTable) {
-				ComplexTable table = (ComplexTable) question;
-				for (ComplexTableItem child: table.getQuestionChildElements()) {
+			if (question instanceof ComplexTable table) {
+                for (ComplexTableItem child: table.getQuestionChildElements()) {
 					if (child.getCellType() != ComplexTableItem.CellType.Empty && child.getCellType() != ComplexTableItem.CellType.StaticText) {
 						return false;
 					}
@@ -2529,9 +2496,8 @@ public class Survey implements java.io.Serializable {
 						}
 					}
 				}
-			} else if (element instanceof Matrix) {
-				Matrix matrix = (Matrix) element;
-				for (DependencyItem dep : matrix.getDependentElements()) {
+			} else if (element instanceof Matrix matrix) {
+                for (DependencyItem dep : matrix.getDependentElements()) {
 
 					for (Element dependent : dep.getDependentElements()) {
 						try {
@@ -2579,7 +2545,7 @@ public class Survey implements java.io.Serializable {
 			referencedFiles.put(logo.getUid(), logo.getId());
 		}
 
-		if (backgroundDocuments != null && backgroundDocuments.size() > 0) {
+		if (backgroundDocuments != null && !backgroundDocuments.isEmpty()) {
 			for (String url : backgroundDocuments.values()) {
 				String uid = url.replace(contextpath + "/files/", "");
 				referencedFiles.put(uid, null);
@@ -2587,22 +2553,19 @@ public class Survey implements java.io.Serializable {
 		}
 
 		for (Element element : elements) {
-			if (element instanceof Download) {
-				Download download = (Download) element;
+			if (element instanceof Download download) {
 
-				for (File f : download.getFiles()) {
+                for (File f : download.getFiles()) {
 					referencedFiles.put(f.getUid(), f.getId());
 				}
-			} else if (element instanceof Confirmation) {
-				Confirmation confirmation = (Confirmation) element;
+			} else if (element instanceof Confirmation confirmation) {
 
-				for (File f : confirmation.getFiles()) {
+                for (File f : confirmation.getFiles()) {
 					referencedFiles.put(f.getUid(), f.getId());
 				}
-			} else if (element instanceof Image) {
-				Image image = (Image) element;
+			} else if (element instanceof Image image) {
 
-				if (image.getUrl() != null) {
+                if (image.getUrl() != null) {
 					String fileUID = image.getUrl().replace(contextpath + "/files/", "");
 
 					if (fileUID.length() > 0) {
@@ -2613,10 +2576,9 @@ public class Survey implements java.io.Serializable {
 						referencedFiles.put(fileUID, null);
 					}
 				}
-			} else if (element instanceof GalleryQuestion) {
-				GalleryQuestion gallery = (GalleryQuestion) element;
+			} else if (element instanceof GalleryQuestion gallery) {
 
-				for (File f : gallery.getFiles()) {
+                for (File f : gallery.getFiles()) {
 					referencedFiles.put(f.getUid(), f.getId());
 				}
 			}
@@ -2762,7 +2724,7 @@ public class Survey implements java.io.Serializable {
 	}
 
 	public void reorderElementsByPosition() {
-		elements.sort(Comparator.comparing(o -> (o.getPosition())));		
+		elements.sort(Comparator.comparing(Element::getPosition));
 	}
 
 	@Column(name = "SHOWCOUNTDOWN")
@@ -3009,9 +2971,8 @@ public class Survey implements java.io.Serializable {
 
 	public boolean displayAllSAQuestions() {
 		for (Question q : this.getQuestions()) {
-			if (q instanceof SingleChoiceQuestion) {
-				SingleChoiceQuestion scq = (SingleChoiceQuestion)q;
-				if (scq.getIsTargetDatasetQuestion()) {
+			if (q instanceof SingleChoiceQuestion scq) {
+                if (scq.getIsTargetDatasetQuestion()) {
 					return scq.getDisplayAllQuestions();
 				}
 			}

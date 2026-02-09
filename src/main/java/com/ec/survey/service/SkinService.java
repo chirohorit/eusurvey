@@ -102,19 +102,19 @@ public class SkinService extends BasicService {
 	@Transactional
 	public void add(Skin skin) {
 		Session session = sessionFactory.getCurrentSession();		
-		session.save(skin);
+		session.persist(skin);
 	}
 	
 	@Transactional
 	public void save(Skin skin) {
 		Session session = sessionFactory.getCurrentSession();		
-		session.saveOrUpdate(skin);
+		session.merge(skin);
 	}
 
 	@Transactional
 	public void delete(Skin skin) {
 		Session session = sessionFactory.getCurrentSession();		
-		session.delete(skin);
+		session.remove(skin);
 	}
 
 	@Transactional(readOnly = true)

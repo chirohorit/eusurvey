@@ -2,11 +2,7 @@ package com.ec.survey.model.machinetranslation;
 
 
 public class RequestTranslationMessage {
-	
 
-	
-	
-	
 	private String departmentNumber;
 	private String documentToTranslate; 
 	private String domains; 

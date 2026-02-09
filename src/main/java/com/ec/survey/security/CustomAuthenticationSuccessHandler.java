@@ -4,10 +4,10 @@ package com.ec.survey.security;
 import java.io.IOException;
 import java.util.Locale;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,16 +15,19 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.LocaleResolver;
 
 import com.ec.survey.model.Setting;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.service.AdministrationService;
 import com.ec.survey.service.LdapService;
 import com.ec.survey.service.SettingsService;
-import com.ec.survey.tools.EcasHelper;
+import com.ec.survey.handler.EcasHelper;
 
+//@Component("customAuthenticationSuccessHandler")
 public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandlerExtended {
 	
 	@Resource(name="ldapService")
@@ -34,67 +37,68 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
 	private AdministrationService administrationService;	
 	
 	@Resource(name="settingsService")
-	protected SettingsService settingsService;	
-	
-	@Autowired private LocaleResolver localeResolver;
+	protected SettingsService settingsService;
+
+	@Autowired
+	private LocaleResolver localeResolver;
 	
 	private @Value("${server.prefix}") String host;
+
+	private SecurityContextRepository securityContextRepository;
+	public void setSecurityContextRepository(SecurityContextRepository securityContextRepository) {
+		this.securityContextRepository = securityContextRepository;
+	}
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {		
 		SecurityContext securityContext = SecurityContextHolder.getContext();
-		
 		User user = null;
+
+		try {
+			user = (User) authentication.getDetails();
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage(), e);
+		}
+
 		try {
 			boolean ecas = false;
 			boolean weakAuthentication = false;
 			boolean organisationSet = false;
-			for (GrantedAuthority auth: securityContext.getAuthentication().getAuthorities())
-			{
-				if (auth.getAuthority().equalsIgnoreCase("ROLE_ECAS_USER"))
-				{
+			for (GrantedAuthority auth: securityContext.getAuthentication().getAuthorities()) {
+				if (auth.getAuthority().equalsIgnoreCase("ROLE_ECAS_USER")) {
 					ecas = true;
 				}
 				
-				if (auth.getAuthority().equalsIgnoreCase("ROLE_WEAK_AUTHENTICATION"))
-				{
+				if (auth.getAuthority().equalsIgnoreCase("ROLE_WEAK_AUTHENTICATION")) {
 					weakAuthentication = true;
 				}		
 				
-				if (auth.getAuthority().equalsIgnoreCase("ROLE_ORGANISATION_SET"))
-				{
+				if (auth.getAuthority().equalsIgnoreCase("ROLE_ORGANISATION_SET")) {
 					organisationSet = true;
 				}
 				
-				if (auth.getAuthority().startsWith("ROLE_ECAS_SURVEY_"))
-				{
+				if (auth.getAuthority().startsWith("ROLE_ECAS_SURVEY_")) {
 					request.getSession().setAttribute("ECASSURVEY", auth.getAuthority().substring(17));
 				}
 
-				if (auth.getAuthority().startsWith("ROLE_ECAS_PARAMS_"))
-				{
+				if (auth.getAuthority().startsWith("ROLE_ECAS_PARAMS_")) {
 					request.getSession().setAttribute("ECASSURVEYPARAMS", auth.getAuthority().substring(17));
 				}
 				
-				if (auth.getAuthority().startsWith("ROLE_ECUSER_"))
-				{
+				if (auth.getAuthority().startsWith("ROLE_ECUSER_")) {
 					request.getSession().setAttribute("ECMONIKER", auth.getAuthority().substring(12));
 				}
 			}
 			
-			if (ecas)
-			{
-				try {					
+			/*if (ecas) {
+				try {
 					user = administrationService.getUserForLogin(securityContext.getAuthentication().getName(), true);
-				} catch (Exception e)
-		    	{
+				} catch (Exception e) {
 					logger.error(e.getLocalizedMessage(), e);
 		    	}
 				
-				if (user == null)
-				{
-					if (securityContext.getAuthentication().getDetails() instanceof User)
-					{
+				if (user == null) {
+					if (securityContext.getAuthentication().getDetails() instanceof User) {
 						user = (User)securityContext.getAuthentication().getDetails();
 					} else {
 						user = new User();
@@ -106,8 +110,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
 				}
 				
 				String disabled = settingsService.get(Setting.CreateSurveysForExternalsDisabled);
-				if (disabled.equalsIgnoreCase("true") && user.getGlobalPrivileges().get(GlobalPrivilege.ECAccess) == 0)
-	    		{
+				if (disabled.equalsIgnoreCase("true") && user.getGlobalPrivileges().get(GlobalPrivilege.ECAccess) == 0) {
 	    			user.setCanCreateSurveys(false);
 	    		}
 									
@@ -115,17 +118,20 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
 				EcasHelper.readData(user, ldapService);				
 			} else {
 				user = administrationService.getUserForLogin(securityContext.getAuthentication().getName(), ecas);
-			}
+			}*/
 			
 			request.getSession().setAttribute("USER", user);
 			request.getSession().setAttribute("WEAKAUTHENTICATION", weakAuthentication);
 			request.getSession().setAttribute("ORGANISATIONSET", organisationSet);
-		    localeResolver.setLocale(request, response, new Locale(user.getLanguage()));		        
+		    localeResolver.setLocale(request, response, new Locale(user.getLanguage()));
+
+			//SecurityContext context = SecurityContextHolder.getContext();
+			securityContextRepository.saveContext(securityContext, request, response);
 			
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage(), e);
 		}
-				
+
 		super.onAuthenticationSuccess(request, response, authentication);
 	}
 

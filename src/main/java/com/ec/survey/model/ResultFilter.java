@@ -1,7 +1,7 @@
 package com.ec.survey.model;
 
+import com.ec.survey.enumerator.DelphiChartType;
 import com.ec.survey.model.survey.ChoiceQuestion;
-import com.ec.survey.model.survey.DelphiChartType;
 import com.ec.survey.model.survey.Element;
 import com.ec.survey.model.survey.GalleryQuestion;
 import com.ec.survey.model.survey.Matrix;
@@ -19,7 +19,7 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -29,12 +29,12 @@ import java.util.Map.Entry;
 @Entity
 @Table(name = "RESULTFILTER")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ResultFilter implements java.io.Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 	
 	public enum ResultFilterOrderBy {
 		NAME_ASC("nameAsc"),

@@ -37,7 +37,7 @@ public class ValidCodesService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		session.evict(survey);
 		ValidCode validCode = new ValidCode(uniqueCode, survey.getUniqueId());
-		session.save(validCode);
+		session.persist(validCode);
 	}
 
 	@Transactional

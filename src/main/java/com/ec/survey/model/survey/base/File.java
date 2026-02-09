@@ -4,7 +4,7 @@ import com.ec.survey.tools.ConversionTools;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -15,10 +15,9 @@ import java.util.Date;
 @Entity
 @Table(name = "FILES")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class File implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private String name;
 	private String uid;

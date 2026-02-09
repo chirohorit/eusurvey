@@ -7,10 +7,11 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.ec.survey.exception.*;
+import jakarta.annotation.Resource;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.ec.survey.model.survey.*;
 import com.ec.survey.tools.activity.ActivityRegistry;
@@ -28,29 +29,18 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
-import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.ec.survey.exception.ForbiddenURLException;
-import com.ec.survey.exception.FrozenSurveyException;
-import com.ec.survey.exception.InvalidURLException;
-import com.ec.survey.exception.MessageException;
-import com.ec.survey.exception.NoFormLoadedException;
-import com.ec.survey.exception.TooManyFiltersException;
-import com.ec.survey.exception.AccessDeniedException;
 import com.ec.survey.exception.httpexception.ForbiddenException;
 import com.ec.survey.exception.httpexception.InternalServerErrorException;
 import com.ec.survey.exception.httpexception.NotFoundException;
 import com.ec.survey.exception.httpexception.UnauthorizedException;
 import com.ec.survey.model.AnswerSet;
-import com.ec.survey.model.Archive;
 import com.ec.survey.model.Draft;
 import com.ec.survey.model.Setting;
-import com.ec.survey.model.administration.User;
-import com.ec.survey.model.chargeback.SubmittedContribution;
 import com.ec.survey.service.ActivityService;
 import com.ec.survey.service.AdministrationService;
 import com.ec.survey.service.AnswerExplanationService;
@@ -72,13 +62,7 @@ import com.ec.survey.service.SkinService;
 import com.ec.survey.service.SurveyService;
 import com.ec.survey.service.SystemService;
 import com.ec.survey.service.TranslationService;
-import com.ec.survey.tools.ArchiveExecutor;
 import com.ec.survey.tools.Constants;
-import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.InvalidXHTMLException;
-import com.ec.survey.tools.NotAgreedToTosException;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.WeakAuthenticationException;
 
 @Controller
 public class BasicController implements BeanFactoryAware {
@@ -154,8 +138,8 @@ public class BasicController implements BeanFactoryAware {
 	@Resource(name = "eVoteService")
 	protected EVoteService eVoteService;
 	
-	@Resource(name = "selfassessmentService")
-	protected SelfAssessmentService selfassessmentService;
+	@Resource(name = "selfAssessmentService")
+	protected SelfAssessmentService selfAssessmentService;
 	
 	public @Value("${captcha.secret}") String captchasecret;
 	public @Value("${captcha.serverprefix}") String captchaserverprefix;
@@ -235,7 +219,7 @@ public class BasicController implements BeanFactoryAware {
 		return bypassCaptcha != null && bypassCaptcha.equalsIgnoreCase("true");
 	}
 	
-	@ExceptionHandler(com.ec.survey.tools.SurveyCreationLimitExceededException.class)
+	@ExceptionHandler(SurveyCreationLimitExceededException.class)
 	public ModelAndView handleSurveyCreationLimitExceededException(Exception e, HttpServletRequest request) {
 		logger.info(e.getLocalizedMessage(), e);
 		ModelAndView model = new ModelAndView("redirect:/errors/surveylimit.html");
@@ -243,7 +227,7 @@ public class BasicController implements BeanFactoryAware {
 		return model;
 	}
 
-	@ExceptionHandler(com.ec.survey.tools.Bad2faCredentialsException.class)
+	@ExceptionHandler(Bad2faCredentialsException.class)
 	public ModelAndView handleBad2faCredentialsException(Exception e, HttpServletRequest request) {
 		logger.info(e.getLocalizedMessage(), e);
 		ModelAndView model = new ModelAndView("redirect:/errors/2fa.html");
@@ -251,7 +235,7 @@ public class BasicController implements BeanFactoryAware {
 		return model;
 	}
 
-	@ExceptionHandler(com.ec.survey.tools.FrozenCredentialsException.class)
+	@ExceptionHandler(FrozenCredentialsException.class)
 	public ModelAndView handleFrozenCredentialsException(Exception e, HttpServletRequest request) {
 		logger.info(e.getLocalizedMessage(), e);
 		ModelAndView model = new ModelAndView("redirect:/errors/frozen.html");
@@ -420,9 +404,9 @@ public class BasicController implements BeanFactoryAware {
 			model.addObject(Constants.MESSAGE, message);
 			model.addObject("contextpath", contextpath);
 			return model;
-		};		
-		
-		return handleException((Exception)e, locale, request, response);
+		}
+
+        return handleException(e, locale, request, response);
 	}
 
 	@ExceptionHandler(Exception.class)
@@ -430,12 +414,11 @@ public class BasicController implements BeanFactoryAware {
 			HttpServletResponse response) throws IOException {
 		logger.error(e.getLocalizedMessage(), e);
 		if (e instanceof IllegalArgumentException) {
-			logger.error("caused by URL: " + request.getRequestURL().toString() + "?" + request.getQueryString());
+            logger.error("caused by URL: {}?{}", request.getRequestURL().toString(), request.getQueryString());
 		}
 
 		if (!response.getOutputStream().isReady()) {
-			logger.error("Exception thrown after outputstream was closed, caused by URL: "
-					+ request.getRequestURL().toString() + "?" + request.getQueryString());
+            logger.error("Exception thrown after outputstream was closed, caused by URL: {}?{}", request.getRequestURL().toString(), request.getQueryString());
 			// return null;
 		}
 
@@ -504,7 +487,7 @@ public class BasicController implements BeanFactoryAware {
 				saved = true;
 			} catch (org.hibernate.exception.LockAcquisitionException
 					| org.springframework.dao.CannotAcquireLockException ex) {
-				logger.info("lock on answerSet table catched; retry counter: " + counter);
+                logger.info("lock on answerSet table catched; retry counter: {}", counter);
 				counter++;
 
 				if (counter > 60) {
@@ -528,7 +511,7 @@ public class BasicController implements BeanFactoryAware {
 				return survey;
 			} catch (org.hibernate.exception.LockAcquisitionException
 					| org.springframework.dao.CannotAcquireLockException ex) {
-				logger.info("lock on survey table catched; retry counter: " + counter);
+                logger.info("lock on survey table catched; retry counter: {}", counter);
 				counter++;
 
 				if (counter > 60) {
@@ -556,24 +539,19 @@ public class BasicController implements BeanFactoryAware {
 						break;
 					}
 				}
-			} else if (q instanceof MultipleChoiceQuestion) {
-				MultipleChoiceQuestion mq = ((MultipleChoiceQuestion) q);
-				if (passedSC && !(mq.getTriggers()).equals(linkedSCAnswer.getId() + ";")) {
+			} else if (q instanceof MultipleChoiceQuestion mq) {
+                if (passedSC && !(mq.getTriggers()).equals(linkedSCAnswer.getId() + ";")) {
 					passedMC = false;
 				}
 			}
 		}
 
-		if (passedSC && passedMC) {
-			return false;
-		} else {
-			return true;
-		}
+        return !passedSC || !passedMC;
 	}
 
 	public ModelAndView basicwelcome(HttpServletRequest request) {
 
-		Boolean weakAuthentication = request.getSession().getAttribute("WEAKAUTHENTICATION") == null ? false : (Boolean) request.getSession().getAttribute("WEAKAUTHENTICATION");
+		boolean weakAuthentication = request.getSession().getAttribute("WEAKAUTHENTICATION") != null && (Boolean) request.getSession().getAttribute("WEAKAUTHENTICATION");
 		if (weakAuthentication) {
 			//probably coming from the form runner: log the user out
 			request.getSession().invalidate();
@@ -613,15 +591,13 @@ public class BasicController implements BeanFactoryAware {
 	protected ModelAndView testDraftAlreadySubmitted(Draft draft, Locale locale) {
 		if (draft != null) {
 			String uniqueAnswerSet = draft.getAnswerSet().getUniqueCode();
-			ModelAndView err = testDraftAlreadySubmittedByUniqueCode(uniqueAnswerSet, locale);
-			if (err != null)
-				return err;
+            return testDraftAlreadySubmittedByUniqueCode(uniqueAnswerSet, locale);
 		}
 		return null;
 	}
 
 	protected boolean checkCaptcha(HttpServletRequest request) {
-		URLConnection connection = null;
+		URLConnection connection;
 		try {
 			if (!isByPassCaptcha()) {
 				String captcha = settingsService.get("captcha");
@@ -682,7 +658,7 @@ public class BasicController implements BeanFactoryAware {
 					}	
 										
 					String postData = "captchaAnswer="  + str + "&useAudio=" + ("true".equalsIgnoreCase(useaudio));
-					byte[] postDataBytes = postData.getBytes("UTF-8");
+					byte[] postDataBytes = postData.getBytes(StandardCharsets.UTF_8);
 					
 					conn.setRequestProperty("Content-Length", String.valueOf(postDataBytes.length));
 				    conn.setDoOutput(true);

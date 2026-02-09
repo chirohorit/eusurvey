@@ -10,7 +10,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.owasp.esapi.errors.ValidationException;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -18,14 +18,14 @@ import java.util.Date;
  */
 @Entity
 @DiscriminatorValue("DATEQUESTION")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class DateQuestion extends Question {
 	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	
 
 	public DateQuestion() {}
 	

@@ -3,16 +3,14 @@ package com.ec.survey.security;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.regex.Pattern;
 
-
-
 public class CsrfSecurityRequestMatcher implements RequestMatcher {
-	private Pattern allowedMethods = Pattern.compile("^(GET|HEAD|TRACE|OPTIONS|PATCH|PUT|DELETE)$");
-    private RegexRequestMatcher notifySuccessMatcher = new RegexRequestMatcher("/home/notifySuccess.*",  "POST");
-    private RegexRequestMatcher notifyErrorMatcher = new RegexRequestMatcher("/home/notifyError.*",  "POST");
-    private RegexRequestMatcher notifyTranslationMatcher = new RegexRequestMatcher("/home/returnTranslation.*",  "POST");
+	private final Pattern allowedMethods = Pattern.compile("^(GET|HEAD|TRACE|OPTIONS|PATCH|PUT|DELETE)$");
+    private final RegexRequestMatcher notifySuccessMatcher = new RegexRequestMatcher("/home/notifySuccess.*",  "POST");
+    private final RegexRequestMatcher notifyErrorMatcher = new RegexRequestMatcher("/home/notifyError.*",  "POST");
+    private final RegexRequestMatcher notifyTranslationMatcher = new RegexRequestMatcher("/home/returnTranslation.*",  "POST");
 
 
 

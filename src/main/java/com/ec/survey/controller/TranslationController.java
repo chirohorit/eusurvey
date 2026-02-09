@@ -1,9 +1,9 @@
 package com.ec.survey.controller;
 
-import com.ec.survey.exception.ForbiddenURLException;
-import com.ec.survey.exception.InvalidURLException;
-import com.ec.survey.exception.MessageException;
-import com.ec.survey.exception.NoFormLoadedException;
+import com.ec.survey.exception.*;
+import com.ec.survey.handler.SurveyHelper;
+import com.ec.survey.handler.TranslationsHelper;
+import com.ec.survey.handler.XHTMLValidator;
 import com.ec.survey.model.*;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.Survey;
@@ -11,8 +11,7 @@ import com.ec.survey.service.*;
 import com.ec.survey.tools.*;
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.apache.commons.lang3.StringUtils;
-//import org.codehaus.jackson.map.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
@@ -20,9 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;

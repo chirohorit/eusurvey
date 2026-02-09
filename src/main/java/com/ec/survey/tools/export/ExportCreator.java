@@ -2,7 +2,7 @@ package com.ec.survey.tools.export;
 
 import com.ec.survey.model.Export;
 import com.ec.survey.model.ExportCache;
-import com.ec.survey.model.Export.ExportState;
+import com.ec.survey.enumerator.ExportState;
 import com.ec.survey.model.Form;
 import com.ec.survey.service.*;
 import com.ec.survey.tools.Constants;
@@ -19,8 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletContext;
+import jakarta.annotation.Resource;
+import jakarta.servlet.ServletContext;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -74,8 +74,8 @@ public abstract class ExportCreator implements Runnable {
 	@Resource(name = "reportingServiceProxy")
 	protected ReportingServiceProxy reportingService;
 	
-	@Resource(name = "selfassessmentService")
-	protected SelfAssessmentService selfassessmentService;
+	@Resource(name = "selfAssessmentService")
+	protected SelfAssessmentService selfAssessmentService;
 	
 	@Resource(name = "ecfService")
 	protected ECFService ecfService;

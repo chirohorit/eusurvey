@@ -6,7 +6,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.owasp.esapi.errors.ValidationException;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,11 +15,11 @@ import java.util.List;
  * Represents an answer option inside a (single or multiple) choice question.
  */
 @Entity
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class PossibleAnswer extends Element {
 	
-	private static final long serialVersionUID = 1L;
+	
 	private int questionId;
 	private DependencyItem dependentElements = new DependencyItem();
 	private String savedDependentElementsString = "";

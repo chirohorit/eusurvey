@@ -3,7 +3,7 @@ package com.ec.survey.model;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import com.ec.survey.model.administration.User;

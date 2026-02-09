@@ -1,16 +1,16 @@
 package com.ec.survey.controller;
 
-import com.ec.survey.exception.ForbiddenURLException;
-import com.ec.survey.exception.InvalidURLException;
-import com.ec.survey.exception.MessageException;
+import com.ec.survey.exception.*;
 import com.ec.survey.exception.httpexception.ForbiddenException;
 import com.ec.survey.exception.httpexception.InternalServerErrorException;
 import com.ec.survey.exception.httpexception.NotFoundException;
+import com.ec.survey.handler.QuizHelper;
+import com.ec.survey.handler.SurveyHelper;
 import com.ec.survey.model.AnswerSet;
 import com.ec.survey.model.Draft;
 import com.ec.survey.model.Form;
-import com.ec.survey.model.administration.GlobalPrivilege;
-import com.ec.survey.model.administration.LocalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
+import com.ec.survey.enumerator.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.selfassessment.SACriterion;
 import com.ec.survey.model.selfassessment.SAReportConfiguration;
@@ -18,7 +18,6 @@ import com.ec.survey.model.selfassessment.SAResult;
 import com.ec.survey.model.selfassessment.SATargetDataset;
 import com.ec.survey.model.survey.Element;
 import com.ec.survey.model.survey.Survey;
-import com.ec.survey.exception.ECFException;
 import com.ec.survey.model.ECFProfile;
 import com.ec.survey.model.survey.ecf.ECFIndividualResult;
 import com.ec.survey.service.SelfAssessmentService;
@@ -40,12 +39,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -60,12 +59,12 @@ public class ContributionController extends BasicController {
 	@Resource(name = "validCodesService")
 	private ValidCodesService validCodesService;
 	
-	@Resource(name = "selfassessmentService")
-	protected SelfAssessmentService selfassessmentService;
+	@Resource(name = "selfAssessmentService")
+	protected SelfAssessmentService selfAssessmentService;
 
 	public AnswerSet getAnswerSet(String code, HttpServletRequest request)
 			throws NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException {
-		AnswerSet answerSetOrNull = null;
+		AnswerSet answerSetOrNull;
 		User user;
 		answerSetOrNull = answerService.get(code);
 		
@@ -166,21 +165,21 @@ public class ContributionController extends BasicController {
 		
 		result.addObject("issaresultpage", true);
 		
-		SAReportConfiguration config = selfassessmentService.getReportConfiguration(answerSet.getSurvey().getUniqueId());
+		SAReportConfiguration config = selfAssessmentService.getReportConfiguration(answerSet.getSurvey().getUniqueId());
 		result.addObject("SAReportConfiguration", config);
 		
-		List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(answerSet.getSurvey().getUniqueId());
+		List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(answerSet.getSurvey().getUniqueId());
 		result.addObject("SATargetDatasets", datasets);
 		
-		List<SACriterion> criteria = selfassessmentService.getCriteria(answerSet.getSurvey().getUniqueId());
+		List<SACriterion> criteria = selfAssessmentService.getCriteria(answerSet.getSurvey().getUniqueId());
 		result.addObject("SACriteria", criteria);
 		
-		SAResult saresult = selfassessmentService.getSAResult(dataset, answerSet.getUniqueCode());
+		SAResult saresult = selfAssessmentService.getSAResult(dataset, answerSet.getUniqueCode());
 		result.addObject("SAResult", saresult);
 		
 		SATargetDataset comparisonDataset = null;
 		if (dataset > 0) {
-			comparisonDataset = selfassessmentService.getTargetDataset(dataset);
+			comparisonDataset = selfAssessmentService.getTargetDataset(dataset);
 		}
 		
 		result.addObject("ComparisonDataset", comparisonDataset);
@@ -191,7 +190,7 @@ public class ContributionController extends BasicController {
 			java.io.File folder = fileService.getSurveyExportsFolder(answerSet.getSurvey().getUniqueId());
 			java.io.File chartstarget = new java.io.File(String.format("%s/sa%s.dat", folder.getPath(), chartsuid ));
 			
-			String charts = FileUtils.readFileToString(chartstarget, Charset.forName("UTF-8"));			
+			String charts = FileUtils.readFileToString(chartstarget, StandardCharsets.UTF_8);
 			result.addObject("charts", charts.split(",") );		
 		}
 		
@@ -396,7 +395,7 @@ public class ContributionController extends BasicController {
 			}
 			
 			if (f.getSurvey().getIsSelfAssessment() && isPDF) {
-				selfassessmentService.initializeForm(f, invisibleElements);
+				selfAssessmentService.initializeForm(f, invisibleElements);
 			}
 
 			model.addObject("submit", true);
@@ -473,7 +472,7 @@ public class ContributionController extends BasicController {
 				Map<Element, String> validation = SurveyHelper.validateAnswerSet(oldAnswerSet, answerService,
 						invisibleElements, resources, locale, request.getParameter("draftid"), request, true, u,
 						fileService);
-				if (validation.size() > 0) {
+				if (!validation.isEmpty()) {
 					Survey survey = origsurvey;
 					if (request.getParameter("language.code") != null
 							&& request.getParameter("language.code").length() == 2) {
@@ -577,10 +576,10 @@ public class ContributionController extends BasicController {
 					result.addObject("surveyprefix", origsurvey.getId());
 					result.addObject("issaresultpage", true);
 					
-					SAReportConfiguration config = selfassessmentService.getReportConfiguration(answerSet.getSurvey().getUniqueId());
+					SAReportConfiguration config = selfAssessmentService.getReportConfiguration(answerSet.getSurvey().getUniqueId());
 					result.addObject("SAReportConfiguration", config);
 					
-					List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(answerSet.getSurvey().getUniqueId());
+					List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(answerSet.getSurvey().getUniqueId());
 					result.addObject("SATargetDatasets", datasets);
 								
 					return result;
@@ -789,7 +788,7 @@ public class ContributionController extends BasicController {
 					form.getAnswerSets().add(answerSet);
 					
 					if (form.getSurvey().getIsSelfAssessment()) {
-						selfassessmentService.initializeForm(form, invisibleElements);
+						selfAssessmentService.initializeForm(form, invisibleElements);
 					}
 
 					ModelAndView contributionsPrintModel = new ModelAndView("contributions/print", "form", form);
@@ -821,8 +820,8 @@ public class ContributionController extends BasicController {
 	@DeleteMapping(value = "/contribution/{code}")
 	public @ResponseBody String deleteContribution(@PathVariable String code, HttpServletRequest request, Locale locale)
 			throws NotFoundException, ForbiddenException, InternalServerErrorException {
-		User currentUser = null;
-		AnswerSet answerSet = null;
+		User currentUser;
+		AnswerSet answerSet;
 		try {
 			answerSet = this.getAnswerSet(code, request);
 			currentUser = this.sessionService.getCurrentUser(request);

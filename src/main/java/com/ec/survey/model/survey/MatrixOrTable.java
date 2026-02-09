@@ -8,7 +8,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.owasp.esapi.errors.ValidationException;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -19,12 +19,10 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("MATORTAB")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public abstract class MatrixOrTable extends Question {
 
-	private static final long serialVersionUID = 1L;
-	
 	protected List<Element> childElements = new ArrayList<>();
 	protected List<Element> missingQuestions = new ArrayList<>();
 	protected List<Element> missingAnswers = new ArrayList<>();
@@ -58,7 +56,7 @@ public abstract class MatrixOrTable extends Question {
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
 	@JoinColumn(nullable=true)
-
+	////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Element> getChildElements() {
 		return childElements;
 	}

@@ -1,14 +1,14 @@
 package com.ec.survey.model.selfassessment;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -17,10 +17,9 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "SAREPORTCONFIG", uniqueConstraints = {
 		@UniqueConstraint(columnNames = { "SAREPORTCONFIG_SURVEY" }, name = "SURVEY_REPORT") })
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class SAReportConfiguration implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
 	private int id;
 	private String surveyUID;
 	private String algorithm = "AVG";

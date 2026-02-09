@@ -1,8 +1,9 @@
 package com.ec.survey.tools.export;
 
+import com.ec.survey.enumerator.ParticipationGroupType;
 import com.ec.survey.model.*;
 import com.ec.survey.model.administration.EcasUser;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.attendees.Attendee;
 import com.ec.survey.model.attendees.AttributeName;
@@ -18,6 +19,7 @@ import com.ec.survey.model.survey.ecf.ECFOrganizationalCompetencyResult;
 import com.ec.survey.model.survey.ecf.ECFOrganizationalResult;
 import com.ec.survey.model.survey.ecf.ECFProfileCompetencyResult;
 import com.ec.survey.model.survey.ecf.ECFProfileResult;
+import com.ec.survey.service.BasicService;
 import com.ec.survey.service.ExportService;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
@@ -31,21 +33,21 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.util.HSSFColor;
-import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.*;
 //import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.util.Units;
 import org.hibernate.*;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 
 public abstract class CommonExcelExportCreator extends ExportCreator {
+	@Autowired
+	private BasicService basicService;
 
 	/** Manipulated in the initialization **/
 	CellStyle dateStyle;
@@ -453,7 +455,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 		}
 		List<Question> questions = form.getSurvey().getQuestions();
 		
-		Map<Integer, String> targetDatasetNames = selfassessmentService.getTargetDatasetNames(survey);
+		Map<Integer, String> targetDatasetNames = selfAssessmentService.getTargetDatasetNames(survey);
 		
 		if (answersets != null) {
 			for (List<String> row : answersets) {
@@ -474,7 +476,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 					+ answerService.getSql(null, form.getSurvey().getId(), filter, values, true)
 					+ ") ORDER BY ans.ANSWER_SET_ID";
 
-			NativeQuery query = session.createNativeQuery(sql);
+			Query query = session.createQuery(sql);
 
 			query.setReadOnly(true);
 
@@ -592,7 +594,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 							java.io.File f = fileService.getSurveyFile(survey.getUniqueId(), file.getUid());
 
 							if (!f.exists()) {
-								f = new java.io.File(exportService.getFileDir() + file.getUid());
+								f = new java.io.File(basicService.getFileDir() + file.getUid());
 							}
 
 							if (f.exists()) {
@@ -609,7 +611,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 					java.io.File file = fileService.getSurveyFile(survey.getUniqueId(), explanationFile.getUid());
 
 					if (!file.exists()) {
-						file = new java.io.File(exportService.getFileDir() + explanationFile.getUid());
+						file = new java.io.File(basicService.getFileDir() + explanationFile.getUid());
 					}
 
 					if (file.exists()) {
@@ -1426,7 +1428,7 @@ public abstract class CommonExcelExportCreator extends ExportCreator {
 					if (question instanceof SingleChoiceQuestion) {
 						SingleChoiceQuestion scq = (SingleChoiceQuestion) question;
 						if (scq.getIsTargetDatasetQuestion()) {
-							List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+							List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 							for (SATargetDataset dataset : datasets) {
 								String key = scq.getUniqueId() + "-" + dataset.getId();
 								row = sheet.createRow(rowIndex++);

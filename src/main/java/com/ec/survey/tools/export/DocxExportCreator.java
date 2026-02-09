@@ -83,7 +83,7 @@ public class DocxExportCreator extends ExportCreator {
         	
         	if (export.getResultFilter() == null || visibleQuestions.isEmpty() || visibleQuestions.contains(question.getId().toString()))
         	{
-        		if (question instanceof ChoiceQuestion)
+        		if (question instanceof ChoiceQuestion choiceQuestion)
 				{
 					cellValue = question.getTitle();
 					if (export.getShowShortnames())
@@ -92,12 +92,10 @@ public class DocxExportCreator extends ExportCreator {
 					}						
 					
 					XWPFTable table = createTableForAnswer(cellValue);
-					ChoiceQuestion choiceQuestion = (ChoiceQuestion)question;
-					
-					if (question instanceof SingleChoiceQuestion) {
-						SingleChoiceQuestion scq = (SingleChoiceQuestion) question;
-						if (scq.getIsTargetDatasetQuestion()) {
-							List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+
+                    if (question instanceof SingleChoiceQuestion scq) {
+                        if (scq.getIsTargetDatasetQuestion()) {
+							List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 							for (SATargetDataset dataset : datasets) {
 								String key = scq.getUniqueId() + "-" + dataset.getId();
 								XWPFTableRow row = table.createRow();				
@@ -155,7 +153,7 @@ public class DocxExportCreator extends ExportCreator {
 					row.getCell(3).setText(df.format(statistics.getRequestedRecordsPercent().get(question.getId().toString())) + "%");
 					
 					document.createParagraph();
-				} else if (question instanceof GalleryQuestion && ((GalleryQuestion)question).getSelection()) {
+				} else if (question instanceof GalleryQuestion galleryQuestion && ((GalleryQuestion)question).getSelection()) {
 					cellValue = question.getTitle();
 					if (export.getShowShortnames())
 					{
@@ -163,8 +161,7 @@ public class DocxExportCreator extends ExportCreator {
 					}						
 					
 					XWPFTable table = createTableForAnswer(cellValue);
-					GalleryQuestion galleryQuestion = (GalleryQuestion)question;
-					for (com.ec.survey.model.survey.base.File file : galleryQuestion.getAllFiles()) {
+                    for (com.ec.survey.model.survey.base.File file : galleryQuestion.getAllFiles()) {
 						XWPFTableRow row = table.createRow();				
 						
 						cellValue = ConversionTools.removeHTMLNoEscape(file.getName());
@@ -196,11 +193,9 @@ public class DocxExportCreator extends ExportCreator {
 					row.getCell(3).setText(df.format(statistics.getRequestedRecordsPercent().get(question.getId().toString())) + "%");
 					
 					document.createParagraph();
-				} else if (question instanceof Matrix) {
-					
-					Matrix matrix = (Matrix)question;
-					
-					for (Element matrixQuestion: matrix.getQuestions()) {
+				} else if (question instanceof Matrix matrix) {
+
+                    for (Element matrixQuestion: matrix.getQuestions()) {
 						
 						cellValue = matrix.getTitle() + ": " + matrixQuestion.getTitle();
 						if (export.getShowShortnames())
@@ -247,11 +242,9 @@ public class DocxExportCreator extends ExportCreator {
 						
 						document.createParagraph();
 					}
-				} else if (question instanceof ComplexTable) {
-					
-					ComplexTable complexTable = (ComplexTable)question;
-					
-					for (ComplexTableItem childQuestion: complexTable.getQuestionChildElements()) {
+				} else if (question instanceof ComplexTable complexTable) {
+
+                    for (ComplexTableItem childQuestion: complexTable.getQuestionChildElements()) {
 						boolean isChoice = childQuestion.getCellType() == ComplexTableItem.CellType.SingleChoice || childQuestion.getCellType() == ComplexTableItem.CellType.MultipleChoice;
 						boolean hasStatistics = isChoice;
 						if (!hasStatistics) {
@@ -328,11 +321,9 @@ public class DocxExportCreator extends ExportCreator {
 							document.createParagraph();
 						}
 					}
-				} else if (question instanceof RatingQuestion) {
-					
-					RatingQuestion rating = (RatingQuestion)question;
-					
-					for (Element childQuestion: rating.getQuestions()) {
+				} else if (question instanceof RatingQuestion rating) {
+
+                    for (Element childQuestion: rating.getQuestions()) {
 						
 						cellValue = rating.getTitle() + ": " + childQuestion.getTitle();
 						if (export.getShowShortnames())
@@ -375,9 +366,8 @@ public class DocxExportCreator extends ExportCreator {
 						
 						document.createParagraph();
 					}
-				} else if (question instanceof RankingQuestion) {
-					RankingQuestion ranking = (RankingQuestion) question;
-					int size = ranking.getChildElements().size();
+				} else if (question instanceof RankingQuestion ranking) {
+                    int size = ranking.getChildElements().size();
 					
 					cellValue = ConversionTools
 							.removeHTMLNoEscape(ranking.getTitle());
@@ -471,9 +461,8 @@ public class DocxExportCreator extends ExportCreator {
 					pr.setHMerge(hMerge1);
 
 					document.createParagraph();
-				} else if (question instanceof NumberQuestion) {
-					NumberQuestion numberQuestion = (NumberQuestion)question;
-					if (numberQuestion.showStatisticsForNumberQuestion()) {
+				} else if (question instanceof NumberQuestion numberQuestion) {
+                    if (numberQuestion.showStatisticsForNumberQuestion()) {
 					
 						cellValue = question.getTitle();
 						if (export.getShowShortnames())
@@ -515,9 +504,8 @@ public class DocxExportCreator extends ExportCreator {
 						
 						document.createParagraph();
 					}
-				} else if (question instanceof FormulaQuestion) {
-					FormulaQuestion formulaQuestion = (FormulaQuestion)question;
-					if (formulaQuestion.showStatisticsForNumberQuestion()) {
+				} else if (question instanceof FormulaQuestion formulaQuestion) {
+                    if (formulaQuestion.showStatisticsForNumberQuestion()) {
 
 						cellValue = question.getTitle();
 						if (export.getShowShortnames())
@@ -586,7 +574,7 @@ public class DocxExportCreator extends ExportCreator {
 		
 		if (paragraph.getCTP().getPPr() == null)
             paragraph.getCTP().addNewPPr();
-		paragraph.getCTP().getPPr().addNewKeepNext().setVal("on");
+		paragraph.getCTP().getPPr().addNewKeepNext().setVal("on");	//"on"
 		
 		XWPFRun run = paragraph.createRun();
 		run.setText(ConversionTools.removeHTMLNoEscape(title));	
@@ -609,7 +597,7 @@ public class DocxExportCreator extends ExportCreator {
 		XWPFParagraph paragraph = document.createParagraph();
 		
 		if (paragraph.getCTP().getPPr() == null) paragraph.getCTP().addNewPPr();
-		paragraph.getCTP().getPPr().addNewKeepNext().setVal("on");
+		paragraph.getCTP().getPPr().addNewKeepNext().setVal("on");	//"on"
 		
 		XWPFRun run = paragraph.createRun();
 		run.setText(ConversionTools.removeHTMLNoEscape(title));	

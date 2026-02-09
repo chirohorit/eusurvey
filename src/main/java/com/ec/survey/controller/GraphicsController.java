@@ -8,8 +8,8 @@ import org.jfree.data.general.DefaultPieDataset;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.OutputStream;
 
@@ -38,7 +38,7 @@ public class GraphicsController extends BasicController {
         plot.setCircular(true);
         plot.setOutlineVisible(false);
         plot.setLabelGenerator(null);
-        //plot.setBaseSectionPaint(Color.blue);
+        plot.setDefaultSectionPaint(Color.blue);
         plot.setSectionPaint("Score",new Color(51,122,183));
         plot.setSectionPaint("Other", Color.lightGray);
         plot.setShadowPaint(Color.white);

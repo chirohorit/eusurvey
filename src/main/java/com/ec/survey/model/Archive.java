@@ -2,7 +2,7 @@ package com.ec.survey.model;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import com.ec.survey.tools.ConversionTools;
 import com.ec.survey.tools.Tools;
@@ -19,7 +19,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Table(name = "ARCHIVE", indexes = {@Index(name="IDX_ARCHIVE",columnList = "ARCHIVE_USER, ARCHIVE_DATE")})
 public class Archive implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private Date archived;
 	private Date created;

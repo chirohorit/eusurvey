@@ -3,22 +3,25 @@ package com.ec.survey.controller;
 import com.ec.survey.exception.ForbiddenURLException;
 import com.ec.survey.exception.InvalidURLException;
 import com.ec.survey.exception.MessageException;
+import com.ec.survey.handler.worker.AnswerExecutor;
+import com.ec.survey.handler.worker.QuizExecutor;
 import com.ec.survey.model.*;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.*;
 import com.ec.survey.service.mapping.PaginationMapper;
 import com.ec.survey.tools.*;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.ClientProtocolException;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
@@ -29,14 +32,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -67,11 +71,17 @@ public class HomeController extends BasicController {
 	
 	@Resource(name="mailService")
 	private MailService mailService;
-	
+
+	@RequestMapping(value = "/index.html", method = {RequestMethod.GET, RequestMethod.HEAD})
+	public ModelAndView index(HttpServletRequest request, Locale locale) {
+		return new ModelAndView("index");
+	}
+
 	@RequestMapping(value = "/home/about", method = {RequestMethod.GET, RequestMethod.HEAD})
 	public String about(Locale locale, ModelMap model) {
+
 		model.put("continueWithoutJavascript", true);		
-		model.put("oss", super.isOss());		
+		model.put("oss", super.isOss());
 		return "home/about";
 	}
 	
@@ -293,7 +303,7 @@ public class HomeController extends BasicController {
 		}
 
 		InputStream inputStream = servletContext.getResourceAsStream("/WEB-INF/Content/mailtemplateeusurvey.html");
-		String text = IOUtils.toString(inputStream, "UTF-8").replace("[CONTENT]", body).replace("[HOST]", host);
+		String text = IOUtils.toString(inputStream, StandardCharsets.UTF_8).replace("[CONTENT]", body).replace("[HOST]", host);
 
 		java.io.File attachment1 = null;
 		java.io.File attachment2 = null;
@@ -327,100 +337,89 @@ public class HomeController extends BasicController {
 		String additionalinfo  = ConversionTools.removeHTML(request.getParameter("additionalinfo"), true);
 		String additionalsurveyinfotitle = ConversionTools.removeHTML(request.getParameter("additionalsurveyinfotitle"), true);
 		String additionalsurveyinfoalias = ConversionTools.removeHTML(request.getParameter("additionalsurveyinfoalias"), true);
-		String login = "";
+		String login;
 		
 		boolean external = !email.toLowerCase().endsWith("ec.europa.eu");
 		InputStream inputStreamXML = servletContext.getResourceAsStream("/WEB-INF/Content/createIncident.xml");
 		InputStream inputStreamJSON = external ? servletContext.getResourceAsStream("/WEB-INF/Content/createIncidentExternal.json") : servletContext.getResourceAsStream("/WEB-INF/Content/createIncident.json");
-		String createTemplate = IOUtils.toString(useJSON ? inputStreamJSON : inputStreamXML, "UTF-8");
-		
-		CloseableHttpClient httpclient = HttpClients.createSystem();	
-		
-		try {
-			
-			if (!external) {
-				//get login from ldap
-				login = ldapService.getLoginForEmail(email);
-				createTemplate = createTemplate.replace("[CALLER]", login);
-			}				
-	
-			createTemplate = createTemplate.replace("[MESSAGE]", message);
-			createTemplate = createTemplate.replace("[ADDITIONALINFOUSERNAME]", name);
-			createTemplate = createTemplate.replace("[ADDITIONALINFOEMAIL]", email);
-			createTemplate = createTemplate.replace("[ADDITIONALINFO]", additionalinfo);
-			createTemplate = createTemplate.replace("[ADDITIONALINFOSURVEYTITLE]", additionalsurveyinfotitle);
-			createTemplate = createTemplate.replace("[ADDITIONALINFOSURVEYALIAS]", additionalsurveyinfoalias);
-			createTemplate = createTemplate.replace("[SUBJECT]", subject);		
-			createTemplate = createTemplate.replace("[REASON]", GetSmtLabelForReason(reason));
-			createTemplate = createTemplate.replace("[BUSINESSSERVICE]", "EU Survey Solutions");
-			createTemplate = createTemplate.replace("[SERVICEOFFERING]", "EU Survey - General issue");
+		String createTemplate = IOUtils.toString(useJSON ? inputStreamJSON : inputStreamXML, StandardCharsets.UTF_8);
 
-			sessionService.initializeProxy();
-			
-			HttpPost httppost = new HttpPost(incidentHost);
-			httppost.addHeader("Content-type", useJSON ? "application/json" : "text/xml;charset=UTF-8");
-			
-			if (!useJSON) {
-				httppost.addHeader("SOAPAction", "Create");
-			}
+        try (CloseableHttpClient httpclient = HttpClients.createSystem()) {
 
-			if (smtpAuth != null) {
-				httppost.addHeader("Authorization", "Basic " + smtpAuth);
-			}
+            if (!external) {
+                //get login from ldap
+                login = ldapService.getLoginForEmail(email);
+                createTemplate = createTemplate.replace("[CALLER]", login);
+            }
 
-			httppost.setEntity(new StringEntity(createTemplate));
-			
-			CloseableHttpResponse response = httpclient.execute(httppost);
-			
-			try {
-			
-				HttpEntity entity = response.getEntity();
-				int statusCode = response.getStatusLine().getStatusCode();
-			
-				String strResponse = entity == null ? "" : EntityUtils.toString(entity, "UTF-8");
-				if (useJSON) {						
-					if (statusCode != 200 && statusCode != 201)
-					{
-						logger.error(statusCode + " " + strResponse);
-						throw new MessageException("Calling ServiceNow UAT failed.");
-					}
-					
-					String[] uploadedfiles = request.getParameterValues("uploadedfile");
-					String[] uploadedfilenames = request.getParameterValues("uploadedfilename");
-					
-					java.io.File attachment1 = null;
-					java.io.File attachment2 = null;
-					if (uploadedfiles != null && uploadedfiles.length > 0)
-					{
-						JSONObject jsonResponse = new JSONObject(strResponse).getJSONObject("result");
-						String sys_id = jsonResponse.getString("sys_id");
-						
-						attachment1 = fileService.getTemporaryFile(uploadedfiles[0]);
-						addAttachment(sys_id, uploadedfilenames[0], attachment1, httpclient);
-						if (uploadedfiles.length > 1)
-						{
-							attachment2 = fileService.getTemporaryFile(uploadedfiles[1]);
-							addAttachment(sys_id, uploadedfilenames[1], attachment2, httpclient);
-						}
-					}
-					
-				} else if (!strResponse.toLowerCase().contains("message=\"success\"")) {
-					logger.error(statusCode + " " +strResponse);
-					throw new MessageException("Calling SMT web service failed.");
-				}
-				logger.info(statusCode + " " + strResponse);				
-			
-			} finally{
-			   response.close();
-			}
+            createTemplate = createTemplate.replace("[MESSAGE]", message);
+            createTemplate = createTemplate.replace("[ADDITIONALINFOUSERNAME]", name);
+            createTemplate = createTemplate.replace("[ADDITIONALINFOEMAIL]", email);
+            createTemplate = createTemplate.replace("[ADDITIONALINFO]", additionalinfo);
+            createTemplate = createTemplate.replace("[ADDITIONALINFOSURVEYTITLE]", additionalsurveyinfotitle);
+            createTemplate = createTemplate.replace("[ADDITIONALINFOSURVEYALIAS]", additionalsurveyinfoalias);
+            createTemplate = createTemplate.replace("[SUBJECT]", subject);
+            createTemplate = createTemplate.replace("[REASON]", GetSmtLabelForReason(reason));
+            createTemplate = createTemplate.replace("[BUSINESSSERVICE]", "EU Survey Solutions");
+            createTemplate = createTemplate.replace("[SERVICEOFFERING]", "EU Survey - General issue");
 
-		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage(), e);
-			//fallback to email
-			return sendSupportEmail(request, locale, model);
-		} finally {
-			httpclient.close();
-		}
+            sessionService.initializeProxy();
+
+            HttpPost httppost = new HttpPost(incidentHost);
+            httppost.addHeader("Content-type", useJSON ? "application/json" : "text/xml;charset=UTF-8");
+
+            if (!useJSON) {
+                httppost.addHeader("SOAPAction", "Create");
+            }
+
+            if (smtpAuth != null) {
+                httppost.addHeader("Authorization", "Basic " + smtpAuth);
+            }
+
+            httppost.setEntity(new StringEntity(createTemplate));
+
+            try (CloseableHttpResponse response = httpclient.execute(httppost)) {
+
+                HttpEntity entity = response.getEntity();
+                int statusCode = response.getCode();
+
+                String strResponse = entity == null ? "" : EntityUtils.toString(entity, "UTF-8");
+                if (useJSON) {
+                    if (statusCode != 200 && statusCode != 201) {
+                        logger.error(statusCode + " " + strResponse);
+                        throw new MessageException("Calling ServiceNow UAT failed.");
+                    }
+
+                    String[] uploadedfiles = request.getParameterValues("uploadedfile");
+                    String[] uploadedfilenames = request.getParameterValues("uploadedfilename");
+
+                    java.io.File attachment1;
+                    java.io.File attachment2;
+                    if (uploadedfiles != null && uploadedfiles.length > 0) {
+                        JSONObject jsonResponse = new JSONObject(strResponse).getJSONObject("result");
+                        String sys_id = jsonResponse.getString("sys_id");
+
+                        attachment1 = fileService.getTemporaryFile(uploadedfiles[0]);
+                        addAttachment(sys_id, uploadedfilenames[0], attachment1, httpclient);
+                        if (uploadedfiles.length > 1) {
+                            attachment2 = fileService.getTemporaryFile(uploadedfiles[1]);
+                            addAttachment(sys_id, uploadedfilenames[1], attachment2, httpclient);
+                        }
+                    }
+
+                } else if (!strResponse.toLowerCase().contains("message=\"success\"")) {
+                    logger.error(statusCode + " " + strResponse);
+                    throw new MessageException("Calling SMT web service failed.");
+                }
+                logger.info(statusCode + " " + strResponse);
+
+            }
+
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+            //fallback to email
+            return sendSupportEmail(request, locale, model);
+        }
 
 		model.put("messagesent", true);
 		model.put("additionalinfo", getBrowserInformation(request, locale));
@@ -429,7 +428,7 @@ public class HomeController extends BasicController {
 	
 	private void addAttachment(String sys_id, String filename, java.io.File attachment, CloseableHttpClient httpclient) throws ClientProtocolException, IOException, MessageException {
 			
-		HttpPost httppostFile = new HttpPost(attachmentHost + sys_id + "&file_name=" + URLEncoder.encode(filename, "UTF-8"));
+		HttpPost httppostFile = new HttpPost(attachmentHost + sys_id + "&file_name=" + URLEncoder.encode(filename, StandardCharsets.UTF_8));
 		httppostFile.setHeader("Content-Type", "application/octet-stream");
 	
 		if (smtpAuth != null) {
@@ -438,24 +437,21 @@ public class HomeController extends BasicController {
 		
 		FileEntity entityAttachment = new FileEntity(attachment, ContentType.APPLICATION_OCTET_STREAM);
 		httppostFile.setEntity(entityAttachment);
-		
-		CloseableHttpResponse responseFile = httpclient.execute(httppostFile);
-		
-		try {
-			
-			HttpEntity entityFile = responseFile.getEntity();
-			String strResponseFile = entityFile == null ? "" : EntityUtils.toString(entityFile, "UTF-8");
-			int statusCodeFile = responseFile.getStatusLine().getStatusCode();
-			
-			if (statusCodeFile != 200 && statusCodeFile != 201)
-			{
-				logger.error(statusCodeFile + " " + strResponseFile);
-				throw new MessageException("Calling ServiceNow UAT failed.");
-			}
-		} finally{
-		   responseFile.close();
-		}
-	}
+
+        try (CloseableHttpResponse responseFile = httpclient.execute(httppostFile)) {
+
+            HttpEntity entityFile = responseFile.getEntity();
+            String strResponseFile = entityFile == null ? "" : EntityUtils.toString(entityFile, "UTF-8");
+            int statusCodeFile = responseFile.getCode();
+
+            if (statusCodeFile != 200 && statusCodeFile != 201) {
+                logger.error(statusCodeFile + " " + strResponseFile);
+                throw new MessageException("Calling ServiceNow UAT failed.");
+            }
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	@RequestMapping(value = "/home/support/deletefile", method = {RequestMethod.GET, RequestMethod.HEAD})
 	public @ResponseBody String deletefile(HttpServletRequest request, HttpServletResponse response) {
@@ -481,7 +477,7 @@ public class HomeController extends BasicController {
 	@PostMapping(value = "/home/support/uploadfile")
 	public void uploadFile(HttpServletRequest request, HttpServletResponse response) {
 
-		PrintWriter writer = null;
+		PrintWriter writer;
         InputStream is = null;
         FileOutputStream fos = null;
 
@@ -496,13 +492,12 @@ public class HomeController extends BasicController {
         
         try {
         
-	        if (request instanceof DefaultMultipartHttpServletRequest)
+	        if (request instanceof DefaultMultipartHttpServletRequest r)
 	        {
-	        	DefaultMultipartHttpServletRequest r = (DefaultMultipartHttpServletRequest)request;        	
-	        	filename = com.ec.survey.tools.FileUtils.cleanFilename(java.net.URLDecoder.decode(r.getFile("qqfile").getOriginalFilename(), "UTF-8"));        	
+                filename = com.ec.survey.tools.FileUtils.cleanFilename(java.net.URLDecoder.decode(r.getFile("qqfile").getOriginalFilename(), StandardCharsets.UTF_8));
 	        	is = r.getFile("qqfile").getInputStream();        	
 	        } else {
-	        	filename = com.ec.survey.tools.FileUtils.cleanFilename(java.net.URLDecoder.decode(request.getHeader("X-File-Name"), "UTF-8"));
+	        	filename = com.ec.survey.tools.FileUtils.cleanFilename(java.net.URLDecoder.decode(request.getHeader("X-File-Name"), StandardCharsets.UTF_8));
 	        	is = request.getInputStream();
 	        }
         	

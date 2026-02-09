@@ -3,14 +3,10 @@ package com.ec.survey.model;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Embeddable
 public class ECFExpectedScoreToProfileEid implements Serializable {
-    /**
-	 *
-	 */
-	private static final long serialVersionUID = -4183214707510584371L;
 
 	@ManyToOne
 	@JoinColumn(name = "COMPETENCY", referencedColumnName = "COMPETENCY_ID")

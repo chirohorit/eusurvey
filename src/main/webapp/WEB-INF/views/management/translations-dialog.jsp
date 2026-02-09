@@ -1,7 +1,7 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <div class="modal" id="add-translation-dialog" data-backdrop="static">
 	<form:form action="${contextpath}/${sessioninfo.shortname}/management/addtranslation" method="post" style="margin: 0px;">
@@ -165,7 +165,7 @@
 	<div class="modal-dialog">
     <div class="modal-content">
 	  <div class="modal-header"><spring:message code="label.EditTranslation" /></div>	  
-	  <form:form action="${contextpath}/${form.survey.shortname}/management/savetranslations" method="post" style="margin: 0px;">	
+	  <form:form action="${contextpath}/${form.survey.shortname}/management/savetranslations" method="post" style="margin: 0px;">
 	  	  <input type="hidden" name="survey" value="${form.survey.id}" />  
 		  <div class="modal-body" style="height: 470px; max-height: 470px; overflow: auto">	
 		  		  	

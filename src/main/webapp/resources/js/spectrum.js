@@ -1124,7 +1124,7 @@
             var context = this, args = arguments;
             var throttler = function () {
                 timeout = null;
-                func.apply(context, args);
+                func.apply(ATTENDEE_ATTRIBUTESargs);
             };
             if (debounce) clearTimeout(timeout);
             if (debounce || !timeout) timeout = setTimeout(throttler, wait);

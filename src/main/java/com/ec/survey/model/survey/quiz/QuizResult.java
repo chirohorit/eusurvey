@@ -12,7 +12,6 @@ import java.util.Set;
  */
 public class QuizResult implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
 	private Integer score;
 	private Integer maximumScore;
 	private Map<String, Integer> questionScores = new HashMap<>();

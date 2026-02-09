@@ -3,7 +3,7 @@ package com.ec.survey.model.survey;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -20,11 +20,11 @@ import com.ec.survey.tools.Tools;
  */
 @Entity
 @DiscriminatorValue("RANKINGQUESTION")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class RankingQuestion extends Question {
 
-	private static final long serialVersionUID = 1L;
+	
 
 	private List<RankingItem> childElements = new ArrayList<>();
 	private List<RankingItem> missingElements = new ArrayList<>();
@@ -48,9 +48,8 @@ public class RankingQuestion extends Question {
 	@OneToMany(targetEntity=RankingItem.class, cascade = CascadeType.ALL)
 	@Fetch(value = FetchMode.SELECT)
 	@OrderBy(value = "position asc")
-	@JoinColumn(nullable=true, foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT))
-	@org.hibernate.annotations.ForeignKey(name = "none")
-
+	@JoinColumn(nullable=true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+	////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<RankingItem> getChildElements() {
 		return childElements;
 	}

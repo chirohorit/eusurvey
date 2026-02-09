@@ -1,7 +1,7 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -10,15 +10,12 @@
 	<title>EUSurvey - <spring:message code="label.DoLogin" /></title>
 	<%@ include file="../includes.jsp" %>
 	
-	<script type="text/javascript"> 
-	
-		function requestLink()
-		{
+	<script type="text/javascript">
+		function requestLink() {
 			$("#forgotPasswordForm").find(".validation-error").hide();
 			$("#forgotPasswordForm").find(".validation-error-keep").hide();			
 			
-			if ($("#email").val() == null || $("#email").val() == '' || $("#login").val() == null || $("#login").val() == '' || !validateEmail($("#email").val()) )
-			{
+			if ($("#email").val() == null || $("#email").val() == '' || $("#login").val() == null || $("#login").val() == '' || !validateEmail($("#email").val()) ) {
 				$("#errorMessage").show();
 				return;
 			}
@@ -27,8 +24,7 @@
 				var challenge = getChallenge();
 			    var uresponse = getResponse();
 			    
-			    if (uresponse.trim().length == 0)
-			    {
+			    if (uresponse.trim().length == 0) {
 			    	$("#runner-captcha-empty-error").show();
 			    	return;
 			    }
@@ -36,15 +32,12 @@
 			
 			$("#forgotPasswordForm").submit();
 		}
-		
 
 		$(document).ready(function(){
-			
 			//verify if there is only the system login option
 			var showEcas = $("#ecasPanel").length;
 			
-			if(showEcas == 0)
-			{
+			if(showEcas == 0) {
 				$("#sysLoginForm").show();
 			}
 			
@@ -54,25 +47,21 @@
 			
 			$("#sysCancel").click(function(){
 				
-				if(showEcas != 0)
-				{
+				if(showEcas != 0) {
 					switchPanels();
 				}
 								
-				$("input[name='username'").val("");
-				$("input[name='password'").val("");
+				$("input[name='username']").val("");
+				$("input[name='password']").val("");
 			});
 			
-			if(window.location.href.indexOf("error=true")>-1)
-			{
-				if(showEcas != 0)
-				{
+			if(window.location.href.indexOf("error=true")>-1) {
+				if(showEcas != 0) {
 					switchPanels();
 				}
 			}
 			
-			if(window.location.href.indexOf("sessionexpired")>-1)
-			{
+			if(window.location.href.indexOf("sessionexpired")>-1) {
 				showError('<spring:message code="error.Session" />');
 			}
 			
@@ -85,8 +74,7 @@
 			</c:if>			
 		});
 		
-		function switchPanels()
-		{
+		function switchPanels() {
 			$("#connectionOptions").toggle();
 			$("#sysLoginForm").toggle();
 			if (!($("#sysLoginForm").css('display') == 'none')) {
@@ -215,7 +203,7 @@
 	
 				 	<form:form id="loginForm" action="../login" method="post" >
 				 		<fieldset>		
-				 			<img src="${contextpath}/resources/images/folder-eusurvey.png" style="float:right; margin-right:75px; width:136px;" alt="login logo">	 				 	
+				 			<img src="${contextpath}/resources/images/folder-eusurvey.png" style="float:right; margin-right:75px; width:136px;" alt="login logo">
 				 			<p>
 								<label for="username"><spring:message code="label.UserName" /></label>
 								<div class="input-group">
@@ -263,9 +251,7 @@
 					<spring:message code="label.PleaseEnterYourEmail" /><br />
 					<input id="email" type="text" name="email" maxlength="255" class="form-control email" /><br />
 					<span id="errorMessage" style="color: #f00; display: none;"><spring:message code="error.PleaseEnterYourNameAndEmail" /></span>
-					<div style="margin-left: 0px; margin-bottom: 20px; margin-top: 20px;">
-						<%@ include file="../captcha.jsp" %>	
-		        	</div>				
+
 				</div>
 				<div class="modal-footer">
 					<a onclick="requestLink();" class="btn btn-primary"><spring:message code="label.OK" /></a>
@@ -276,25 +262,6 @@
 		</div>
 	</div>
 		
-	<c:if test="${error != null}">
-		<script type="text/javascript">
-			switchPanels();
-			showError('<esapi:encodeForHTML>${error}</esapi:encodeForHTML>');
-		</script>
- 	</c:if>
- 	
- 	<c:if test="${info != null}">
- 		<script type="text/javascript">
- 			switchPanels();
-			showInfo('<esapi:encodeForHTML>${info}</esapi:encodeForHTML>');
-		</script>
- 	</c:if>
-
- 	<c:if test="${redirecttoeulogin != null}">
- 	    <script type="text/javascript">
-            $('#2faeuloginauthenticationform').submit();
- 	    </script>
- 	</c:if>
 
 </body>
 </html>

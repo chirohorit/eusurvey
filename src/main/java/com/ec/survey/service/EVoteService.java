@@ -1,5 +1,6 @@
 package com.ec.survey.service;
 
+import com.ec.survey.enumerator.ParticipationGroupType;
 import com.ec.survey.model.*;
 import com.ec.survey.tools.ConversionTools;
 import com.ec.survey.tools.activity.ActivityRegistry;
@@ -35,8 +36,6 @@ import com.ec.survey.model.survey.SingleChoiceQuestion;
 import com.ec.survey.model.survey.Survey;
 import com.mysql.cj.util.StringUtils;
 
-import edu.emory.mathcs.backport.java.util.Collections;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,27 +54,23 @@ public class EVoteService extends BasicService {
 		 boolean usesHeader = true;
 		 
 		 //iterate rows
-		 Iterator<Row> rowIterator = sheet.iterator();
-         while (rowIterator.hasNext()) 
-         {
-             Row row = rowIterator.next();
-             
-             String login = row.getCell(0).getStringCellValue();
-             String firstName = row.getCell(1).getStringCellValue();
-             String surname = row.getCell(2).getStringCellValue();
-             
-             if (usesHeader) {
-            	 usesHeader = false;
-             } else {
-            	 Voter voter = new Voter();
-            	 voter.setEcMoniker(login);
-            	 voter.setGivenName(firstName);
-            	 voter.setSurname(surname);
-            	 voter.setSurveyUid(surveyUid);
-            	 voter.setCreated(new Date());
-            	 voters.add(voter);
-             }
-         }
+        for (Row row : sheet) {
+            String login = row.getCell(0).getStringCellValue();
+            String firstName = row.getCell(1).getStringCellValue();
+            String surname = row.getCell(2).getStringCellValue();
+
+            if (usesHeader) {
+                usesHeader = false;
+            } else {
+                Voter voter = new Voter();
+                voter.setEcMoniker(login);
+                voter.setGivenName(firstName);
+                voter.setSurname(surname);
+                voter.setSurveyUid(surveyUid);
+                voter.setCreated(new Date());
+                voters.add(voter);
+            }
+        }
          workbook.close();
          
          return voters;
@@ -90,7 +85,7 @@ public class EVoteService extends BasicService {
 		//iterate rows
 		Iterator<Row> rowIterator = sheet.iterator();
 		int rowCounter = 0;
-		int colCounter = 1;
+		int colCounter;
 		int candidateCounter = 0;
 		
 		// this map is used to quickly find a candidate by his position in the list
@@ -145,7 +140,7 @@ public class EVoteService extends BasicService {
 	public void addVoters(List<Voter> voters, User user) {
 		Session session = sessionFactory.getCurrentSession();
 		for (Voter voter: voters) {
-			session.save(voter);
+			session.persist(voter);
 		}
 		ParticipationGroup group = new ParticipationGroup(voters.get(0).getSurveyUid());
 		group.setActive(true);
@@ -162,7 +157,7 @@ public class EVoteService extends BasicService {
 	public void addMoreVoters(List<Voter> voters, User user) {
 		Session session = sessionFactory.getCurrentSession();
 		for (Voter voter: voters) {
-			session.save(voter);
+			session.persist(voter);
 		}
 		String logValues = voters.stream().map(v -> v.getId() + "").collect(Collectors.joining(","));
 		activityService.log(ActivityRegistry.ID_GUEST_LIST_VOTER_ADDED, null, logValues, user.getId(), voters.get(0).getSurveyUid(), "VoterFile");
@@ -175,7 +170,7 @@ public class EVoteService extends BasicService {
 		if (page == -1) {
 			// this means last page
 			long count = getVoterCount(surveyUid, user, first, last, voted);
-			page = (int) Math.floorDiv(count, 20l);
+			page = (int) Math.floorDiv(count, 20L);
 		}
 		
 		String where = getWhere(user, first, last, voted);
@@ -184,9 +179,8 @@ public class EVoteService extends BasicService {
 		query.setParameter("surveyUid", surveyUid).setFirstResult((page-1) * rowsPerPage).setMaxResults(rowsPerPage);
 		
 		addQueryParameters(query, surveyUid, user, first, last, voted);
-		
-		List<Voter> result = query.list();
-		return result;
+
+        return query.list();
 	}
 
 	@Transactional
@@ -236,7 +230,7 @@ public class EVoteService extends BasicService {
 			query.setParameter("last", '%' + last + '%');
 		}
 		if (voted != null) {
-			query.setParameter("voted", voted.booleanValue());
+			query.setParameter("voted", voted);
 		}
 	}
 
@@ -291,6 +285,7 @@ public class EVoteService extends BasicService {
 		query.executeUpdate();
 	}
 
+	@Transactional
 	public byte[] exportVoterFile(String surveyUid, String user, String first, String last, Boolean voted) throws IOException {
 		List<Voter> voters = getVoters(surveyUid, 1, 100000, user, first, last, voted);
 
@@ -309,7 +304,7 @@ public class EVoteService extends BasicService {
 		headerCell.setCellValue("First name");
 		headerCell = header.createCell(2);
 		headerCell.setCellValue("Surname");
-		if (voters.size() > 0) {
+		if (!voters.isEmpty()) {
 			headerCell = header.createCell(3);
 			headerCell.setCellValue("Has voted?");
 		}
@@ -328,11 +323,9 @@ public class EVoteService extends BasicService {
 		}
 		
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		try {
-		    workbook.write(bos);
-		} finally {
-		    bos.close();
-		}
+        try (bos) {
+            workbook.write(bos);
+        }
 		byte[] bytes = bos.toByteArray();
 		
 		workbook.close();
@@ -365,13 +358,12 @@ public class EVoteService extends BasicService {
 				}
 			}
 			
-			if (question instanceof MultipleChoiceQuestion) {
+			if (question instanceof MultipleChoiceQuestion mc) {
 				SeatDistribution listSeats = new SeatDistribution();
 				listSeats.setName(question.getStrippedTitle());
 				result.getListSeatDistribution().add(listSeats);
-				
-				MultipleChoiceQuestion mc = (MultipleChoiceQuestion)question;
-				config.listSeatDistributions.put(mc, listSeats);
+
+                config.listSeatDistributions.put(mc, listSeats);
 
 				for (PossibleAnswer pa : mc.getPossibleAnswers()) {
 					ElectedCandidate ec = new ElectedCandidate();
@@ -427,9 +419,7 @@ public class EVoteService extends BasicService {
 			}
 
 			// ensure that blank and spoilt votes contain no candidate selections
-			if (blankOrSpoilt && candidateCounter > 0) {
-				return false;
-			}
+            return !blankOrSpoilt || candidateCounter <= 0;
 		}
 
 		return true;
@@ -447,7 +437,7 @@ public class EVoteService extends BasicService {
 	}
 	
 	@Transactional
-	private eVoteResults loadEVoteAnswers(EVoteConfiguration config, SeatCounting result) throws TooManyFiltersException, MessageException {
+	public eVoteResults loadEVoteAnswers(EVoteConfiguration config, SeatCounting result) throws TooManyFiltersException, MessageException {
 		eVoteResults evoteResults = getEmptyListResult(config.survey);
 		
 		Session session = sessionFactory.getCurrentSession();
@@ -466,11 +456,11 @@ public class EVoteService extends BasicService {
 		for (String attrib : values.keySet()) {
 			Object value = values.get(attrib);
 			if (value instanceof String) {
-				query.setParameter(attrib, (String) values.get(attrib));
+				query.setParameter(attrib, values.get(attrib));
 			} else if (value instanceof Integer) {
-				query.setParameter(attrib, (Integer) values.get(attrib));
+				query.setParameter(attrib, values.get(attrib));
 			} else if (value instanceof Date) {
-				query.setParameter(attrib, (Date) values.get(attrib));
+				query.setParameter(attrib, values.get(attrib));
 			}
 		}
 		
@@ -495,12 +485,11 @@ public class EVoteService extends BasicService {
 				}
 				counter++;
 
-                Object[] a = (Object[]) results.get();
-
-                String quid = (String) a[0];
-                String pauid = (String) a[1];
-                String value = (String) a[2];
-                int answerSetId = ConversionTools.getValue(a[3]);
+				Object[] a = (Object[]) results.get();
+				String quid = (String) a[0];
+				String pauid = (String) a[1];
+				String value = (String) a[2];
+				int answerSetId = ConversionTools.getValue(a[3]);
 				
 				if (config.blank.getUniqueId().equals(pauid)) {
 					evoteResults.setBlankVotes(evoteResults.getBlankVotes() + 1);
@@ -510,19 +499,15 @@ public class EVoteService extends BasicService {
 					voteAnswerIds.add(answerSetId);
 				} else if (evoteResults.getLists().containsKey(quid)) {
 					eVoteListResult listResult = evoteResults.getLists().get(quid);
-					
-					if (!foundAnswerIds.contains(answerSetId)) {
-						foundAnswerIds.add(answerSetId);
-					}
+
+                    foundAnswerIds.add(answerSetId);
 					
 					if (!config.useLuxembourgProcedure && value != null && value.equalsIgnoreCase("EVOTE-ALL")) {
 						listResult.setListVotes(listResult.getListVotes() + 1);
 					} else if (listResult.getCandidateVotes().containsKey(pauid)) {
 						listResult.getCandidateVotes().put(pauid, listResult.getCandidateVotes().get(pauid) + 1);
-						
-						if (!preferentialVoteAnswerIds.contains(answerSetId)) {
-							preferentialVoteAnswerIds.add(answerSetId);
-						}
+
+                        preferentialVoteAnswerIds.add(answerSetId);
 						
 						if (config.useLuxembourgProcedure) {
 							listResult.setLuxListVotes(listResult.getLuxListVotes() + 1);
@@ -532,9 +517,7 @@ public class EVoteService extends BasicService {
 			}
 			
 			for (int answerSetId : foundAnswerIds) {
-				if (voteAnswerIds.contains(answerSetId)) {
-					voteAnswerIds.remove(answerSetId);
-				}				
+                voteAnswerIds.remove(answerSetId);
 			}
 		} finally {
 			results.close();
@@ -546,7 +529,7 @@ public class EVoteService extends BasicService {
 	}
 	
 	@Transactional
-	private void parseEVoteAnswers(EVoteConfiguration config, SeatCounting result, eVoteResults evoteResults) {
+	public void parseEVoteAnswers(EVoteConfiguration config, SeatCounting result, eVoteResults evoteResults) {
 		
 		result.setPreferentialVotes(evoteResults.getPreferentialVotes());
 		
@@ -587,7 +570,7 @@ public class EVoteService extends BasicService {
 	}
 	
 	private SeatCounting handleOutsideCommunity(Survey survey, SeatCounting result, EVoteConfiguration config, Locale locale) {
-		int sumAllPreferentialVotes = config.listSeatDistributions.values().stream().collect(Collectors.summingInt(SeatDistribution::getPreferentialVotes));
+		int sumAllPreferentialVotes = config.listSeatDistributions.values().stream().mapToInt(SeatDistribution::getPreferentialVotes).sum();
 		result.setTotalPreferentialVotes(sumAllPreferentialVotes);
 		result.setPreferentialVotesFinal(sumAllPreferentialVotes);
 		result.setListVotes(sumAllPreferentialVotes);
@@ -636,13 +619,13 @@ public class EVoteService extends BasicService {
 		//filter out lists with less than x% votes
 		LinkedHashMap<MultipleChoiceQuestion, SeatDistribution> listSeatDistributionsFiltered = config.listSeatDistributions
 				.entrySet().stream().filter(x -> x.getValue().getListPercent() >= result.getMinListPercent())
-				.collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue(),  (u, v) -> {
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,  (u, v) -> {
 						throw new IllegalStateException(String.format("Duplicate key %s", u));
 					},
 					LinkedHashMap::new));
 		LinkedHashMap<MultipleChoiceQuestion, SeatDistribution> notAcceptedLists = config.listSeatDistributions
 				.entrySet().stream().filter(x -> x.getValue().getListPercentWeighted() < result.getMinListPercent())
-				.collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue(),  (u, v) -> {
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,  (u, v) -> {
 							throw new IllegalStateException(String.format("Duplicate key %s", u));
 						},
 						LinkedHashMap::new));
@@ -666,8 +649,8 @@ public class EVoteService extends BasicService {
 			listSeatDistribution.setListPercentFinal(Math.round((double)listSeatDistribution.getPreferentialVotes() / (double)result.getListVotesFinal() * 10000) / 100.0);
 		}
 		
-		MultipleChoiceQuestion[] mcs = listSeatDistributionsFiltered.keySet().toArray(new MultipleChoiceQuestion[listSeatDistributionsFiltered.size()]);
-		MultipleChoiceQuestion[] mcs_notAcceptedList = notAcceptedLists.keySet().toArray(new MultipleChoiceQuestion[notAcceptedLists.size()]);
+		MultipleChoiceQuestion[] mcs = listSeatDistributionsFiltered.keySet().toArray(new MultipleChoiceQuestion[0]);
+		MultipleChoiceQuestion[] mcs_notAcceptedList = notAcceptedLists.keySet().toArray(new MultipleChoiceQuestion[0]);
 
 		for (MultipleChoiceQuestion mc : listSeatDistributionsFiltered.keySet()) {
 			List<ElectedCandidate> candidatesOrderedByVotes = getCandidates(mc, config.candidateVotes, true);
@@ -718,42 +701,38 @@ public class EVoteService extends BasicService {
 		Set<ElectedCandidate> maxUnselected = new HashSet<>();
 		for (i = 0; i < result.getMaxCandidatesInLists(); i++) {
 			List<ElectedCandidate> candidateList = new ArrayList<>();
-				
-			for (int q = 0; q < mcs.length; q++) {
-				MultipleChoiceQuestion mc = mcs[q];
-			
-				if (mc.getPossibleAnswers().size() > i) {
-					PossibleAnswer pa = mc.getPossibleAnswers().get(i);					
-					ElectedCandidate candidateVote = config.candidateVotes.get(pa);
-					candidateList.add(candidateVote);
-					
-					if (candidateVote.getSeats() > 0 && candidateVote.getVotes() < minVotesOfSelectedCandidates) {
-						minVotesOfSelectedCandidates = candidateVote.getVotes();
-						minSelected = candidateVote;
-					}
-					if (candidateVote.getSeats() == 0 && candidateVote.getVotes() >= maxVotesOfUnselectedCandidates) {
-						maxVotesOfUnselectedCandidates = candidateVote.getVotes();
-						maxUnselected.add(candidateVote);
-					}
-				} else {
-					ElectedCandidate ec = new ElectedCandidate();
-					candidateList.add(ec); // the list does not have enough candidates -> add empty one
-				}
-			}
-			for (int q = 0; q < mcs_notAcceptedList.length; q++) {
-				MultipleChoiceQuestion mc = mcs_notAcceptedList[q];
 
-				if (mc.getPossibleAnswers().size() > i) {
-					PossibleAnswer pa = mc.getPossibleAnswers().get(i);
-					ElectedCandidate ec = config.candidateVotes.get(pa);
-					ec.setListNotAccepted(true);
-					candidateList.add(ec);
-				} else {
-					ElectedCandidate ec = new ElectedCandidate();
-					ec.setListNotAccepted(true);
-					candidateList.add(ec); // the list does not have enough candidates -> add empty one
-				}
-			}
+            for (MultipleChoiceQuestion mc : mcs) {
+                if (mc.getPossibleAnswers().size() > i) {
+                    PossibleAnswer pa = mc.getPossibleAnswers().get(i);
+                    ElectedCandidate candidateVote = config.candidateVotes.get(pa);
+                    candidateList.add(candidateVote);
+
+                    if (candidateVote.getSeats() > 0 && candidateVote.getVotes() < minVotesOfSelectedCandidates) {
+                        minVotesOfSelectedCandidates = candidateVote.getVotes();
+                        minSelected = candidateVote;
+                    }
+                    if (candidateVote.getSeats() == 0 && candidateVote.getVotes() >= maxVotesOfUnselectedCandidates) {
+                        maxVotesOfUnselectedCandidates = candidateVote.getVotes();
+                        maxUnselected.add(candidateVote);
+                    }
+                } else {
+                    ElectedCandidate ec = new ElectedCandidate();
+                    candidateList.add(ec); // the list does not have enough candidates -> add empty one
+                }
+            }
+            for (MultipleChoiceQuestion mc : mcs_notAcceptedList) {
+                if (mc.getPossibleAnswers().size() > i) {
+                    PossibleAnswer pa = mc.getPossibleAnswers().get(i);
+                    ElectedCandidate ec = config.candidateVotes.get(pa);
+                    ec.setListNotAccepted(true);
+                    candidateList.add(ec);
+                } else {
+                    ElectedCandidate ec = new ElectedCandidate();
+                    ec.setListNotAccepted(true);
+                    candidateList.add(ec); // the list does not have enough candidates -> add empty one
+                }
+            }
 			result.getCandidateVotes().add(candidateList);
 		}
 		
@@ -847,7 +826,7 @@ public class EVoteService extends BasicService {
 				votes = new Integer[] {result.getListVotes(), result.getPreferentialVotes()};
 				seatsArray = computeSeats(survey, votes, result.getListVotes() + result.getPreferentialVotes(), result.getMaxSeats(), null, null);
 			} else {
-				int sumAllPreferentialVotes = config.listSeatDistributions.values().stream().collect(Collectors.summingInt(SeatDistribution::getPreferentialVotes));
+				int sumAllPreferentialVotes = config.listSeatDistributions.values().stream().mapToInt(SeatDistribution::getPreferentialVotes).sum();
 				result.setTotalPreferentialVotes(sumAllPreferentialVotes);
 				result.setPreferentialVotesFinal(sumAllPreferentialVotes);
 				
@@ -884,13 +863,13 @@ public class EVoteService extends BasicService {
 			// compute distribution of list seats		
 			LinkedHashMap<MultipleChoiceQuestion, SeatDistribution> listSeatDistributionsFiltered = config.listSeatDistributions
 					.entrySet().stream().filter(x -> x.getValue().getListPercentWeighted() >= result.getMinListPercent())
-					.collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue(),  (u, v) -> {
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,  (u, v) -> {
 		                throw new IllegalStateException(String.format("Duplicate key %s", u));
 		            },
 		            LinkedHashMap::new));
 			LinkedHashMap<MultipleChoiceQuestion, SeatDistribution> notAcceptedLists = config.listSeatDistributions
 					.entrySet().stream().filter(x -> x.getValue().getListPercentWeighted() < result.getMinListPercent())
-					.collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue(),  (u, v) -> {
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,  (u, v) -> {
 								throw new IllegalStateException(String.format("Duplicate key %s", u));
 							},
 							LinkedHashMap::new));
@@ -985,20 +964,19 @@ public class EVoteService extends BasicService {
 					
 					counter = 0;
 					if (listSeatDistribution.getPreferentialSeats() > 0) {
-						for (int i = 0; i < candidatesOrderedByVotes.size(); i++) {
-							ElectedCandidate ec = candidatesOrderedByVotes.get(i);
-							if (ec.getSeats() == 0) { // only consider candidates that do not already have a seat (list vote)
-								ec.setSeats(1);
-								ec.setPreferentialSeat(true);
-								result.getCandidatesFromPreferentialVotes().add(ec);
-								counter++;
-								
-								if (counter == listSeatDistribution.getPreferentialSeats()) {
-									// we reached the limit for preferential vote seats
-									break;
-								}
-							}
-						}
+                        for (ElectedCandidate ec : candidatesOrderedByVotes) {
+                            if (ec.getSeats() == 0) { // only consider candidates that do not already have a seat (list vote)
+                                ec.setSeats(1);
+                                ec.setPreferentialSeat(true);
+                                result.getCandidatesFromPreferentialVotes().add(ec);
+                                counter++;
+
+                                if (counter == listSeatDistribution.getPreferentialSeats()) {
+                                    // we reached the limit for preferential vote seats
+                                    break;
+                                }
+                            }
+                        }
 					}
 				}
 				
@@ -1020,9 +998,9 @@ public class EVoteService extends BasicService {
 				}			
 			}
 			
-			MultipleChoiceQuestion[] mcs = listSeatDistributionsFiltered.keySet().toArray(new MultipleChoiceQuestion[listSeatDistributionsFiltered.size()]);
-			MultipleChoiceQuestion[] mcs_notAcceptedList = notAcceptedLists.keySet().toArray(new MultipleChoiceQuestion[notAcceptedLists.size()]);
-			int[] finalPreferentialSeats = null;
+			MultipleChoiceQuestion[] mcs = listSeatDistributionsFiltered.keySet().toArray(new MultipleChoiceQuestion[0]);
+			MultipleChoiceQuestion[] mcs_notAcceptedList = notAcceptedLists.keySet().toArray(new MultipleChoiceQuestion[0]);
+			int[] finalPreferentialSeats;
 			int[] reallocatedListSeats = new int[listSeatDistributionsFiltered.size()];
 			if (!config.useLuxembourgProcedure) {
 				// find reallocated list seats
@@ -1095,20 +1073,18 @@ public class EVoteService extends BasicService {
 						candidateList.add(ec); // the list does not have enough candidates -> add empty one
 					}
 				}
-				for (int q = 0; q < mcs_notAcceptedList.length; q++) {
-					MultipleChoiceQuestion mc = mcs_notAcceptedList[q];
-
-					if (mc.getPossibleAnswers().size() > i) {
-						PossibleAnswer pa = mc.getPossibleAnswers().get(i);
-						ElectedCandidate ec = config.candidateVotes.get(pa);
-						ec.setListNotAccepted(true);
-						candidateList.add(ec);
-					} else {
-						ElectedCandidate ec = new ElectedCandidate();
-						ec.setListNotAccepted(true);
-						candidateList.add(ec); // the list does not have enough candidates -> add empty one
-					}
-				}
+                for (MultipleChoiceQuestion mc : mcs_notAcceptedList) {
+                    if (mc.getPossibleAnswers().size() > i) {
+                        PossibleAnswer pa = mc.getPossibleAnswers().get(i);
+                        ElectedCandidate ec = config.candidateVotes.get(pa);
+                        ec.setListNotAccepted(true);
+                        candidateList.add(ec);
+                    } else {
+                        ElectedCandidate ec = new ElectedCandidate();
+                        ec.setListNotAccepted(true);
+                        candidateList.add(ec); // the list does not have enough candidates -> add empty one
+                    }
+                }
 				result.getCandidateVotes().add(candidateList);
 			}			
 		
@@ -1123,7 +1099,7 @@ public class EVoteService extends BasicService {
 			// only need Votes per Candidate
 
 			List<ElectedCandidate> allCandidatesOrdered = getCandidates(config.listSeatDistributions.keySet(), config.candidateVotes, true);
-			if (allCandidatesOrdered.size() > 0) {
+			if (!allCandidatesOrdered.isEmpty()) {
 				result.setHighestVote(allCandidatesOrdered.get(0).getVotes());
 			}
 			//limit candidates shown on the results page to 50 here, as it would be more difficult to implement this on the results page
@@ -1154,8 +1130,8 @@ public class EVoteService extends BasicService {
 		}
 		
 		if (orderByVotes) {		
-			Collections.sort(result, Comparator.comparing(ElectedCandidate::getVotes).reversed()
-	            .thenComparing(ElectedCandidate::getPosition));
+			result.sort(Comparator.comparing(ElectedCandidate::getVotes).reversed()
+                    .thenComparing(ElectedCandidate::getPosition));
 		}
 		
 		return result;
@@ -1195,25 +1171,22 @@ public class EVoteService extends BasicService {
 	}
 	
 	public static int[] computeSeats(Survey survey, Integer[] input, int total, int maxSeats, DHondtEntry[][] numbers, int[] candidatesPerList) {
-		switch (survey.geteVoteTemplate()){
-			case "l":
-			case "o":
-				return computeSeatsUsingDHondtMethod(input, total, maxSeats, numbers, candidatesPerList);
-			default:
-				return computeSeatsUsingLargestRemainderMethod(input, total, maxSeats, candidatesPerList);
-		}
+        return switch (survey.geteVoteTemplate()) {
+            case "l", "o" -> computeSeatsUsingDHondtMethod(input, total, maxSeats, numbers, candidatesPerList);
+            default -> computeSeatsUsingLargestRemainderMethod(input, total, maxSeats, candidatesPerList);
+        };
 	}
 		
 	private static DHondtEntry getLargestEntry(DHondtEntry[][] numbers) {
 		DHondtEntry result = null;
-		
-		for (int r = 0; r < numbers.length; r++) {
-			for (int i = 0; i < numbers[0].length; i++) {
-				if (numbers[r][i].getSeat() == 0 && !numbers[r][i].isInvalid() && (result == null || numbers[r][i].getValue() > result.getValue())) {
-					result = numbers[r][i];
-				}
-			}
-		}
+
+        for (DHondtEntry[] number : numbers) {
+            for (int i = 0; i < numbers[0].length; i++) {
+                if (number[i].getSeat() == 0 && !number[i].isInvalid() && (result == null || number[i].getValue() > result.getValue())) {
+                    result = number[i];
+                }
+            }
+        }
 		
 		return result;
 	}
@@ -1290,20 +1263,20 @@ public class EVoteService extends BasicService {
 		}
 		
 		if (seats > 0 && seats < maxSeats) {
-			Collections.sort(rvs, Comparator.comparingDouble(RemainderValue::getFraction).reversed());
-			
-			for (int i = 0; i < rvs.size(); i++) {
-				if (candidatesPerList != null && rvs.get(i).getSeats() >= candidatesPerList[rvs.get(i).getIndex()]) {
-					// todo: mark as invalid
-					continue;
-				}
-				
-				rvs.get(i).setSeats(rvs.get(i).getSeats()+1);
-				seats++;
-				if (seats >= maxSeats) {
-					break;
-				}
-			}
+			rvs.sort(Comparator.comparingDouble(RemainderValue::getFraction).reversed());
+
+            for (RemainderValue rv : rvs) {
+                if (candidatesPerList != null && rv.getSeats() >= candidatesPerList[rv.getIndex()]) {
+                    // todo: mark as invalid
+                    continue;
+                }
+
+                rv.setSeats(rv.getSeats() + 1);
+                seats++;
+                if (seats >= maxSeats) {
+                    break;
+                }
+            }
 		}
 		
 		for (RemainderValue rv : rvs) {

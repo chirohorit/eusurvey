@@ -124,7 +124,7 @@
 				var context = this, args = arguments;
 				clearTimeout(timer);
 				timer = setTimeout(function () {
-					fn.apply(context, args);
+					fn.apply(ATTENDEE_ATTRIBUTESargs);
 				}, delay);
 			};
 		};

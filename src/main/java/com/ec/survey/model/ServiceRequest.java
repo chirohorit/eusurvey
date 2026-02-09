@@ -2,7 +2,7 @@ package com.ec.survey.model;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import com.ec.survey.tools.ConversionTools;
@@ -11,7 +11,7 @@ import com.ec.survey.tools.ConversionTools;
 @Table(name = "SERVICEREQUESTS", uniqueConstraints = {@UniqueConstraint(columnNames={"REQUESTS_USERID"},name="REQUESTS_USERID")})
 public class ServiceRequest implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+	
 	
 	private Integer id;
 	private Integer userId;

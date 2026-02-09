@@ -1,6 +1,6 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page session="true" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -86,7 +86,7 @@
 							var a = document.createElement("a");
 							
 							if ($(row).hasClass("invitation")) {
-								$(a).attr("target", "_blank").attr("href","${contextpath}/runner/" + surveyUid + '/' + $(row).attr("data-invitationId")).html(data);											
+								$(a).attr("target", "_blank").attr("href","${contextpath}/runner/" + surveyUid + '/' + $(row).attr("data-invitationId")).html(data);
 							} else {
 								$(a).attr("target", "_blank").attr("href","${contextpath}/runner/" + surveyUid + '?draftid=' + data).html(data);
 							}
@@ -171,7 +171,7 @@
 					$(td).append('<a target="_blank" href="${contextpath}/runner/' + list[i].surveyUID + '/' + list[i].invitationId + '">' + list[i].draftId  + '</a>');
 					$(td).append('<div style="float: right"><a data-toggle="tooltip" title="<spring:message code="tooltip.readonlypreview" />" target="_blank" href="${contextpath}/runner/' + list[i].surveyUID + '/' + list[i].invitationId + '?readonly=true"><span class="glyphicon glyphicon-eye-open"></span></a></div>');
 				} else if (list[i].draft) {				
-					$(td).append('<a target="_blank" href="${contextpath}/runner/' + list[i].surveyUID + '?draftid=' + list[i].draftId + '">' + list[i].draftId  + '</a>');	
+					$(td).append('<a target="_blank" href="${contextpath}/runner/' + list[i].surveyUID + '?draftid=' + list[i].draftId + '">' + list[i].draftId  + '</a>');
 					$(td).append('<div style="float: right"><a data-toggle="tooltip" title="<spring:message code="tooltip.readonlypreview" />" target="_blank" href="${contextpath}/runner/' + list[i].surveyUID + '?draftid=' + list[i].draftId + '&readonly=true"><span class="glyphicon glyphicon-eye-open"></span></a></div>');
 				} else {
 					$(td).append(list[i].draftId);									
@@ -363,7 +363,7 @@
 										<td>
 											<c:choose>
 												<c:when test="${(answerSet.isDraft) && answerSet.invitationId != null && answerSet.invitationId.length() > 0}">
-													<a target="_blank" href="${contextpath}/runner/${answerSet.survey.uniqueId}/${answerSet.invitationId}">${answerSet.draftId}</a>											
+													<a target="_blank" href="${contextpath}/runner/${answerSet.survey.uniqueId}/${answerSet.invitationId}">${answerSet.draftId}</a>
 													<div style="float: right">
 														<a data-toggle="tooltip" title="<spring:message code="tooltip.readonlypreview" />" target="_blank" href="${contextpath}/runner/${answerSet.survey.uniqueId}/${answerSet.invitationId}?readonly=true"><span class="glyphicon glyphicon-eye-open"></span></a>
 													</div>	

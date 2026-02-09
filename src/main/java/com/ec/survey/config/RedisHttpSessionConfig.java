@@ -1,3 +1,4 @@
+/*
 package com.ec.survey.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -45,3 +46,4 @@ public class RedisHttpSessionConfig {
         return template;
     }
 }
+*/

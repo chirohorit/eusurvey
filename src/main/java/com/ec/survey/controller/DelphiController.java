@@ -1,11 +1,11 @@
 package com.ec.survey.controller;
 
+import com.ec.survey.enumerator.*;
 import com.ec.survey.exception.MessageException;
 import com.ec.survey.exception.TooManyFiltersException;
+import com.ec.survey.handler.SurveyHelper;
 import com.ec.survey.model.*;
 import com.ec.survey.model.administration.EcasUser;
-import com.ec.survey.model.administration.GlobalPrivilege;
-import com.ec.survey.model.administration.LocalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.attendees.Attendee;
 import com.ec.survey.model.attendees.Invitation;
@@ -22,7 +22,7 @@ import com.kennycason.kumo.nlp.normalize.CharacterStrippingNormalizer;
 import com.kennycason.kumo.nlp.normalize.LowerCaseNormalizer;
 import com.kennycason.kumo.nlp.normalize.TrimToEmptyNormalizer;
 
-import com.ec.survey.replacements.Pair;
+import com.ec.survey.tools.Pair;
 import org.apache.commons.io.IOUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,9 +30,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.HtmlUtils;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,14 +59,13 @@ public class DelphiController extends BasicController {
 			
 			final String questionUid = request.getParameter("questionUid");
 			
-			Element element = answerSet.getSurvey().getQuestionMapByUniqueId().get(questionUid);
+			Question element = answerSet.getSurvey().getQuestionMapByUniqueId().get(questionUid);
 
-			if (!(element instanceof Question)) {
+			if (element == null) {
 				return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 			}
 
-			Question question = (Question) element;
-			if (!answerSetContainsAnswerForQuestion(answerSet, question)) {
+            if (!answerSetContainsAnswerForQuestion(answerSet, element)) {
 				return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 			}			
 			
@@ -82,9 +82,8 @@ public class DelphiController extends BasicController {
 			
 				DelphiMedian median = null;
 				
-				if (element instanceof SingleChoiceQuestion) {
-					SingleChoiceQuestion singleChoiceQuestion = (SingleChoiceQuestion)element;
-					if (singleChoiceQuestion.getUseLikert() && singleChoiceQuestion.getMaxDistance() >= 0) {						
+				if (element instanceof SingleChoiceQuestion singleChoiceQuestion) {
+                    if (singleChoiceQuestion.getUseLikert() && singleChoiceQuestion.getMaxDistance() >= 0) {
 						List<Answer> answers = answerSet.getAnswers(singleChoiceQuestion.getUniqueId());
 						if (!answers.isEmpty())
 						{
@@ -93,9 +92,8 @@ public class DelphiController extends BasicController {
 					}
 				}
 				
-				if (element instanceof NumberQuestion) {
-					NumberQuestion numberQuestion = (NumberQuestion)element;
-					if (numberQuestion.isSlider() && numberQuestion.getMaxDistance() >= 0) {						
+				if (element instanceof NumberQuestion numberQuestion) {
+                    if (numberQuestion.isSlider() && numberQuestion.getMaxDistance() >= 0) {
 						List<Answer> answers = answerSet.getAnswers(numberQuestion.getUniqueId());
 						if (!answers.isEmpty())
 						{
@@ -176,8 +174,7 @@ public class DelphiController extends BasicController {
 						if (attendee != null) {
 							answerSet.mapToUser(attendee.getEmail(), attendee.getName(), survey.isAnonymous());
 						} else {
-							logger.error("Attendee " + invitation.getAttendeeId() + " referenced by invitation "
-									+ invitation.getId() + " not found!");
+                            logger.error("Attendee {} referenced by invitation {} not found!", invitation.getAttendeeId(), invitation.getId());
 						}
 					}
 				}
@@ -280,15 +277,14 @@ public class DelphiController extends BasicController {
 			}
 
 			String questionuid = request.getParameter("questionuid");
-			Element element = survey.getQuestionMapByUniqueId(true).get(questionuid);
+			Question element = survey.getQuestionMapByUniqueId(true).get(questionuid);
 
-			if (!(element instanceof Question)) {
+			if (element == null) {
 				return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 			}
 
-			Question question = (Question) element;
-			if (!resultsview && !privileged && !survey.getIsDelphiShowAnswersAndStatisticsInstantly()
-					&& !answerSetContainsAnswerForQuestion(answerSet, question)) {
+            if (!resultsview && !privileged && !survey.getIsDelphiShowAnswersAndStatisticsInstantly()
+					&& !answerSetContainsAnswerForQuestion(answerSet, element)) {
 				return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 			}
 
@@ -312,25 +308,22 @@ public class DelphiController extends BasicController {
 			StatisticsCreator creator = (StatisticsCreator) context.getBean("statisticsCreator");
 			creator.init(survey, filter, false);
 
-			if (question instanceof NumberQuestion) {
-				NumberQuestion numq = (NumberQuestion) question;
-				NumberQuestionStatistics numberQuestionStats = creator.getAnswers4NumberQuestionStatistics(survey, numq);
+			if (element instanceof NumberQuestion numq) {
+                NumberQuestionStatistics numberQuestionStats = creator.getAnswers4NumberQuestionStatistics(survey, numq);
 				return handleDelphiNumberQuestion(survey, numq, numberQuestionStats);
 			}
 
-			if (question instanceof FormulaQuestion) {
-				FormulaQuestion formula = (FormulaQuestion) question;
-				NumberQuestionStatistics formulaQuestionStats = creator.getAnswers4NumberQuestionStatistics(survey, formula);
+			if (element instanceof FormulaQuestion formula) {
+                NumberQuestionStatistics formulaQuestionStats = creator.getAnswers4NumberQuestionStatistics(survey, formula);
 				return handleDelphiFormulaQuestion(survey, formula, formulaQuestionStats);
 			}
 			
-			if (question instanceof FreeTextQuestion) {
-				return handleDelphiFreetextQuestion(survey, question, creator);
+			if (element instanceof FreeTextQuestion) {
+				return handleDelphiFreetextQuestion(survey, element, creator);
 			}
 			
-			if (question instanceof ComplexTableItem) {
-				ComplexTableItem item = (ComplexTableItem) question;
-				if (item.getCellType() == ComplexTableItem.CellType.FreeText) {
+			if (element instanceof ComplexTableItem item) {
+                if (item.getCellType() == ComplexTableItem.CellType.FreeText) {
 					return handleDelphiFreetextQuestion(survey, item, creator);
 				}
 			}
@@ -346,7 +339,7 @@ public class DelphiController extends BasicController {
 
 			creator.getAnswers4Statistics(
 					survey,
-					question,
+                    element,
 					numberOfAnswersMap,
 					numberOfAnswersMapMatrix,
 					numberOfAnswersMapGallery,
@@ -356,26 +349,25 @@ public class DelphiController extends BasicController {
 					numberOfAnswersMapRankingQuestion,
 					mapTargetDatasetQuestion);
 
-			if (question instanceof ChoiceQuestion) {
-				return handleDelphiGraphChoiceQuestion(survey, (ChoiceQuestion) question, statistics, creator, numberOfAnswersMap, multipleChoiceSelectionsByAnswerset, mapTargetDatasetQuestion);
+			if (element instanceof ChoiceQuestion) {
+				return handleDelphiGraphChoiceQuestion(survey, element, statistics, creator, numberOfAnswersMap, multipleChoiceSelectionsByAnswerset, mapTargetDatasetQuestion);
 			}
 
-			if (question instanceof Matrix) {
-				return handleDelphiGraphMatrix(survey, (Matrix) question, statistics, creator, numberOfAnswersMapMatrix);
+			if (element instanceof Matrix) {
+				return handleDelphiGraphMatrix(survey, (Matrix) element, statistics, creator, numberOfAnswersMapMatrix);
 			}
 
-			if (question instanceof RatingQuestion) {
-				return handleDelphiGraphRatingQuestion(survey, (RatingQuestion) question, statistics, creator, numberOfAnswersMapRatingQuestion);
+			if (element instanceof RatingQuestion) {
+				return handleDelphiGraphRatingQuestion(survey, (RatingQuestion) element, statistics, creator, numberOfAnswersMapRatingQuestion);
 			}
 			
-			if (question instanceof RankingQuestion) {
-				return handleDelphiGraphRankingQuestion(survey, (RankingQuestion) question, statistics, creator, numberOfAnswersMapRankingQuestion);
+			if (element instanceof RankingQuestion) {
+				return handleDelphiGraphRankingQuestion(survey, (RankingQuestion) element, statistics, creator, numberOfAnswersMapRankingQuestion);
 			}
 			
-			if (question instanceof ComplexTableItem) {
-				ComplexTableItem item = (ComplexTableItem) question;
-				if (item.getCellType() == ComplexTableItem.CellType.SingleChoice || item.getCellType() == ComplexTableItem.CellType.MultipleChoice) {
-					return handleDelphiGraphChoiceQuestion(survey, question, statistics, creator, numberOfAnswersMap, multipleChoiceSelectionsByAnswerset, mapTargetDatasetQuestion);
+			if (element instanceof ComplexTableItem item) {
+                if (item.getCellType() == ComplexTableItem.CellType.SingleChoice || item.getCellType() == ComplexTableItem.CellType.MultipleChoice) {
+					return handleDelphiGraphChoiceQuestion(survey, element, statistics, creator, numberOfAnswersMap, multipleChoiceSelectionsByAnswerset, mapTargetDatasetQuestion);
 				}
 				if (item.getCellType() == ComplexTableItem.CellType.Number || item.getCellType() == ComplexTableItem.CellType.Formula) {
 					NumberQuestionStatistics numberQuestionStats = creator.getAnswers4NumberQuestionStatistics(survey, item);
@@ -511,7 +503,7 @@ public class DelphiController extends BasicController {
 			InputStream inputStream = servletContext.getResourceAsStream("/WEB-INF/Content/StopWords/EN.txt");
 			String text;
 			try {
-				text = IOUtils.toString(inputStream, "UTF-8");
+				text = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 				String[] stopWordsArray = text.split("\\R");
 				stopWords = Arrays.asList(stopWordsArray);
 			} catch (IOException e) {
@@ -551,11 +543,10 @@ public class DelphiController extends BasicController {
 
 	private ResponseEntity<AbstractDelphiGraphData> handleDelphiNumberQuestion(Survey survey, Question question, NumberQuestionStatistics numberQuestionStatistics) {
 		
-		boolean showStatisticsForNumberQuestion = false;
+		boolean showStatisticsForNumberQuestion;
 		boolean isSlider = false;
-		if (question instanceof NumberQuestion) {
-			NumberQuestion num = (NumberQuestion) question;
-			showStatisticsForNumberQuestion = num.showStatisticsForNumberQuestion();
+		if (question instanceof NumberQuestion num) {
+            showStatisticsForNumberQuestion = num.showStatisticsForNumberQuestion();
 			isSlider = num.isSlider();
 		} else {
 			ComplexTableItem item = (ComplexTableItem) question;
@@ -639,9 +630,8 @@ public class DelphiController extends BasicController {
 		boolean single = question instanceof SingleChoiceQuestion;
 		boolean multiple = question instanceof MultipleChoiceQuestion;
 		
-		if (question instanceof ComplexTableItem) {
-			ComplexTableItem item = (ComplexTableItem) question;
-			single = item.getCellType() == ComplexTableItem.CellType.SingleChoice;
+		if (question instanceof ComplexTableItem item) {
+            single = item.getCellType() == ComplexTableItem.CellType.SingleChoice;
 			multiple = item.getCellType() == ComplexTableItem.CellType.MultipleChoice;			
 		}
 
@@ -653,11 +643,10 @@ public class DelphiController extends BasicController {
 			return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 		}
 		
-		if (survey.getIsSelfAssessment() && question instanceof SingleChoiceQuestion) {
-			SingleChoiceQuestion scq = (SingleChoiceQuestion)question;
-			
-			if (scq.getIsTargetDatasetQuestion()) {
-				List<SATargetDataset> datasets = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+		if (survey.getIsSelfAssessment() && question instanceof SingleChoiceQuestion scq) {
+
+            if (scq.getIsTargetDatasetQuestion()) {
+				List<SATargetDataset> datasets = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 				
 				for (SATargetDataset dataset : datasets) {
 					DelphiGraphEntry entry = new DelphiGraphEntry();
@@ -707,10 +696,9 @@ public class DelphiController extends BasicController {
 		
 			DelphiSection lastMainSection = null;
 			for (Element element : survey.getQuestionsAndSections()) {
-				if (element instanceof Section) {
-					Section section = (Section) element;
-					
-					currentDelphiSection = new DelphiSection();
+				if (element instanceof Section section) {
+
+                    currentDelphiSection = new DelphiSection();
 					currentDelphiSection.setTitle(element.getTitle());
 					currentDelphiSection.setLevel(section.getLevel());
 					structure.getSections().add(currentDelphiSection);
@@ -719,9 +707,8 @@ public class DelphiController extends BasicController {
 						lastMainSection = currentDelphiSection;
 					}
 					
-				} else if (element instanceof Question) {
-					Question question = (Question)element;
-					if (question.getIsDelphiQuestion()) {
+				} else if (element instanceof Question question) {
+                    if (question.getIsDelphiQuestion()) {
 						
 						DelphiQuestion delphiQuestion = new DelphiQuestion();
 						delphiQuestion.setTitle(question.getTitle());
@@ -730,41 +717,39 @@ public class DelphiController extends BasicController {
 												
 						if (answerSet != null)
 						{
-							String result = "";
+							StringBuilder result = new StringBuilder();
 							
-							if (question instanceof Matrix)
-							{								
-								Matrix matrix = (Matrix)question;
-						
-								for (Element matrixQuestions : matrix.getQuestions()) {
+							if (question instanceof Matrix matrix)
+							{
+
+                                for (Element matrixQuestions : matrix.getQuestions()) {
 									List<Answer> answers = answerSet.getAnswers(matrixQuestions.getUniqueId());
 									
 									for (Answer answer: answers) {
-										result += SurveyHelper.getAnswerTitle(survey, answer, false, false) + " ";
+										result.append(SurveyHelper.getAnswerTitle(survey, answer, false, false)).append(" ");
 									}
 								}
 								
-								delphiQuestion.setAnswer(result);
-							} else if (question instanceof RatingQuestion)
-							{								
-								RatingQuestion rating = (RatingQuestion)question;
+								delphiQuestion.setAnswer(result.toString());
+							} else if (question instanceof RatingQuestion rating)
+							{
 
-								for (Element ratingQuestions : rating.getQuestions()) {
+                                for (Element ratingQuestions : rating.getQuestions()) {
 									List<Answer> answers = answerSet.getAnswers(ratingQuestions.getUniqueId());
 									
 									for (Answer answer: answers) {
-										result += answer.getValue() + " ";
+										result.append(answer.getValue()).append(" ");
 									}
 								}
 
-								delphiQuestion.setAnswer(result);
+								delphiQuestion.setAnswer(result.toString());
 							} else if (question instanceof RankingQuestion)
 							{
 								List<Answer> answers = answerSet.getAnswers(question.getUniqueId());
 
 								if (!answers.isEmpty()) {
 									for (Answer answer : answers) {
-										result += SurveyHelper.getAnswerTitle(survey, answer, false, false) + " ";
+										result.append(SurveyHelper.getAnswerTitle(survey, answer, false, false)).append(" ");
 									}
 								}
 							} else {
@@ -772,20 +757,18 @@ public class DelphiController extends BasicController {
 
 								if (!answers.isEmpty()) {
 									for (Answer answer : answers) {
-										result += SurveyHelper.getAnswerTitle(survey, answer, false, false) + " ";
+										result.append(SurveyHelper.getAnswerTitle(survey, answer, false, false)).append(" ");
 										
 										DelphiMedian median = null;										
 										
-										if (question instanceof SingleChoiceQuestion) {
-											SingleChoiceQuestion singleChoiceQuestion = (SingleChoiceQuestion)question;
-											if (singleChoiceQuestion.getUseLikert() && singleChoiceQuestion.getMaxDistance() > -1) {
+										if (question instanceof SingleChoiceQuestion singleChoiceQuestion) {
+                                            if (singleChoiceQuestion.getUseLikert() && singleChoiceQuestion.getMaxDistance() > -1) {
 												median = answerService.getMedian(survey, singleChoiceQuestion, answer, null);												
 											}
 										}
 										
-										if (question instanceof NumberQuestion) {
-											NumberQuestion numberQuestion = (NumberQuestion)question;
-											if (numberQuestion.isSlider() && numberQuestion.getMaxDistance() > -1) {
+										if (question instanceof NumberQuestion numberQuestion) {
+                                            if (numberQuestion.isSlider() && numberQuestion.getMaxDistance() > -1) {
 												median = answerService.getMedian(survey, numberQuestion, answer, null);												
 											}
 										}
@@ -806,7 +789,7 @@ public class DelphiController extends BasicController {
 								}
 							}
 
-							delphiQuestion.setAnswer(result);
+							delphiQuestion.setAnswer(result.toString());
 							delphiQuestion.setHasUnreadComments(answerExplanationService.hasUnreadComments(answerSet.getUniqueCode(), question.getUniqueId()));
 						}
 
@@ -828,12 +811,11 @@ public class DelphiController extends BasicController {
 						{
 							if (answerSet == null) {
 								structure.setUnansweredMandatoryQuestions(true);
-							} else if (question instanceof MatrixOrTable)
+							} else if (question instanceof MatrixOrTable matrix)
 							{
 								boolean found = false;
-								MatrixOrTable matrix = (MatrixOrTable)question;
-						
-								for (Element matrixQuestions : matrix.getQuestions()) {
+
+                                for (Element matrixQuestions : matrix.getQuestions()) {
 									List<Answer> answers = answerSet.getAnswers(matrixQuestions.getUniqueId());
 									if (!answers.isEmpty()) {
 										found = true;
@@ -844,10 +826,9 @@ public class DelphiController extends BasicController {
 								if (!found) {
 									structure.setUnansweredMandatoryQuestions(true);
 								}
-							} else if (question instanceof RatingQuestion)
-							{								
-								RatingQuestion rating = (RatingQuestion)question;
-								boolean found = false;
+							} else if (question instanceof RatingQuestion rating)
+							{
+                                boolean found = false;
 								for (Element ratingQuestions : rating.getQuestions()) {
 									List<Answer> answers = answerSet.getAnswers(ratingQuestions.getUniqueId());
 									if (!answers.isEmpty()) {
@@ -949,6 +930,7 @@ public class DelphiController extends BasicController {
 				tableEntry.getFiles().add(tableFile);
 			}
 		} catch (NoSuchElementException ex) {
+			logger.error(ex.getLocalizedMessage());
 		}
 	}
 	
@@ -968,7 +950,7 @@ public class DelphiController extends BasicController {
 		String questionuid = request.getParameter("questionuid");
 		Element element = survey.getQuestionMapByUniqueId().get(questionuid);
 		
-		if (answerSet == null || element == null || !(element instanceof SingleChoiceQuestion || element instanceof NumberQuestion)) {
+		if (answerSet == null || !(element instanceof SingleChoiceQuestion || element instanceof NumberQuestion)) {
 			return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 		}
 		
@@ -980,9 +962,8 @@ public class DelphiController extends BasicController {
 		
 		DelphiMedian median;
 		
-		if (element instanceof SingleChoiceQuestion) {		
-			SingleChoiceQuestion singleChoiceQuestion = (SingleChoiceQuestion) element;
-			if (!singleChoiceQuestion.getUseLikert() || singleChoiceQuestion.getMaxDistance() == -1) {
+		if (element instanceof SingleChoiceQuestion singleChoiceQuestion) {
+            if (!singleChoiceQuestion.getUseLikert() || singleChoiceQuestion.getMaxDistance() == -1) {
 				return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 			}
 			median = answerService.getMedian(survey, singleChoiceQuestion, answer, null);
@@ -1027,15 +1008,14 @@ public class DelphiController extends BasicController {
 			}
 
 			String questionuid = request.getParameter("questionuid");
-			Element element = survey.getQuestionMapByUniqueId().get(questionuid);
+			Question element = survey.getQuestionMapByUniqueId().get(questionuid);
 
-			if (!(element instanceof Question)) {
+			if (element == null) {
 				return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 			}
 
-			Question question = (Question) element;
-			if (!question.getIsDelphiQuestion() || (!survey.getIsDelphiShowAnswersAndStatisticsInstantly()
-					&& !answerSetContainsAnswerForQuestion(answerSet, question))) {
+            if (!element.getIsDelphiQuestion() || (!survey.getIsDelphiShowAnswersAndStatisticsInstantly()
+					&& !answerSetContainsAnswerForQuestion(answerSet, element))) {
 				return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 			}
 
@@ -1063,23 +1043,23 @@ public class DelphiController extends BasicController {
 
 			DelphiTable result;
 
-			if (question instanceof ChoiceQuestion) {
-				result = handleDelphiTableChoiceQuestion((ChoiceQuestion) question, orderBy, limit, offset, answerSetId);
-			} else if (question instanceof Matrix) {
-				result = handleDelphiTableMatrix((Matrix) question, orderBy, limit, offset, answerSetId);
-			} else if (question instanceof RatingQuestion) {
-				result = handleDelphiTableRatingQuestion((RatingQuestion) question, orderBy, limit, offset, answerSetId);
-			} else if (question instanceof Table) {
-				result = handleDelphiTableTable((Table) question, orderBy, limit, offset, answerSetId);
-			} else if (question instanceof RankingQuestion) {
-				result = handleDelphiTableRankingQuestion((RankingQuestion) question, orderBy, limit, offset, answerSetId);
+			if (element instanceof ChoiceQuestion) {
+				result = handleDelphiTableChoiceQuestion((ChoiceQuestion) element, orderBy, limit, offset, answerSetId);
+			} else if (element instanceof Matrix) {
+				result = handleDelphiTableMatrix((Matrix) element, orderBy, limit, offset, answerSetId);
+			} else if (element instanceof RatingQuestion) {
+				result = handleDelphiTableRatingQuestion((RatingQuestion) element, orderBy, limit, offset, answerSetId);
+			} else if (element instanceof Table) {
+				result = handleDelphiTableTable((Table) element, orderBy, limit, offset, answerSetId);
+			} else if (element instanceof RankingQuestion) {
+				result = handleDelphiTableRankingQuestion((RankingQuestion) element, orderBy, limit, offset, answerSetId);
 			} else {
-				result = handleDelphiTableRawValueQuestion(question, orderBy, limit, offset, answerSetId);
+				result = handleDelphiTableRawValueQuestion(element, orderBy, limit, offset, answerSetId);
 			}
 
 			result = orderByAnswerOrExplanation(result, orderBy);
 
-			result.setQuestionType(DelphiQuestionType.from(question));
+			result.setQuestionType(DelphiQuestionType.from(element));
 
 			for (DelphiTableEntry entry : result.getEntries()) {
 				boolean stopIteration = false;
@@ -1110,7 +1090,7 @@ public class DelphiController extends BasicController {
 				}
 			}
 
-			result.setShowExplanationBox(question.getShowExplanationBox());
+			result.setShowExplanationBox(element.getShowExplanationBox());
 
 			return ResponseEntity.ok(result);
 		} catch (Exception e) {
@@ -1122,24 +1102,16 @@ public class DelphiController extends BasicController {
 	private DelphiTable orderByAnswerOrExplanation(DelphiTable result, DelphiTableOrderBy orderBy) {
 		List<DelphiTableEntry> entries = result.getEntries();
 
-		Comparator<DelphiTableEntry> compareByAnswers = new Comparator<DelphiTableEntry>() {
-			@Override
-			public int compare(DelphiTableEntry e1, DelphiTableEntry e2) {
-				return e1.getAnswer().compareTo(e2.getAnswer());
-			}
-		};
+		Comparator<DelphiTableEntry> compareByAnswers = Comparator.comparing(DelphiTableEntry::getAnswer);
 
-		Comparator<DelphiTableEntry> compareByLikes = new Comparator<DelphiTableEntry>() {
-			@Override
-			public int compare(DelphiTableEntry e1, DelphiTableEntry e2) {
-				if (e2.getExplanation() == null) {
-					return 0;
-				} else if (e1.getExplanation() == null) {
-					return -1;
-				}
-				return Integer.compare(e1.getExplanation().getNumLikes(), e2.getExplanation().getNumLikes());
-			}
-		};
+		Comparator<DelphiTableEntry> compareByLikes = (e1, e2) -> {
+            if (e2.getExplanation() == null) {
+                return 0;
+            } else if (e1.getExplanation() == null) {
+                return -1;
+            }
+            return Integer.compare(e1.getExplanation().getNumLikes(), e2.getExplanation().getNumLikes());
+        };
 
 		switch (orderBy) {
 			case UpdateAsc:
@@ -1147,21 +1119,21 @@ public class DelphiController extends BasicController {
 				break;
 
 			case AnswersAsc:
-				Collections.sort(entries, compareByAnswers);
+				entries.sort(compareByAnswers);
 				break;
 
 			case AnswersDesc:
-				Collections.sort(entries, compareByAnswers);
+				entries.sort(compareByAnswers);
 				Collections.reverse(entries);
 				break;
 
 			case ExplanationsMostLiked:
-				Collections.sort(entries, compareByLikes);
+				entries.sort(compareByLikes);
 				Collections.reverse(entries);
 				break;
 
 			case ExplanationsLessLiked:
-				Collections.sort(entries, compareByLikes);
+				entries.sort(compareByLikes);
 				break;
 
 		}
@@ -1228,7 +1200,7 @@ public class DelphiController extends BasicController {
 		for (List<DelphiContribution> entry : groupDelphiContributions(contributions)) {
 			List<String> values = entry.stream()
 					.map(DelphiContribution::getAnswerUid)
-					.collect(Collectors.toList());
+					.toList();
 
 			DelphiTableEntry tableEntry = new DelphiTableEntry();
 			DelphiContribution firstValue = entry.get(0);
@@ -1304,7 +1276,7 @@ public class DelphiController extends BasicController {
 			List<DelphiTableAnswer> sortedAnswers = answers.stream()
 					.sorted(Comparator.comparingInt(Pair::getKey))
 					.map(Pair::getValue)
-					.collect(Collectors.toList());
+					.toList();
 
 			DelphiContribution firstValue = entry.get(0);
 
@@ -1360,7 +1332,7 @@ public class DelphiController extends BasicController {
 			List<DelphiTableAnswer> sortedAnswers = answers.stream()
 					.sorted(Comparator.comparingInt(Pair::getKey))
 					.map(Pair::getValue)
-					.collect(Collectors.toList());
+					.toList();
 
 			DelphiContribution firstValue = entry.get(0);
 
@@ -1433,9 +1405,9 @@ public class DelphiController extends BasicController {
 			final String questionUid = request.getParameter("questionuid");
 			final String parent = request.getParameter("parent");
 			
-			Element element = survey.getQuestionMapByUniqueId().get(questionUid);
+			Question element = survey.getQuestionMapByUniqueId().get(questionUid);
 
-			if (!(element instanceof Question) || !element.isDelphiElement()) {
+			if (element == null || !element.isDelphiElement()) {
 				return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 			}
 			
@@ -1446,9 +1418,8 @@ public class DelphiController extends BasicController {
 					// participant may only see answers if he answered before
 					return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
 				}
-	
-				Question question = (Question) element;
-				if (!answerSetContainsAnswerForQuestion(answerSet, question)) {
+
+                if (!answerSetContainsAnswerForQuestion(answerSet, element)) {
 					return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 				}			
 			}
@@ -1653,13 +1624,13 @@ public class DelphiController extends BasicController {
 			try {
 				InputStream inputStream = servletContext
 						.getResourceAsStream("/WEB-INF/Content/mailtemplateeusurvey.html");
-				String text = IOUtils.toString(inputStream, "UTF-8").replace("[CONTENT]", body).replace("[HOST]",
+				String text = IOUtils.toString(inputStream, StandardCharsets.UTF_8).replace("[CONTENT]", body).replace("[HOST]",
 						serverPrefix);
 
 				mailService.SendHtmlMail(email, sender, sender,
 						resources.getMessage("message.mail.linkSubject", null, new Locale("EN")), text, null);
 			} catch (Exception e) {
-				logger.error("Problem during sending the draft link. To:" + email + " Link:" + link, e);
+                logger.error("Problem during sending the draft link. To:{} Link:{}", email, link, e);
 				return new ResponseEntity<>(resources.getMessage("message.mail.failMailLinkDraft", null, locale), HttpStatus.INTERNAL_SERVER_ERROR);
 			}		
 

@@ -2,17 +2,15 @@ package com.ec.survey.service;
 
 import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.ParticipationGroup;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.attendees.*;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.NativeQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,7 +48,7 @@ public class AttendeeService extends BasicService {
 	@Transactional(readOnly = true)
 	public List<Attendee> getAttendees(List<Integer> ids, boolean eagerload) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"FROM Attendee a WHERE a.id in (" + StringUtils.collectionToCommaDelimitedString(ids) + ")");
 		List<Attendee> result = query.list();
 
@@ -192,12 +190,13 @@ public class AttendeeService extends BasicService {
 		return res;
 	}
 
-	private String getSql(Integer ownerId, Map<String, String> attributeFilter,
+	@Transactional
+	public String getSql(Integer ownerId, Map<String, String> attributeFilter,
 			HashMap<String, Object> oQueryParameters, boolean onlywritableshares) {
 
 		StringBuilder sql = new StringBuilder("FROM ATTENDEE a");
 
-		if (attributeFilter != null && attributeFilter.size() > 0) {
+		if (attributeFilter != null && !attributeFilter.isEmpty()) {
 			for (Entry<String, String> entry : attributeFilter.entrySet()) {
 				if (!entry.getKey().equalsIgnoreCase("name") && !entry.getKey().equalsIgnoreCase(Constants.EMAIL)
 						&& !entry.getKey().equalsIgnoreCase("owner") && !entry.getKey().equalsIgnoreCase("_csrf")
@@ -245,7 +244,7 @@ public class AttendeeService extends BasicService {
 
 		sql.append(" AND a.ATTENDEE_HIDDEN IS NULL");
 
-		if (attributeFilter != null && attributeFilter.size() > 0) {
+		if (attributeFilter != null && !attributeFilter.isEmpty()) {
 			int counter = 0;
 			for (Entry<String, String> entry : attributeFilter.entrySet()) {
 				if (!entry.getKey().equalsIgnoreCase("name") && !entry.getKey().equalsIgnoreCase(Constants.EMAIL) && !entry.getKey().equalsIgnoreCase("owner"))
@@ -291,19 +290,19 @@ public class AttendeeService extends BasicService {
 		return sql.toString();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+
 	@Transactional(readOnly = true)
 	public List<AttributeName> getAllAttributes(int ownerId) {
 		Session session = sessionFactory.getCurrentSession();
 
-		Query query = session.createNativeQuery("SELECT a FROM AttributeName a ORDER BY a.name ASC");
+		Query<AttributeName> query = session.createQuery("SELECT a FROM AttributeName a ORDER BY a.name ASC", AttributeName.class);
 
 		if (ownerId > 0) {
 			String shared = " OR a.ownerId = -1 OR a.id IN (SELECT attributeName.id FROM Share share JOIN share.attendees as attendee JOIN attendee.attributes as attribute JOIN attribute.attributeName as attributeName WHERE share.recipient.id = :ownerId)";
 
-			query = session.createNativeQuery(
+			query = session.createQuery(
 					"SELECT a FROM AttributeName a WHERE a.ownerId = :ownerId" + shared + " ORDER BY a.name ASC");
-			query.setParameter("ownerId", (Integer) ownerId);
+			query.setParameter("ownerId", ownerId);
 		}
 
 		List<AttributeName> attributeNames = query.list();
@@ -329,23 +328,23 @@ public class AttendeeService extends BasicService {
 	@Transactional(readOnly = true)
 	public Attendee get(Integer id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (Attendee) session.get(Attendee.class, id);
+		return session.get(Attendee.class, id);
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void add(Attendee attendee) {
 		Session session = sessionFactory.getCurrentSession();
 		for (Attribute attribute : attendee.getAttributes()) {
 			if (attribute.getAttributeName().getId() == null || attribute.getAttributeName().getId() == 0) {
-				session.save(attribute.getAttributeName());
+				session.persist(attribute.getAttributeName());
 			}
 		}
 		attendee.setCreated(new Date());
 		attendee.setUpdated(attendee.getCreated());
-		session.save(attendee);
+		session.persist(attendee);
 		for (Attribute attribute : attendee.getAttributes()) {
 			attribute.setAttendeeId(attendee.getId());
-			session.update(attribute);
+			session.merge(attribute);
 		}
 
 		if (attendee.getOriginalId() != null) {
@@ -356,40 +355,40 @@ public class AttendeeService extends BasicService {
 
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void add(List<Attendee> attendees) {
 		Session session = sessionFactory.getCurrentSession();
 		for (Attendee attendee : attendees) {
 			for (Attribute attribute : attendee.getAttributes()) {
 				attribute.setAttendeeId(attendee.getId());
 				if (attribute.getAttributeName().getId() == null || attribute.getAttributeName().getId() == 0) {
-					session.save(attribute.getAttributeName());
+					session.persist(attribute.getAttributeName());
 				}
 			}
 			attendee.setCreated(new Date());
 			attendee.setUpdated(attendee.getCreated());
-			session.save(attendee);
+			session.persist(attendee);
 			for (Attribute attribute : attendee.getAttributes()) {
 				attribute.setAttendeeId(attendee.getId());
-				session.update(attribute);
+				session.merge(attribute);
 			}
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void update(Attendee attendee, boolean ismarkdeleted) {
 		Session session = sessionFactory.getCurrentSession();
-		attendee = (Attendee) session.merge(attendee);
+		attendee = session.merge(attendee);
 		if (!ismarkdeleted)
 		{
 			for (Attribute attribute : attendee.getAttributes()) {
 				if (attribute.getAttributeName().getId() == null || attribute.getAttributeName().getId() == 0) {
-					session.saveOrUpdate(attribute.getAttributeName());
+					session.merge(attribute.getAttributeName());
 				}
 			}
 		}
 		attendee.setUpdated(new Date());
-		session.saveOrUpdate(attendee);
+		session.merge(attendee);
 
 		if (!ismarkdeleted)
 		{
@@ -399,7 +398,7 @@ public class AttendeeService extends BasicService {
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void update(List<Attendee> attendees, boolean isDelete) {
 		Session session = sessionFactory.getCurrentSession();
 
@@ -407,12 +406,12 @@ public class AttendeeService extends BasicService {
 			if (!isDelete) {
 				for (Attribute attribute : attendee.getAttributes()) {
 					if (attribute.getAttributeName().getId() == null || attribute.getAttributeName().getId() == 0) {
-						session.saveOrUpdate(attribute.getAttributeName());
+						session.merge(attribute.getAttributeName());
 					}
 				}
 			}
 			attendee.setUpdated(new Date());
-			session.saveOrUpdate(attendee);
+			session.merge(attendee);
 
 			if (!isDelete) {
 				for (Attribute attribute : attendee.getAttributes()) {
@@ -422,41 +421,41 @@ public class AttendeeService extends BasicService {
 		}
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void delete(int id) {
 		Session session = sessionFactory.getCurrentSession();
 
-		Attendee attendee = (Attendee) session.get(Attendee.class, id);
+		// 1. Get the attendee (get() is still valid, find() is JPA standard)
+		Attendee attendee = session.find(Attendee.class, id);
+		if (attendee == null) return;
 
-		Criteria crit = session.createCriteria(ParticipationGroup.class);
-		crit.createAlias("attendees", "attendeesAlias");
-		crit.add(Restrictions.eq("attendeesAlias.id", id));
+		// 2. Remove attendee from ParticipationGroups
+		// Use HQL to find groups containing this attendee
+		List<ParticipationGroup> groups = session.createQuery(
+						"select pg from ParticipationGroup pg join pg.attendees a where a.id = :id", ParticipationGroup.class)
+				.setParameter("id", id)
+				.getResultList();
 
-		@SuppressWarnings("unchecked")
-		List<ParticipationGroup> groups = crit.list();
-
-		for (ParticipationGroup participationGroup : groups) {
-			participationGroup.getAttendees().remove(attendee);
-			session.update(participationGroup);
+		for (ParticipationGroup pg : groups) {
+			pg.getAttendees().remove(attendee);
 		}
 
-		crit = session.createCriteria(Share.class);
-		crit.createAlias("attendees", "attendeesAlias");
-		crit.add(Restrictions.eq("attendeesAlias.id", id));
-
-		@SuppressWarnings("unchecked")
-		List<Share> shares = crit.list();
+		// 3. Remove attendee from Shares
+		List<Share> shares = session.createQuery(
+						"select s from Share s join s.attendees a where a.id = :id", Share.class)
+				.setParameter("id", id)
+				.getResultList();
 
 		for (Share share : shares) {
 			share.getAttendees().remove(attendee);
-			session.update(share);
 		}
 
-		session.flush();
-		session.delete(attendee);
+		// 4. Final Cleanup
+		session.flush(); // Synchronize state
+		session.remove(attendee); // Use remove() instead of delete()
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void delete(List<Attendee> attendees) {
 		Session session = sessionFactory.getCurrentSession();
 
@@ -475,34 +474,34 @@ public class AttendeeService extends BasicService {
 				.setParameterList("ids", ids);
 		query.executeUpdate();
 
-		query = session.createNativeQuery("DELETE FROM attendee_attributes WHERE ATTENDEE_ID IN (:ids)")
+		query = session.createNativeQuery("DELETE FROM ATTENDEE_ATTRIBUTES WHERE ATTENDEE_ID IN (:ids)")
 				.setParameterList("ids", ids);
 		query.executeUpdate();
 
-		query = session.createNativeQuery("DELETE FROM Attribute a WHERE a.attendeeId IN (:ids)").setParameterList("ids",
+		query = session.createQuery("DELETE FROM Attribute a WHERE a.attendeeId IN (:ids)").setParameterList("ids",
 				ids);
 		query.executeUpdate();
 
-		query = session.createNativeQuery("DELETE FROM Attendee a WHERE a.id IN (:ids)").setParameterList("ids", ids);
+		query = session.createQuery("DELETE FROM Attendee a WHERE a.id IN (:ids)").setParameterList("ids", ids);
 		query.executeUpdate();
 	}
 
 	@Transactional(readOnly = true)
 	public Attribute getAttribute(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (Attribute) session.get(Attribute.class, id);
+		return session.get(Attribute.class, id);
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void add(AttributeName attributeName) {
 		Session session = sessionFactory.getCurrentSession();
-		session.save(attributeName);
+		session.persist(attributeName);
 	}
 
 	@Transactional(readOnly = true)
 	public AttributeName getAttributeName(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (AttributeName) session.get(AttributeName.class, id);
+		return session.get(AttributeName.class, id);
 	}
 
 	@Transactional(readOnly = true)
@@ -510,10 +509,10 @@ public class AttendeeService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Query query;
 		if (ownerId == -1) {
-			query = session.createNativeQuery("SELECT a FROM AttributeName a WHERE a.name = :name").setParameter("name", (String) name);
+			query = session.createQuery("SELECT a FROM AttributeName a WHERE a.name = :name").setParameter("name", name);
 		} else {
-			query = session.createNativeQuery("SELECT a FROM AttributeName a WHERE a.name = :name AND a.ownerId = :owner")
-					.setParameter("name", (String) name).setParameter("owner", (Integer) ownerId);
+			query = session.createQuery("SELECT a FROM AttributeName a WHERE a.name = :name AND a.ownerId = :owner")
+					.setParameter("name", name).setParameter("owner", ownerId);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -525,7 +524,7 @@ public class AttendeeService extends BasicService {
 		return null;
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void add(Invitation invitation) throws InterruptedException {
 		internalAddInvitation(invitation);
 	}
@@ -538,10 +537,10 @@ public class AttendeeService extends BasicService {
 
 		while (!saved) {
 			try {
-				session.save(invitation);
+				session.persist(invitation);
 				saved = true;
 			} catch (org.hibernate.exception.LockAcquisitionException ex) {
-				logger.info("lock on invitation table catched; retry counter: " + counter);
+                logger.info("lock on invitation table catched; retry counter: {}", counter);
 				counter++;
 
 				if (counter > 60) {
@@ -558,9 +557,9 @@ public class AttendeeService extends BasicService {
 	public Map<Integer, Invitation> getInvitationsByAttendeeForParticipationGroup(Integer participationGroupId) {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session
-				.createNativeQuery("SELECT i FROM Invitation i WHERE i.participationGroupId = :participationGroupId");
+				.createQuery("SELECT i FROM Invitation i WHERE i.participationGroupId = :participationGroupId");
 		@SuppressWarnings("unchecked")
-		List<Invitation> invitations = query.setParameter("participationGroupId", (Integer) participationGroupId).list();
+		List<Invitation> invitations = query.setParameter("participationGroupId", participationGroupId).list();
 
 		HashMap<Integer, Invitation> result = new HashMap<>();
 
@@ -577,9 +576,9 @@ public class AttendeeService extends BasicService {
 	public List<Invitation> getInvitationsForParticipationGroup(Integer participationGroupId) {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session
-				.createNativeQuery("SELECT i FROM Invitation i WHERE i.participationGroupId = :participationGroupId");
+				.createQuery("SELECT i FROM Invitation i WHERE i.participationGroupId = :participationGroupId");
 		@SuppressWarnings("unchecked")
-		List<Invitation> invitations = query.setParameter("participationGroupId", (Integer) participationGroupId).list();
+		List<Invitation> invitations = query.setParameter("participationGroupId", participationGroupId).list();
 
 		return invitations;
 	}
@@ -587,11 +586,11 @@ public class AttendeeService extends BasicService {
 	@Transactional(readOnly = true)
 	public Invitation getInvitationForParticipationGroupAndAttendee(Integer participationGroupId, Integer attendeeId) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery(
+		Query query = session.createQuery(
 				"SELECT i FROM Invitation i WHERE i.participationGroupId = :participationGroupId and i.attendeeId = :attendeeId");
 		@SuppressWarnings("unchecked")
-		List<Invitation> invitations = query.setParameter("participationGroupId", (Integer) participationGroupId)
-				.setParameter("attendeeId", (Integer) attendeeId).list();
+		List<Invitation> invitations = query.setParameter("participationGroupId", participationGroupId)
+				.setParameter("attendeeId", attendeeId).list();
 
 		if (!invitations.isEmpty())
 			return invitations.get(0);
@@ -607,8 +606,8 @@ public class AttendeeService extends BasicService {
 	@Transactional(readOnly = true)
 	public List<Invitation> getInvitationsByUniqueId(String uniqueId) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("SELECT i FROM Invitation i WHERE i.uniqueId LIKE :uniqueId")
-				.setParameter("uniqueId", (String) ("%" + uniqueId + "%"));
+		Query query = session.createQuery("SELECT i FROM Invitation i WHERE i.uniqueId LIKE :uniqueId")
+				.setParameter("uniqueId", "%" + uniqueId + "%");
 
 		@SuppressWarnings("unchecked")
 		List<Invitation> invitations = query.list();
@@ -618,8 +617,8 @@ public class AttendeeService extends BasicService {
 
 	private Invitation internalGetInvitationByUniqueId(String uniqueId) throws MessageException {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("SELECT i FROM Invitation i WHERE i.uniqueId = :uniqueId")
-				.setParameter("uniqueId", (String) uniqueId).setCacheable(true);
+		Query query = session.createQuery("SELECT i FROM Invitation i WHERE i.uniqueId = :uniqueId")
+				.setParameter("uniqueId", uniqueId).setCacheable(true);
 
 		@SuppressWarnings("unchecked")
 		List<Invitation> invitations = query.list();
@@ -637,19 +636,19 @@ public class AttendeeService extends BasicService {
 	@Transactional(readOnly = true)
 	public Invitation getInvitation(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (Invitation) session.get(Invitation.class, id);
+		return session.get(Invitation.class, id);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void update(Invitation invitation) {
 		Session session = sessionFactory.getCurrentSession();
-		session.update(invitation);
+		session.merge(invitation);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void save(Share share) {
 		Session session = sessionFactory.getCurrentSession();
-		session.saveOrUpdate(share);
+		session.merge(share);
 	}
 
 	@Transactional(readOnly = true)
@@ -657,9 +656,9 @@ public class AttendeeService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = null;
 		if (userId > 0) {
-			query = session.createNativeQuery("FROM Share s WHERE s.owner.id = :userId").setParameter("userId", (Integer) userId);
+			query = session.createQuery("FROM Share s WHERE s.owner.id = :userId").setParameter("userId", userId);
 		} else {
-			query = session.createNativeQuery("FROM Share s");
+			query = session.createQuery("FROM Share s");
 		}
 
 		@SuppressWarnings("unchecked")
@@ -670,8 +669,8 @@ public class AttendeeService extends BasicService {
 	@Transactional(readOnly = true)
 	public List<Share> getPassiveShares(int recipientId) {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.createNativeQuery("FROM Share s WHERE s.recipient.id = :recipientId").setParameter("recipientId",
-                (Integer) recipientId);
+		Query query = session.createQuery("FROM Share s WHERE s.recipient.id = :recipientId").setParameter("recipientId",
+				recipientId);
 
 		@SuppressWarnings("unchecked")
 		List<Share> result = query.list();
@@ -681,14 +680,14 @@ public class AttendeeService extends BasicService {
 	@Transactional(readOnly = true)
 	public Share getShare(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		return (Share) session.get(Share.class, id);
+		return session.get(Share.class, id);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void deleteShare(int id) {
 		Session session = sessionFactory.getCurrentSession();
-		Share share = (Share) session.get(Share.class, id);
-		session.delete(share);
+		Share share = session.get(Share.class, id);
+		session.remove(share);
 	}
 
 	@Transactional(readOnly = true)
@@ -712,8 +711,8 @@ public class AttendeeService extends BasicService {
 			
 			if (attributeName.getOwnerId() != -1) {
 				Query query = session
-						.createNativeQuery("SELECT a.value FROM Attribute a WHERE a.attributeName.id = :id ORDER BY a.value ASC")
-						.setParameter("id", (Integer) attributeName.getId());
+						.createQuery("SELECT a.value FROM Attribute a WHERE a.attributeName.id = :id ORDER BY a.value ASC")
+						.setParameter("id", attributeName.getId());
 				@SuppressWarnings("unchecked")
 				List<String> attributes = query.list();
 		
@@ -729,13 +728,13 @@ public class AttendeeService extends BasicService {
 		return attributeValues;
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void delete(Invitation invitation) {
 		Session session = sessionFactory.getCurrentSession();
-		session.delete(invitation);
+		session.remove(invitation);
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void addTokens(List<String> tokens, Integer groupId) throws InterruptedException {
 		for (String token : tokens) {
 			Invitation invitation = new Invitation(groupId, token);
@@ -744,7 +743,7 @@ public class AttendeeService extends BasicService {
 		}
 	}
 
-	@Transactional(readOnly = false)
+	@Transactional()
 	public void decreaseInvitationAnswer(String invitationUID) throws MessageException {
 		Session session = sessionFactory.getCurrentSession();
 		Invitation invitation = internalGetInvitationByUniqueId(invitationUID);
@@ -752,7 +751,7 @@ public class AttendeeService extends BasicService {
 			if (invitation.getAnswers() > 0) {
 				invitation.setAnswers(invitation.getAnswers() - 1);
 			}
-			session.saveOrUpdate(invitation);
+			session.merge(invitation);
 		}
 	}
 
@@ -761,7 +760,7 @@ public class AttendeeService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Map<Integer, String> result = new HashMap<>();
 		for (int id : ids) {
-			AttributeName name = (AttributeName) session.get(AttributeName.class, id);
+			AttributeName name = session.get(AttributeName.class, id);
 			result.put(id, name.getName());
 		}
 		return result;
@@ -812,7 +811,7 @@ public class AttendeeService extends BasicService {
 		NativeQuery query = session.createNativeQuery("SELECT ATTENDEE_ID FROM ATTENDEE WHERE OWNER_ID = :id");
 
 		@SuppressWarnings("rawtypes")
-		List attendees = query.setParameter("id", (Integer) userid).list();
+		List attendees = query.setParameter("id", userid).list();
 		List<Integer> result = new ArrayList<>();
 
 		for (Object o : attendees) {
@@ -822,37 +821,37 @@ public class AttendeeService extends BasicService {
 		return result;
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void deactivateInvitations(List<Integer> invitationsToDeactivate) {
 		Session session = sessionFactory.getCurrentSession();
 		for (int id : invitationsToDeactivate) {
-			Invitation invitation = (Invitation) session.get(Invitation.class, id);
+			Invitation invitation = session.get(Invitation.class, id);
 			if (invitation != null) {
 				invitation.setDeactivated(true);
-				session.saveOrUpdate(invitation);
+				session.merge(invitation);
 			}
 		}		
 	}
 	
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void activateInvitations(List<Integer> invitationsToActivate) {
 		Session session = sessionFactory.getCurrentSession();
 		for (int id : invitationsToActivate) {
-			Invitation invitation = (Invitation) session.get(Invitation.class, id);
+			Invitation invitation = session.get(Invitation.class, id);
 			if (invitation != null) {
 				invitation.setDeactivated(false);
-				session.saveOrUpdate(invitation);
+				session.merge(invitation);
 			}
 		}		
 	}
 	
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void deleteInvitations(List<Integer> invitationsToDelete) {
 		Session session = sessionFactory.getCurrentSession();
 		for (int id : invitationsToDelete) {
-			Invitation invitation = (Invitation) session.get(Invitation.class, id);
+			Invitation invitation = session.get(Invitation.class, id);
 			if (invitation != null) {
-				session.delete(invitation);
+				session.remove(invitation);
 			}
 		}		
 	}

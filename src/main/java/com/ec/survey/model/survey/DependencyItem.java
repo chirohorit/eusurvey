@@ -5,8 +5,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import javax.persistence.*;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,10 +19,8 @@ import java.util.Set;
 @Entity
 @Table(name = "DEPITEMS")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class DependencyItem implements java.io.Serializable {
-	
-	private static final long serialVersionUID = 1L;
 	private Integer id;
 	private Integer position;
 	private List<Element> dependentElements = new ArrayList<>();
@@ -46,12 +44,12 @@ public class DependencyItem implements java.io.Serializable {
 	}
 	
 	@ManyToMany(targetEntity=Element.class)
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT),
 			name = "POSSIBLEANSWER_ELEMENT",
 			joinColumns = @JoinColumn(name = "DEPITEMS_ID"),
 			inverseJoinColumns = @JoinColumn(name = "dependentElements_ID"))
 	@Fetch(value = FetchMode.SELECT)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Element> getDependentElements() {
 		return dependentElements;
 	}

@@ -1,7 +1,7 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <c:if test="${USER.agreedToToS}">
 	<div class="fulltitle">
 		<c:if test="${USER!= null && runnermode == null && USER.showAdmin}">
@@ -798,7 +798,7 @@
 
 		$('input[name="new-survey-template"]').first().attr("checked", "checked");
 
-		$.ajax({type: "GET",
+		/*$.ajax({type: "GET",
 			url: contextpath + url,
 			async: false,
 		    success :function(result)
@@ -845,5 +845,5 @@
 		    	
 		    	checkValidator();
 		    }
-		 });
+		 });*/
 	</script>

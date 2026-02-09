@@ -1,5 +1,6 @@
 package com.ec.survey.model;
 
+import com.ec.survey.enumerator.ParticipationGroupType;
 import com.ec.survey.model.administration.EcasUser;
 import com.ec.survey.model.attendees.Attendee;
 import com.ec.survey.model.attendees.AttendeeFilter;
@@ -10,18 +11,17 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "PARTICIPANTS")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ParticipationGroup {
 	
 	private int id;
@@ -77,22 +77,15 @@ public class ParticipationGroup {
 	@Transient
 	public String getNiceType()
 	{
-		switch(type)
-		{
-		case Dynamic:
-			return "Contacts";
-		case ECMembers:
-			return "Department";
-		case Static:
-			return "Contacts";
-		case Token:
-			return "Token";
-		case VoterFile:
-			return "VoterFile";
-		}
-		
-		return "unknown";
-	}
+        return switch (type) {
+            case Dynamic -> "Contacts";
+            case ECMembers -> "Department";
+            case Static -> "Contacts";
+            case Token -> "Token";
+            case VoterFile -> "VoterFile";
+        };
+
+    }
 	
 	@Column(name = "PARTICIPATION_SURVEY_ID")
 	public Integer getSurveyId() {
@@ -151,12 +144,12 @@ public class ParticipationGroup {
 	}
 	
 	@ManyToMany()
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="PARTICIPANTS_ATTENDEE",
 			inverseJoinColumns = @JoinColumn(name = "attendees_ATTENDEE_ID"),
 			joinColumns = @JoinColumn(name = "PARTICIPANTS_PARTICIPATION_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@LazyCollection(LazyCollectionOption.EXTRA)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Attendee> getAttendees() {
 		return attendees;
 	}	
@@ -165,12 +158,12 @@ public class ParticipationGroup {
 	}
 	
 	@ManyToMany()
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="PARTICIPANTS_ECASUSERS",
 			inverseJoinColumns = @JoinColumn(name = "ecasUsers_USER_ID"),
 			joinColumns = @JoinColumn(name = "PARTICIPANTS_PARTICIPATION_ID"))
 	@Fetch(value = FetchMode.SELECT)
 	@LazyCollection(LazyCollectionOption.EXTRA)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<EcasUser> getEcasUsers() {
 		return ecasUsers;
 	}	

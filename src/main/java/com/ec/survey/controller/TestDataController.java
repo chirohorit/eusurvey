@@ -6,9 +6,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.tools.Constants;
-import com.ec.survey.tools.TestDataGenerator;
+import com.ec.survey.handler.worker.TestDataGenerator;
 
 @Controller
 @Configurable
@@ -42,7 +42,7 @@ public class TestDataController extends BasicController {
 			ModelMap model, HttpServletRequest request) {
 		try {
 			User user = sessionService.getCurrentUser(request);
-			testDataGenerator.init(user, Integer.parseInt(answers), fileDir, sender, email, null, null, context, 0, 1, 0, 0);
+			testDataGenerator.init(user, Integer.parseInt(answers), fileDir, sender, email, null, null, 0, 1, 0, 0);
 			getPool().execute(testDataGenerator);
 
 			model.put(Constants.MESSAGE,
@@ -61,7 +61,7 @@ public class TestDataController extends BasicController {
 			@RequestParam(Constants.EMAIL) String email, Locale locale, ModelMap model, HttpServletRequest request) {
 		try {
 			User user = sessionService.getCurrentUser(request);
-			testDataGenerator.init(user, Integer.parseInt(answers), fileDir, sender, email,	shortname, null, context, 0, 1, 0, 0);
+			testDataGenerator.init(user, Integer.parseInt(answers), fileDir, sender, email,	shortname, null, 0, 1, 0, 0);
 			getPool().execute(testDataGenerator);
 
 			model.put(Constants.MESSAGE,
@@ -81,7 +81,7 @@ public class TestDataController extends BasicController {
 			@RequestParam(Constants.EMAIL) String email, Locale locale, ModelMap model, HttpServletRequest request) {
 		try {
 			User user = sessionService.getCurrentUser(request);
-			testDataGenerator.init(user, Integer.parseInt(answers), fileDir, sender, email, null,Integer.parseInt(questions), context, 0, 1, 0, 0);
+			testDataGenerator.init(user, Integer.parseInt(answers), fileDir, sender, email, null,Integer.parseInt(questions), 0, 1, 0, 0);
 			getPool().execute(testDataGenerator);
 
 			model.put(Constants.MESSAGE,
@@ -101,7 +101,7 @@ public class TestDataController extends BasicController {
 		try {
 			User user = sessionService.getCurrentUser(request);
 			
-			testDataGenerator.init(user, -1, fileDir, sender, email, null, null, context, 0, 500, 0, 0);
+			testDataGenerator.init(user, -1, fileDir, sender, email, null, null, 0, 500, 0, 0);
 			getPool().execute(testDataGenerator);
 
 			model.put(Constants.MESSAGE, "The generation of 500 test surveys has started. You will receive an email to "
@@ -120,7 +120,7 @@ public class TestDataController extends BasicController {
 			User user = sessionService.getCurrentUser(request);
 
 			// 5000 test surveys are created with #replies(survey(x))=floor(150.000/x -1)
-			testDataGenerator.init(user, 10, fileDir, sender, email, null, null, context, 0, 5000, 0, 0);
+			testDataGenerator.init(user, 10, fileDir, sender, email, null, null, 0, 5000, 0, 0);
 			getPool().execute(testDataGenerator);
 
 			model.put(Constants.MESSAGE, "The generation of 5000 test surveys has started. You will receive an email to "
@@ -139,7 +139,7 @@ public class TestDataController extends BasicController {
 			User user = sessionService.getCurrentUser(request);
 
 			// 1 test surveys is created with 1000000 replys
-			testDataGenerator.init(user, 1000000, fileDir, sender, email, null, null, context, 0, 1, 0, 0);
+			testDataGenerator.init(user, 1000000, fileDir, sender, email, null, null, 0, 1, 0, 0);
 			getPool().execute(testDataGenerator);
 
 			model.put(Constants.MESSAGE, "The generation of 1000000 answers has started. You will receive an email to " + email
@@ -157,7 +157,7 @@ public class TestDataController extends BasicController {
 		try {
 			User user = sessionService.getCurrentUser(request);
 
-			testDataGenerator.init(user, 0, fileDir, sender, email, null, null, context,
+			testDataGenerator.init(user, 0, fileDir, sender, email, null, null,
 					Integer.parseInt(files), 1, 0, 0);
 			getPool().execute(testDataGenerator);
 
@@ -176,7 +176,7 @@ public class TestDataController extends BasicController {
 		try {
 			User user = sessionService.getCurrentUser(request);
 
-			testDataGenerator.init(user, 0, fileDir, sender, email, null, null, context, 0, 0, Integer.parseInt(contacts), 0);
+			testDataGenerator.init(user, 0, fileDir, sender, email, null, null, 0, 0, Integer.parseInt(contacts), 0);
 			getPool().execute(testDataGenerator);
 
 			model.put(Constants.MESSAGE,
@@ -195,7 +195,7 @@ public class TestDataController extends BasicController {
 		try {
 			User user = sessionService.getCurrentUser(request);
 
-			testDataGenerator.init(user, 0, fileDir, sender, email, survey, null, context, 0, 0, 0, Integer.parseInt(users));
+			testDataGenerator.init(user, 0, fileDir, sender, email, survey, null, 0, 0, 0, Integer.parseInt(users));
 			getPool().execute(testDataGenerator);
 
 			model.put(Constants.MESSAGE,

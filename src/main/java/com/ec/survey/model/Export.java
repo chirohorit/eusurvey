@@ -1,5 +1,8 @@
 package com.ec.survey.model;
 
+import com.ec.survey.enumerator.ExportFormat;
+import com.ec.survey.enumerator.ExportState;
+import com.ec.survey.enumerator.ExportType;
 import com.ec.survey.model.survey.Survey;
 import com.ec.survey.tools.ConversionTools;
 import com.ec.survey.tools.Tools;
@@ -9,7 +12,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,24 +20,8 @@ import java.util.Map;
 @Entity
 @Table(name = "EXPORTS")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Export implements java.io.Serializable {
-
-	public enum ExportState
-	{
-		Pending, Failed, Finished
-	}
-
-	public enum ExportType {
-		Content, Statistics, Charts, AddressBook, Activity, Tokens, Files, VoterFiles, Survey, StatisticsQuiz, ECFGlobalResults, ECFProfileResults, ECFOrganizationResults, PDFReport
-	}
-	
-	public enum ExportFormat
-	{
-		xls, xlsx, odt, ods, pdf, doc, csv, xml, zip, eus, docx
-	}
-	
-	private static final long serialVersionUID = 1L;
 	
 	private Integer id;
 	private Survey survey;

@@ -5,17 +5,15 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
 @Table(name = "DELETEDCONTRIBUTIONS")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class DeletedContribution implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
-	
 	private Integer id;
 	private String contributionCode;
 	private String surveyUid;

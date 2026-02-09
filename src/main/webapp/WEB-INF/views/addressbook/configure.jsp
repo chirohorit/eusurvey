@@ -1,7 +1,7 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
 <%@ taglib uri="http://www.springframework.org/tags/form" prefix="form" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page session="true" %>
 
 <div class="hideme">
@@ -19,7 +19,7 @@
 <div class="modal" id="configure-attributes-dialog" role="dialog">
 	<div class="modal-dialog">
     <div class="modal-content">
-	<form:form id="configure-attributes-form" method="POST" action="${contextpath}/addressbook/configureAttributes" style="height: auto; margin: 0px; padding: 0px;">			
+	<form:form id="configure-attributes-form" method="POST" action="${contextpath}/addressbook/configureAttributes" style="height: auto; margin: 0px; padding: 0px;">
 		<input type="hidden" name="selectedAttributesOrder" id="selectedAttributesOrder" value="<esapi:encodeForHTMLAttribute>${selectedAttributesOrder}</esapi:encodeForHTMLAttribute>" />
 		<input type="hidden" name="selectedAttributesSource" id="selectedAttributesSource" value="attendees" />
 		<div class="modal-header">

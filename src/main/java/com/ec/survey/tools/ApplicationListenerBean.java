@@ -1,6 +1,6 @@
 package com.ec.survey.tools;
 
-import com.ec.survey.controller.HomeController;
+import com.ec.survey.handler.*;
 import com.ec.survey.model.*;
 import com.ec.survey.model.administration.Role;
 import com.ec.survey.model.administration.User;
@@ -8,57 +8,59 @@ import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.MessageSource;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.task.TaskExecutor;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 import java.io.IOException;
 import java.util.*;
 
 public class ApplicationListenerBean implements ApplicationListener<ContextRefreshedEvent> {
-	
 	private static final Logger logger = LoggerFactory.getLogger(ApplicationListenerBean.class);
 
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
-		if (event != null) {
-			
-			ApplicationContext applicationContext = event.getApplicationContext();
-            
-            //the event is thrown twice (one for each context), so we only count the last one
-            if (applicationContext.getId().endsWith("dispatcher"))
-            {           	
-                HomeController homeController = (HomeController) applicationContext.getBean("homeController");
-	            
-	            AdministrationService administrationService = (AdministrationService) applicationContext.getBean("administrationService");
-	            SurveyService surveyService = (SurveyService) applicationContext.getBean("surveyService");
-	            SchemaService schemaService = (SchemaService) applicationContext.getBean("schemaService");
-	            SkinService skinService = (SkinService) applicationContext.getBean("skinService");
-	            FileService fileService = (FileService) applicationContext.getBean("fileService");
-	                   
-	            boolean showEcas=false;
-	            showEcas =( homeController.isShowEcas() || homeController.isCasOss());
-	            
-	            initializeDatabase(administrationService, surveyService, schemaService, skinService, homeController.servletContext, homeController.fileDir, homeController.createStressData != null && homeController.createStressData.equalsIgnoreCase("1"), showEcas, homeController.sender, fileService, homeController.createStressData != null && homeController.createStressData.equalsIgnoreCase("2"));
-	        
-	        	TaskUpdater taskWorker = (TaskUpdater) applicationContext.getBean("taskWorker");
-	        	taskWorker.run();
-	        }
-        }		
+		ApplicationContext applicationContext = event.getApplicationContext();
+		logger.debug("EVENT: {}", applicationContext);
+		//the event is thrown twice (one for each context), so we only count the last one
+		/*if (applicationContext.getId().endsWith("dispatcher")) {
+			logger.warn("I think this is where all are happeing ,,, ");
+			logger.debug("is Session context aailable?");
+			AdministrationService administrationService = (AdministrationService) applicationContext.getBean("administrationService");
+			SurveyService surveyService = (SurveyService) applicationContext.getBean("surveyService");
+			SchemaService schemaService = (SchemaService) applicationContext.getBean("schemaService");
+			SkinService skinService = (SkinService) applicationContext.getBean("skinService");
+			FileService fileService = (FileService) applicationContext.getBean("fileService");
+			TaskUpdater taskWorker = (TaskUpdater) applicationContext.getBean("taskWorker");
+			BasicService basicService = (BasicService) applicationContext.getBean("basicService");
+
+			boolean showEcas = false;
+			showEcas = (basicService.isShowEcas() || basicService.isCasOss());
+			logger.warn("Before calling InitializeDatabase");
+			initializeDatabase(
+					administrationService,
+					surveyService,
+					schemaService,
+					skinService,
+					basicService.getServletContext(),
+					basicService.getFileDir(),
+					basicService.getCreateStressData() != null && basicService.getCreateStressData().equals(1),
+					showEcas,
+					basicService.getSender(),
+					fileService,
+					basicService.getCreateStressData() != null && basicService.getCreateStressData().equalsIgnoreCase("2")
+			);
+			taskWorker.run();
+		}*/
 	}
 	
-	public static void initializeDatabase(AdministrationService administrationService, SurveyService surveyService, SchemaService schemaService, SkinService skinService, ServletContext servletContext, String fileDir, boolean createStressTestData, boolean showecas, String sender, FileService fileService, boolean createNewStressTestData)
-	{
+	public static void initializeDatabase(AdministrationService administrationService, SurveyService surveyService, SchemaService schemaService, SkinService skinService, ServletContext servletContext, String fileDir, boolean createStressTestData, boolean showecas, String sender, FileService fileService, boolean createNewStressTestData) {
 	    java.io.File folder = new java.io.File(fileDir);
         if (!folder.exists()) folder.mkdirs();
 		List<Role> result = administrationService.getAllRoles();
 		if (result.isEmpty()) {
-			logger.info("InitializeDatabase No Roles create basic rule with showecas " + showecas);
+            logger.info("InitializeDatabase No Roles create basic rule with showecas {}", showecas);
 			RolesCreator.createBasicRoles(administrationService, showecas);
 			try {
 				UsersCreator.createDefaultUsers(administrationService, createStressTestData || createNewStressTestData, sender);
@@ -67,34 +69,27 @@ public class ApplicationListenerBean implements ApplicationListener<ContextRefre
 			}
 			
 			List<Language> langs = surveyService.getLanguages();
-			if (langs.isEmpty())
-			{
+			if (langs.isEmpty()) {
 				langs = SurveyCreator.createBasicLanguages();
 				surveyService.saveLanguages(langs);		
 			}
-			
 			surveyService.createStatus(4);
-			
+
 			try {
-			
+				logger.debug("Inside initializeDatabase > try");
 				User admin = administrationService.getUserForLoginAndInitialize(administrationService.getAdminUser(), false);
-				
 				//default skin
 				Skin s = SkinCreator.createDefaultSkin(admin);
 				skinService.save(s);
-				
 				Language objLang = surveyService.getLanguage("EN");
-				
-				updateSchema(schemaService, servletContext);
-				
-				if (createStressTestData)
-				{
+				//updateSchema(schemaService, servletContext);
+
+				if (createStressTestData) {
 					User analyst = administrationService.getUserForLogin(administrationService.getStressUser(), false);
 					SurveyCreator.createStressTestSurvey(analyst, servletContext, fileDir, surveyService, fileService);
 				}
 				
-				if (createStressTestData || createNewStressTestData)
-				{
+				if (createStressTestData || createNewStressTestData) {
 					User analyst = administrationService.getUserForLogin(administrationService.getStressUser(), false);
 					SurveyCreator.createStressTestSurveys(analyst, servletContext, fileDir, surveyService, fileService);
 				}
@@ -105,221 +100,197 @@ public class ApplicationListenerBean implements ApplicationListener<ContextRefre
 			} catch (Exception e) {
 				logger.error(e.getLocalizedMessage(), e);
 			}
-						
 		} else {
 			//update schema
-			try {
-				updateSchema(schemaService, servletContext);
-			} catch (IOException e) {
-				logger.error(e.getLocalizedMessage(), e);
-			}
-		}
-		
+            //updateSchema(schemaService, servletContext);
+        }
 	}
 	
 	private static void updateSchema(SchemaService schemaService, ServletContext servletContext) throws IOException {
-		
-		Status status = schemaService.getStatus();		
-		
-		if (status == null)
-		{
+		Status status = schemaService.getStatus();
+		/*
+		We may do a little code to use a reflection class and method, else update the code
+		String methodName = "step1";
+		try {
+			//Class<?> loadedClass = Class.forName(schemaService.getClass().getName());
+			Method method = Class<?>.getMethod(methodName);
+			method.invoke(loadedClass.getDeclaredConstructor().newInstance());
+		} catch (Exception e) {
+			logger.error(e.getLocalizedMessage());
+		}
+
+		for (int x=0; x < 128; x++) {
+			methodName = "step" + (x+1);
+
+		}*/
+		logger.debug("Inside updateSchema");
+
+		if (status == null) {
 			schemaService.step1();
 			status = schemaService.getStatus();
 		} 
 		
-		if (status.getDbversion() < 2)
-		{
+		if (status.getDbversion() < 2) {
 			schemaService.step2();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 4)
-		{
+		if (status.getDbversion() < 4) {
 			schemaService.step4();
 			status = schemaService.getStatus();
 		}
-		
-		if (status.getDbversion() < 5)
-		{
+
+		if (status.getDbversion() < 5) {
 			schemaService.step5();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 6)
-		{
+		if (status.getDbversion() < 6) {
 			schemaService.step6();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 7)
-		{
+		if (status.getDbversion() < 7) {
 			schemaService.step7();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 8)
-		{
+		if (status.getDbversion() < 8) {
 			schemaService.step8();
 			status = schemaService.getStatus();
 		}
-		
-		if (status.getDbversion() < 10)
-		{
+
+		if (status.getDbversion() < 10) {
 			schemaService.step10();
 			status = schemaService.getStatus();
 		}	
 		
-		if (status.getDbversion() < 11)
-		{
+		if (status.getDbversion() < 11) {
 			schemaService.step11();
 			status = schemaService.getStatus();
 		}	
 		
-		if (status.getDbversion() < 12)
-		{
+		if (status.getDbversion() < 12) {
 			schemaService.step12();
 			status = schemaService.getStatus();
-		}	
-		
-		if (status.getDbversion() < 15)
-		{
+		}
+
+		if (status.getDbversion() < 15) {
 			schemaService.step15();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 16)
-		{
+		if (status.getDbversion() < 16) {
 			schemaService.step16();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 17)
-		{
+		if (status.getDbversion() < 17) {
 			schemaService.step17();
 			status = schemaService.getStatus();
 		}
 		
 		// step 18 removed as not needed anymore
 		
-		if (status.getDbversion() < 19)
-		{
+		if (status.getDbversion() < 19) {
 			schemaService.step19();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 20)
-		{
+		if (status.getDbversion() < 20) {
 			logger.info("starting upgrade step 20");
 			schemaService.step20();
 			status = schemaService.getStatus();
 		}	
 		
-		if (status.getDbversion() < 21)
-		{
+		if (status.getDbversion() < 21) {
 			schemaService.step21();
 			status = schemaService.getStatus();
 		}
 
 		//step 22 removed
 		
-		if (status.getDbversion() < 23)
-		{
+		if (status.getDbversion() < 23) {
 			schemaService.step23();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 24)
-		{
+		if (status.getDbversion() < 24) {
 			schemaService.step24();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 25)
-		{
+		if (status.getDbversion() < 25) {
 			schemaService.step25();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 26)
-		{
+		if (status.getDbversion() < 26) {
 			schemaService.step26();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 27)
-		{				
+		if (status.getDbversion() < 27) {
 			schemaService.step27(servletContext);
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 28)
-		{				
+		if (status.getDbversion() < 28) {
 			schemaService.step28(servletContext);
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 29)
-		{
+		if (status.getDbversion() < 29) {
 			schemaService.step29();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 30)
-		{						
+		if (status.getDbversion() < 30) {
 			schemaService.step30();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 31)
-		{
+		if (status.getDbversion() < 31) {
 			schemaService.step31();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 32)
-		{
+		if (status.getDbversion() < 32) {
 			schemaService.step32();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 33)
-		{
+		if (status.getDbversion() < 33) {
 			schemaService.step33();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 34)
-		{
+		if (status.getDbversion() < 34) {
 			schemaService.step34();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 35)
-		{
+		if (status.getDbversion() < 35) {
 			schemaService.step35();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 36)
-		{
+		if (status.getDbversion() < 36) {
 			schemaService.step36();
 			status = schemaService.getStatus();
 		}
 					
-		if (status.getDbversion() < 37)
-		{
+		if (status.getDbversion() < 37) {
 			schemaService.step37();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 38)
-		{
+		if (status.getDbversion() < 38) {
 			schemaService.step38();
 			status = schemaService.getStatus();
 		}
 		
-		if (status.getDbversion() < 39)
-		{
+		if (status.getDbversion() < 39) {
 			schemaService.step39();
 			status = schemaService.getStatus();
 		}
@@ -929,78 +900,9 @@ public class ApplicationListenerBean implements ApplicationListener<ContextRefre
 		}
 	}
 
-	public static Survey createSurvey(int answerCount, User user, Language objLang, SurveyService surveyService, AnswerService answerService, String fileDir, boolean init, MessageSource resources, Locale locale, Integer questions, ArchiveService archiveService, BeanFactory context,TaskExecutor taskExecutor, FileService fileService) throws Exception {
-		Survey survey = SurveyCreator.createDummySurvey(user, objLang, init, questions);
-		survey.setListForm(true);
-		survey.getPublication().setShowContent(true);
-		survey.getPublication().setShowStatistics(true);
-		survey.getPublication().setShowCharts(true);
-		survey.getPublication().setShowSearch(true);
-	
-		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.DAY_OF_MONTH, 2);
-		survey.setEnd(cal.getTime());
-		
-		survey = surveyService.add(survey, -1);		
-		
-		surveyService.publish(survey, -1, -1, false, user.getId(), false, false);			
-		createDummyAnswers(survey.getShortname(), answerCount, user, fileDir, answerService, surveyService, false, resources, locale, fileService);
-		
-		return survey;
-	}
-	
-	public static void createDummyAnswers(String shortname, int answerCount, User user, String fileDir, AnswerService answerService, SurveyService surveyService, boolean validate, MessageSource resources, Locale locale, FileService fileService) throws Exception
-	{
-		if (answerCount <= 0) return;
-		
-		Survey psurvey = surveyService.getSurvey(shortname, false, false, false, true, null, true, false);
-		
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date());
-		
-		for (int j = 0; j < answerCount; j++) {
-			AnswerSet answerSet = SurveyCreator.createDummyAnswerSet(psurvey, user);
-			
-			if (psurvey.getIsEVote()) {
-				answerSet.setDate(cal.getTime());
-				cal.add(Calendar.MINUTE, -10);
-			}
-			
-			if (validate)
-			{
-				Set<String> invisibleElements = new HashSet<>();
-				SurveyHelper.validateAnswerSet(answerSet,answerService,invisibleElements, resources, locale, null, null, true, null, fileService);
-			}
-			
-			saveAnswerSet(answerSet, fileDir, answerService, null);
-		}
-	}
-	
-	@Transactional
-	public static void saveAnswerSet(AnswerSet answerSet, String fileDir, AnswerService answerService, String draftid) throws Exception {
-		boolean saved = false;
-		
-		int counter = 1;
-		
-		while(!saved)
-		{
-			try {
-				answerService.internalSaveAnswerSet(answerSet, fileDir, draftid, false, true);
-				saved = true;
-			} catch (org.hibernate.exception.LockAcquisitionException ex)
-			{
-				logger.info("lock on answerSet table catched; retry counter: " + counter);
-				counter++;
-								
-				if (counter > 60)
-				{
-					logger.error(ex.getLocalizedMessage(), ex);
-					throw ex;
-				}
-				
-				Thread.sleep(1000);
-			}
-		}		
-	}
+
+
+
+
 
 }

@@ -7,12 +7,10 @@ import com.ec.survey.model.Export;
 import com.ec.survey.model.Form;
 import com.ec.survey.model.WebserviceTask;
 import com.ec.survey.model.administration.User;
-import com.ec.survey.model.survey.Survey;
 import com.ec.survey.service.*;
-import com.ec.survey.tools.AnswerExecutor;
-import com.ec.survey.tools.ArchiveExecutor;
+import com.ec.survey.handler.worker.AnswerExecutor;
 import com.ec.survey.tools.Constants;
-import com.ec.survey.tools.RestoreExecutor;
+import com.ec.survey.handler.worker.RestoreExecutor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
@@ -24,9 +22,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Locale;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
 @RequestMapping("/worker")

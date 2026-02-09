@@ -1,17 +1,16 @@
 package com.ec.survey.service;
 
 import com.ec.survey.model.*;
-import com.ec.survey.model.administration.ComplexityParameters;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.ComplexityParameters;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.Role;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.survey.PossibleAnswer;
 import com.ec.survey.model.survey.Survey;
-import com.ec.survey.tools.DomainUpdater;
-import com.ec.survey.tools.SkinCreator;
-import com.ec.survey.tools.SurveyCreator;
+import com.ec.survey.handler.worker.DomainUpdater;
+import com.ec.survey.handler.SkinCreator;
+import com.ec.survey.handler.SurveyCreator;
 import com.ec.survey.tools.activity.ActivityRegistry;
-import com.mysql.cj.xdevapi.Result;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.query.Query;
 import org.hibernate.query.NativeQuery;
@@ -22,14 +21,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import javax.persistence.PersistenceException;
-import javax.persistence.SqlResultSetMapping;
-import javax.servlet.ServletContext;
+import jakarta.annotation.Resource;
+import jakarta.persistence.PersistenceException;
+import jakarta.servlet.ServletContext;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.ResultSet;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -63,7 +60,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.ContactGuestlistSizeLimitForExternals);
 			s.setValue("500");
 			s.setFormat("Integer");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		existing = settingsService.get(Setting.ContactGuestlistLimitForExternals);
@@ -72,7 +69,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.ContactGuestlistLimitForExternals);
 			s.setValue("1");
 			s.setFormat("Integer");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 	}
@@ -101,7 +98,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(127);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -114,10 +111,10 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.EnableEUGuestList);
 			s.setValue("false");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		status.setDbversion(126);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -130,10 +127,10 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.DisableWebserviceAPI);
 			s.setValue("false");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		status.setDbversion(125);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -146,10 +143,10 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.DisableLoginPage);
 			s.setValue("false");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		status.setDbversion(124);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -160,7 +157,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_DRAFT_CONTRIBUTION_SUBMIT, session);
 
 		status.setDbversion(123);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	@Transactional
 	public void step122() {
@@ -173,11 +170,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.NightlyTaskLimitArchiving);
 			s.setValue("3600");
 			s.setFormat("seconds");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 	
 		status.setDbversion(122);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -185,11 +182,11 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		final String alterTypeColumn = "ALTER TABLE SASCORES MODIFY COLUMN SASCORE_SCORE DOUBLE NULL";
+		final String alterTypeColumn = "ALTER TABLE SELF_ASSESSMENT_SCORES MODIFY COLUMN SASCORE_SCORE DOUBLE NULL";
 		session.createNativeQuery(alterTypeColumn).executeUpdate();
 
 		status.setDbversion(121);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -203,11 +200,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.DeleteSurveysAge);
 			s.setValue("90");
 			s.setFormat("days");			
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		
 		status.setDbversion(120);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -224,7 +221,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.ArchiveOlderThan);
 			s.setValue("36");
 			s.setFormat("months");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		existing = settingsService.get(Setting.ArchiveNotChangedInLast);
@@ -233,11 +230,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.ArchiveNotChangedInLast);
 			s.setValue("12");
 			s.setFormat("months");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 	
 		status.setDbversion(119);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -251,7 +248,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.NightlyTaskStart);
 			s.setValue("04:00");
 			s.setFormat("HH:mm");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		
 		existing = settingsService.get(Setting.NightlyTaskLimit);
@@ -260,11 +257,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.NightlyTaskLimit);
 			s.setValue("3600");
 			s.setFormat("seconds");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 	
 		status.setDbversion(118);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -278,11 +275,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.EnableChargeback);
 			s.setValue("false");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 	
 		status.setDbversion(117);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -294,7 +291,7 @@ public class SchemaService extends BasicService {
 		session.createNativeQuery(createIndex).executeUpdate();
 		
 		status.setDbversion(116);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -305,7 +302,7 @@ public class SchemaService extends BasicService {
 		session.createNativeQuery("UPDATE SURVEYS SET SELFASSESSMENT = 0 WHERE SELFASSESSMENT is NULL;").executeUpdate();
 		
 		status.setDbversion(115);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -313,10 +310,10 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		session.createNativeQuery("UPDATE WEBSERVICETASK SET WST_XMLONLY = 0 WHERE WST_XMLONLY is NULL;").executeUpdate();
+		session.createNativeQuery("UPDATE WEBSERVICE_TASKS SET WST_XMLONLY = 0 WHERE WST_XMLONLY is NULL;").executeUpdate();
 		
 		status.setDbversion(114);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 		
 	@Transactional
@@ -330,11 +327,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.EULoginWhitelist);
 			s.setValue("");
 			s.setFormat("EULogin users separated by ;");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		
 		status.setDbversion(113);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -345,7 +342,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_RESULTS_ACCESS, session);
 
 		status.setDbversion(112);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -367,7 +364,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(111);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -381,11 +378,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.LastCheckedSurveyIDForZombieFiles);
 			s.setValue("1");
 			s.setFormat("Integer");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 	
 		status.setDbversion(110);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -406,7 +403,7 @@ public class SchemaService extends BasicService {
 			skinService.add(ecaskin);
 		}
 		status.setDbversion(109);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -419,7 +416,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.MaxSurveysPerUser);
 			s.setValue("10");
 			s.setFormat("Integer");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		
 		existing = settingsService.get(Setting.MaxSurveysTimespan);
@@ -428,7 +425,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.MaxSurveysTimespan);
 			s.setValue("1440");
 			s.setFormat("minutes");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 	}
 
@@ -442,7 +439,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_EXPORT_SEATS, session);
 
 		status.setDbversion(108);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -453,7 +450,7 @@ public class SchemaService extends BasicService {
 		ensureActivities(session, ActivityRegistry.ID_EVOTE_TEST_PAGE);
 
 		status.setDbversion(107);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -471,7 +468,7 @@ public class SchemaService extends BasicService {
 		);
 
 		status.setDbversion(106);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -484,7 +481,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.AutomaticDraftDeleteExceptions);
 			s.setValue("");
 			s.setFormat("Survey aliases separated by ;");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 	}
 
@@ -497,7 +494,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_OPEN_QUORUM, session);
 
 		status.setDbversion(105);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -511,11 +508,11 @@ public class SchemaService extends BasicService {
 			s.setKey("Coda");
 			s.setValue("false");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		status.setDbversion(104);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -529,11 +526,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.UseSMTService);
 			s.setValue("false");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		
 		status.setDbversion(103);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	
@@ -545,7 +542,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_PROGRESS_BAR, session);
 		
 		status.setDbversion(102);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -553,11 +550,11 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		final String createkIndex = "CREATE INDEX IDX_RESULTFILTER_SURVEY_OWNER ON RESULTFILTER (surveyId, RESFILTER_OWNER);";
+		final String createkIndex = "CREATE INDEX IDX_RESULTFILTER_SURVEY_OWNER ON RESULT_FILTERS (surveyId, RESFILTER_OWNER);";
 		session.createNativeQuery(createkIndex).executeUpdate();
 		
 		status.setDbversion(101);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -568,7 +565,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_BLANK_ANSWERS, session);
 		
 		status.setDbversion(100);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -580,7 +577,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_COMMENT_DELETED, session);
 
 		status.setDbversion(99);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	
@@ -596,7 +593,7 @@ public class SchemaService extends BasicService {
 			for (ECFProfile ecfProfile: ecfProfiles) {
 				String profileName = ecfProfile.getName();
 				ecfProfile.setOrderNumber(defaultOrder.get(profileName));
-				session.saveOrUpdate(ecfProfile);
+				session.merge(ecfProfile);
 			}
 			
 			query = session.createQuery("FROM PossibleAnswer A where A.ecfProfile is not null");
@@ -606,12 +603,12 @@ public class SchemaService extends BasicService {
 			for (PossibleAnswer possibleAnswer : possibleAnswers) {
 				String profileName = possibleAnswer.getEcfProfile().getName();
 				possibleAnswer.setPosition(defaultOrder.get(profileName));
-				session.saveOrUpdate(possibleAnswer);
+				session.merge(possibleAnswer);
 			}
 
 			Status status = getStatus();
 			status.setDbversion(98);
-			session.saveOrUpdate(status);
+			session.merge(status);
 			
 		} catch (Exception e) {
 			logger.error(e.getMessage(),e);
@@ -627,7 +624,7 @@ public class SchemaService extends BasicService {
 				"SURVEYUID varchar(255) NOT NULL," +
 				"PUBLISHEDANSWERS bigint(21) NOT NULL DEFAULT 0," + 
 				"LASTANSWER datetime DEFAULT NULL," + 
-				"MW_TIMESTAMP datetime NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+				"MW_TIMESTAMP datetime NOT NULL DEFAULT '0000-00-00 00:00:00'," + 
 				"KEY MV_SURVEYS_IND (SURVEYUID,PUBLISHEDANSWERS)" + 
 			  ") ENGINE=InnoDB CHARSET=utf8;";
 			session.doWork(con -> con.createStatement().execute(event));
@@ -651,7 +648,7 @@ public class SchemaService extends BasicService {
 
 			Status status = getStatus();
 			status.setDbversion(97);
-			session.saveOrUpdate(status);
+			session.merge(status);
 		} catch (Exception e) {
 			logger.error(e.getMessage(),e);
 			logger.error(e.getLocalizedMessage(), e.getCause());
@@ -667,13 +664,13 @@ public class SchemaService extends BasicService {
 		if (s == null) {
 			s = new Setting();
 			s.setKey("captcha");		
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		s.setValue("internal");
 		s.setFormat("eucaptcha / recaptcha / internal / off");
 
 		status.setDbversion(96);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -685,16 +682,16 @@ public class SchemaService extends BasicService {
 		interval.setKey(Setting.AnswersAnonymWorkerInterval);
 		interval.setValue("1y");
 		interval.setFormat("number followed by 'y' or 'w' or 'd' (years or weeks or days)");
-		session.saveOrUpdate(interval);
+		session.merge(interval);
 
 		Setting enabled = new Setting();
 		enabled.setKey(Setting.AnswersAnonymWorkerEnabled);
 		enabled.setValue("true");
 		enabled.setFormat("true / false");
-		session.saveOrUpdate(enabled);
+		session.merge(enabled);
 
 		status.setDbversion(95);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -706,7 +703,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(94);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -721,7 +718,7 @@ public class SchemaService extends BasicService {
 		settingsService.add(Setting.TrustValueMinimumPassMark, "100", "int");
 
 		status.setDbversion(93);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -745,10 +742,10 @@ public class SchemaService extends BasicService {
 		s.setKey(Setting.BannedUserRecipients);
 		s.setValue("");
 		s.setFormat("email addresses separated by ;");
-		session.saveOrUpdate(s);
+		session.merge(s);
 
 		status.setDbversion(92);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -769,7 +766,7 @@ public class SchemaService extends BasicService {
 		settingsService.update(Setting.ReportText, newReportText);
 
 		status.setDbversion(91);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -782,23 +779,23 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.MaxReports);
 			s.setValue("5");
 			s.setFormat("int");
-			session.saveOrUpdate(s);
+			session.merge(s);
 
 			s = new Setting();
 			s.setKey(Setting.ReportText);
 			s.setValue(
 					"Survey [ALIAS] <br /> [TITLE] has been reported as infringing our policy by [EMAIL] at [DATE]. The reason provided is the following: [TYPE].<br />So far, it has been reported [COUNT] time(s).");
 			s.setFormat("text");
-			session.saveOrUpdate(s);
+			session.merge(s);
 
 			s = new Setting();
 			s.setKey(Setting.ReportRecipients);
 			s.setValue("");
 			s.setFormat("email addresses separated by ;");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		status.setDbversion(90);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -811,10 +808,10 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.WeakAuthenticationDisabled);
 			s.setValue("true");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		status.setDbversion(89);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -827,28 +824,28 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.ReportingMigrationEnabled);
 			s.setValue("false");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 
 			s = new Setting();
 			s.setKey(Setting.ReportingMigrationStart);
 			s.setValue("20:00");
 			s.setFormat("HH:mm");
-			session.saveOrUpdate(s);
+			session.merge(s);
 
 			s = new Setting();
 			s.setKey(Setting.ReportingMigrationTime);
 			s.setValue("60");
 			s.setFormat("runtime in minutes");
-			session.saveOrUpdate(s);
+			session.merge(s);
 
 			s = new Setting();
 			s.setKey(Setting.ReportingMigrationSurveyToMigrate);
 			s.setValue("");
 			s.setFormat("uid of the survey");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		status.setDbversion(88);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -861,10 +858,10 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.CreateSurveysForExternalsDisabled);
 			s.setValue("true");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 		status.setDbversion(87);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -885,7 +882,7 @@ public class SchemaService extends BasicService {
 			skinService.add(ecaskin);
 		}
 		status.setDbversion(86);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -901,7 +898,7 @@ public class SchemaService extends BasicService {
 		IOUtils.copy(is, fos);
 
 		status.setDbversion(85);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -917,7 +914,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.LastSurveyToDeleteAnswerPDFs);
 			s.setValue(Integer.toString(id));
 			s.setFormat("id of newest survey that has to be checked for old answer pdfs");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		existing = settingsService.get(Setting.AnswerPDFDeletionStart);
@@ -926,7 +923,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.AnswerPDFDeletionStart);
 			s.setValue("04:00");
 			s.setFormat("HH:mm");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		existing = settingsService.get(Setting.AnswerPDFDeletionTime);
@@ -935,11 +932,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.AnswerPDFDeletionTime);
 			s.setValue("60");
 			s.setFormat("runtime in minutes");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		status.setDbversion(84);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -950,7 +947,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_OWNER, session);
 
 		status.setDbversion(83);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -969,7 +966,7 @@ public class SchemaService extends BasicService {
 		session.doWork(con -> con.createStatement().execute(index));
 
 		status.setDbversion(82);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -985,7 +982,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.LastSurveyToMigrate);
 			s.setValue(Integer.toString(id));
 			s.setFormat("id of newest survey that still uses old file system");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		existing = settingsService.get(Setting.SurveyMigrateStart);
@@ -994,7 +991,7 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.SurveyMigrateStart);
 			s.setValue("02:00");
 			s.setFormat("HH:mm");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		existing = settingsService.get(Setting.SurveyMigrateTime);
@@ -1003,11 +1000,11 @@ public class SchemaService extends BasicService {
 			s.setKey(Setting.SurveyMigrateTime);
 			s.setValue("120");
 			s.setFormat("runtime in minutes");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		status.setDbversion(81);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1015,11 +1012,11 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		Query query = session.createNativeQuery("ALTER TABLE SCORINGITEMS MODIFY FEEDBACK TEXT");
+		Query query = session.createNativeQuery("ALTER TABLE SCORING_ITEMS MODIFY FEEDBACK TEXT");
 		query.executeUpdate();
 
 		status.setDbversion(80);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1033,11 +1030,11 @@ public class SchemaService extends BasicService {
 			s.setKey("disablewebservicelimit");
 			s.setValue("false");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		status.setDbversion(79);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1059,7 +1056,7 @@ public class SchemaService extends BasicService {
 			skinService.add(copy);
 		}
 		status.setDbversion(78);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1081,7 +1078,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(77);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1095,11 +1092,11 @@ public class SchemaService extends BasicService {
 			s.setKey("uisessiontimeout");
 			s.setValue("60");
 			s.setFormat("minutes");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		status.setDbversion(76);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1116,7 +1113,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(75);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1129,7 +1126,7 @@ public class SchemaService extends BasicService {
 		session.createNativeQuery(update).executeUpdate();
 
 		status.setDbversion(74);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1143,11 +1140,11 @@ public class SchemaService extends BasicService {
 			s.setKey("captcha");
 			s.setValue(isOss() ? "internal" : "recaptcha");
 			s.setFormat("recaptcha / internal / off");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 
 		status.setDbversion(73);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1164,7 +1161,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(72);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1208,7 +1205,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(71);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1234,7 +1231,7 @@ public class SchemaService extends BasicService {
 		Status status = getStatus();
 
 		status.setFsCheckState(newState);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1245,7 +1242,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_GUEST_LIST_CONTACT_CHANGED, session);
 
 		status.setDbversion(70);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1262,7 +1259,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(69);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1270,8 +1267,8 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		final String checkIndexExists = "show index from ARCHIVE where Key_name = 'IDX_ARCHIVE_FINISHED'";
-		final String createkIndex = "CREATE INDEX IDX_ARCHIVE_FINISHED on ARCHIVE (ARCHIVE_FINISHED, ARCHIVE_ERROR)";
+		final String checkIndexExists = "show index from ARCHIVES where Key_name = 'IDX_ARCHIVE_FINISHED'";
+		final String createkIndex = "CREATE INDEX IDX_ARCHIVE_FINISHED on ARCHIVES (ARCHIVE_FINISHED, ARCHIVE_ERROR)";
 
 		NativeQuery query = session.createNativeQuery(checkIndexExists);
 		if (query.list().isEmpty()) {
@@ -1279,7 +1276,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(68);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1299,7 +1296,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(67);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1307,8 +1304,8 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		final String checkIndexExists = "show index from Survey_backgroundDocuments where Key_name = 'IDX_BACK_DOCS'";
-		final String createkIndex = "CREATE INDEX IDX_BACK_DOCS on Survey_backgroundDocuments (BACKGROUNDDOCUMENTS)";
+		final String checkIndexExists = "show index from SURVEY_BACKGROUNDDOCUMENTS where Key_name = 'IDX_BACK_DOCS'";
+		final String createkIndex = "CREATE INDEX IDX_BACK_DOCS on SURVEY_BACKGROUNDDOCUMENTS (BACKGROUNDDOCUMENTS)";
 
 		NativeQuery query = session.createNativeQuery(checkIndexExists);
 		if (query.list().isEmpty()) {
@@ -1316,7 +1313,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(66);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1333,7 +1330,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(65);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1341,8 +1338,8 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		final String checkIndexExists = "show index from ACTIVITY where Key_name = 'IDX_SURVEY_UID'";
-		final String createkIndex = "CREATE INDEX IDX_SURVEY_UID on ACTIVITY (ACTIVITY_SUID)";
+		final String checkIndexExists = "show index from ACTIVITIES where Key_name = 'IDX_SURVEY_UID'";
+		final String createkIndex = "CREATE INDEX IDX_SURVEY_UID on ACTIVITIES (ACTIVITY_SUID)";
 
 		NativeQuery query = session.createNativeQuery(checkIndexExists);
 		if (query.list().isEmpty()) {
@@ -1350,7 +1347,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(64);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1360,10 +1357,10 @@ public class SchemaService extends BasicService {
 
 		try {
 			NativeQuery query = session.createNativeQuery(
-					"UPDATE ARCHIVE SET ARCHIVE_ERROR = ACTIVITY_ERROR, ARCHIVE_FINISHED = ACTIVITY_FINISHED, ARCHIVE_SLANGS = ACTIVITY_SLANGS, ARCHIVE_SOWNER = ACTIVITY_SOWNER, ARCHIVE_SREPLIES = ACTIVITY_SREPLIES, ARCHIVE_SSHORTNAME = ACTIVITY_SSHORTNAME, ARCHIVE_STITLE = ACTIVITY_STITLE, ARCHIVE_SUID = ACTIVITY_SUID, ARCHIVE_USER = ACTIVITY_USER;");
+					"UPDATE ARCHIVES SET ARCHIVE_ERROR = ACTIVITY_ERROR, ARCHIVE_FINISHED = ACTIVITY_FINISHED, ARCHIVE_SLANGS = ACTIVITY_SLANGS, ARCHIVE_SOWNER = ACTIVITY_SOWNER, ARCHIVE_SREPLIES = ACTIVITY_SREPLIES, ARCHIVE_SSHORTNAME = ACTIVITY_SSHORTNAME, ARCHIVE_STITLE = ACTIVITY_STITLE, ARCHIVE_SUID = ACTIVITY_SUID, ARCHIVE_USER = ACTIVITY_USER;");
 			query.executeUpdate();
 
-			final String dropcolumn = "ALTER TABLE ARCHIVE DROP COLUMN ACTIVITY_ERROR, DROP COLUMN ACTIVITY_FINISHED, DROP COLUMN ACTIVITY_SLANGS, DROP COLUMN ACTIVITY_SOWNER, DROP COLUMN ACTIVITY_SREPLIES, DROP COLUMN ACTIVITY_SSHORTNAME, DROP COLUMN ACTIVITY_STITLE, DROP COLUMN ACTIVITY_SUID, DROP COLUMN ACTIVITY_USER;";
+			final String dropcolumn = "ALTER TABLE ARCHIVES DROP COLUMN ACTIVITY_ERROR, DROP COLUMN ACTIVITY_FINISHED, DROP COLUMN ACTIVITY_SLANGS, DROP COLUMN ACTIVITY_SOWNER, DROP COLUMN ACTIVITY_SREPLIES, DROP COLUMN ACTIVITY_SSHORTNAME, DROP COLUMN ACTIVITY_STITLE, DROP COLUMN ACTIVITY_SUID, DROP COLUMN ACTIVITY_USER;";
 
 			session.doWork(con -> con.createStatement().execute(dropcolumn));
 		} catch (SQLGrammarException e) {
@@ -1377,7 +1374,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(63);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1389,7 +1386,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_UPLOADED_ELEMENTS_DOWNLOAD, session);
 
 		status.setDbversion(62);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1400,7 +1397,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_ACTIVITY_EXPORT, session);
 
 		status.setDbversion(61);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1421,7 +1418,7 @@ public class SchemaService extends BasicService {
 		administrationService.createRole(role);
 
 		status.setDbversion(60);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1432,7 +1429,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_WCAG_COMPLIANCE, session);
 
 		status.setDbversion(59);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1443,7 +1440,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_MACHINE_TRANSLATION, session);
 
 		status.setDbversion(58);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1456,7 +1453,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_TEST_EDIT, session);
 
 		status.setDbversion(57);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1478,7 +1475,7 @@ public class SchemaService extends BasicService {
 		session.doWork(con -> con.createStatement().execute(event));
 
 		status.setDbversion(56);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1496,7 +1493,7 @@ public class SchemaService extends BasicService {
 
 		status.setDbversion(55);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1513,7 +1510,7 @@ public class SchemaService extends BasicService {
 			Status status = getStatus();
 			status.setDbversion(54);
 			status.setUpdateDate(new Date());
-			session.saveOrUpdate(status);
+			session.merge(status);
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage(), e);
 		}
@@ -1523,12 +1520,12 @@ public class SchemaService extends BasicService {
 	public void step53() {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
-		NativeQuery query = session.createNativeQuery("ALTER TABLE ECASGROUPS CHANGE GRPS GRPS VARCHAR(255) BINARY");
+		NativeQuery query = session.createNativeQuery("ALTER TABLE ECAS_GROUPS CHANGE GRPS GRPS VARCHAR(255) BINARY");
 		query.executeUpdate();
 
 		status.setDbversion(53);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1546,7 +1543,7 @@ public class SchemaService extends BasicService {
 
 		status.setDbversion(52);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1559,7 +1556,7 @@ public class SchemaService extends BasicService {
 
 		status.setDbversion(51);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1572,7 +1569,7 @@ public class SchemaService extends BasicService {
 		}
 		status.setDbversion(50);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1585,12 +1582,12 @@ public class SchemaService extends BasicService {
 			scp.setKey(cp.getKey());
 			scp.setValue(cp.getDefaultValue().toString());
 			scp.setFormat("Integer");
-			session.saveOrUpdate(scp);
+			session.merge(scp);
 		}
 
 		status.setDbversion(49);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -1598,18 +1595,18 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		NativeQuery deleteQuery = session.createNativeQuery("DELETE FROM Statistics_requestedRecords;");
+		NativeQuery deleteQuery = session.createNativeQuery("DELETE FROM STATISTICS_REQUESTED_RECORDS;");
 		deleteQuery.executeUpdate();
-		deleteQuery = session.createNativeQuery("DELETE FROM Statistics_requestedRecordsPercent;");
+		deleteQuery = session.createNativeQuery("DELETE FROM STATISTICS_REQUESTED_RECORD_PARENT;");
 		deleteQuery.executeUpdate();
-		deleteQuery = session.createNativeQuery("DELETE FROM Statistics_totalsPercent;");
+		deleteQuery = session.createNativeQuery("DELETE FROM STATISTICS_TOTAL_PERCENTAGES;");
 		deleteQuery.executeUpdate();
 		deleteQuery = session.createNativeQuery("DELETE FROM STATISTICS;");
 		deleteQuery.executeUpdate();
 
 		status.setDbversion(47);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1619,25 +1616,25 @@ public class SchemaService extends BasicService {
 
 		dropIndexIfExists("ANSWERS_SET", "surveyIndex", session);
 		dropIndexIfExists("ANSWERS_FILES", "FK3BD115EDA02270B1", session);
-		dropIndexIfExists("ATTENDEE_ATTRIBUTES", "FK2E1AD5FC999EC0EF", session);
+		dropIndexIfExists("ATTENDEES_ATTRIBUTES", "FK2E1AD5FC999EC0EF", session);
 		dropIndexIfExists("ECASGROUPS", "eg_id", session);
 		dropIndexIfExists("ELEMENTS", "FK2E26B0F7B81F47CB", session);
 		dropIndexIfExists("ELEMENTS_ELEMENTS", "FKC0C7573FE592223", session);
 		dropIndexIfExists("ELEMENTS_FILES", "FK729F010F1A5FA3D", session);
 		dropIndexIfExists("MATRIX_DEP", "FKA8AEFA71EFA3DB62", session);
-		dropIndexIfExists("ResultFilter_filterValues", "FK1B684A4C31C9897", session);
+		dropIndexIfExists("RESULT_FILTER_FILTER_VALUES", "FK1B684A4C31C9897", session);
 		dropIndexIfExists("SKINS_SKINELEM", "FK92491E35A72F09", session);
-		dropIndexIfExists("Statistics_requestedRecords", "FKFA712A701B0AE33", session);
-		dropIndexIfExists("Statistics_requestedRecordsPercent", "FK331033B51B0AE33", session);
-		dropIndexIfExists("Statistics_totalsPercent", "FKDA8FE99A1B0AE33", session);
+		dropIndexIfExists("STATISTICS_REQUESTED_RECORDS", "FKFA712A701B0AE33", session);
+		dropIndexIfExists("STATISTICS_REQUESTED_RECORD_PARENT", "FK331033B51B0AE33", session);
+		dropIndexIfExists("STATISTICS_TOTAL_PERCENTAGES", "FKDA8FE99A1B0AE33", session);
 		dropIndexIfExists("SURACCESS", "FKF46D87949F345ACB", session);
 		dropIndexIfExists("SURVEYS_ELEMENTS", "FKAEF3423DB8E815E1", session);
-		dropIndexIfExists("Survey_backgroundDocuments", "FKDD0DB0E54078FF13", session);
-		dropIndexIfExists("Survey_usefulLinks", "FKC081917E4078FF13", session);
+		dropIndexIfExists("SURVEY_BACKGROUNDDOCUMENTS", "FKDD0DB0E54078FF13", session);
+		dropIndexIfExists("SURVEY_USEFULLINKS", "FKC081917E4078FF13", session);
 
 		status.setDbversion(46);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	private void dropIndexIfExists(String table, String index, Session session) {
@@ -1674,7 +1671,7 @@ public class SchemaService extends BasicService {
 		query = session.createNativeQuery("ALTER TABLE SURVEYS MODIFY INTRODUCTION TEXT");
 		query.executeUpdate();
 
-		query = session.createNativeQuery("ALTER TABLE ATTRIBUTE MODIFY ATTRIBUTE_VALUE TEXT");
+		query = session.createNativeQuery("ALTER TABLE ATTRIBUTES MODIFY ATTRIBUTE_VALUE TEXT");
 		query.executeUpdate();
 
 		query = session.createNativeQuery("ALTER TABLE PARTICIPANTS MODIFY TEMPL1 TEXT");
@@ -1695,21 +1692,21 @@ public class SchemaService extends BasicService {
 		query = session.createNativeQuery("ALTER TABLE MESSAGES MODIFY M_TEXT TEXT");
 		query.executeUpdate();
 
-		query = session.createNativeQuery("ALTER TABLE ACTIVITY MODIFY ACTIVITY_NEW TEXT");
+		query = session.createNativeQuery("ALTER TABLE ACTIVITIES MODIFY ACTIVITY_NEW TEXT");
 		query.executeUpdate();
 
-		query = session.createNativeQuery("ALTER TABLE ACTIVITY MODIFY ACTIVITY_OLD TEXT");
+		query = session.createNativeQuery("ALTER TABLE ACTIVITIES MODIFY ACTIVITY_OLD TEXT");
 		query.executeUpdate();
 
 		query = session.createNativeQuery("ALTER TABLE FILES MODIFY FILE_COMMENT TEXT");
 		query.executeUpdate();
 
-		query = session.createNativeQuery("ALTER TABLE ResultFilter_filterValues MODIFY filterValues TEXT");
+		query = session.createNativeQuery("ALTER TABLE RESULT_FILTER_FILTER_VALUES MODIFY filterValues TEXT");
 		query.executeUpdate();
 
 		status.setDbversion(45);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1729,8 +1726,8 @@ public class SchemaService extends BasicService {
 		createUniqueConstraint("ATTENDEEFILTER_ATTRIBUTES", "UC_ATTENDEEFILTER_ATTRIBUTES", "ATTENDEEFILTER_ID",
 				"ATTRIBUTE_ID");
 
-		deleteDuplicateRowsNoId("ECASGROUPS", "eg_id", "GRPS");
-		createUniqueConstraint("ECASGROUPS", "UC_ECASGROUPS", "eg_id", "GRPS");
+		deleteDuplicateRowsNoId("ECAS_GROUPS", "eg_id", "GRPS");
+		createUniqueConstraint("ECAS_GROUPS", "UC_ECASGROUPS", "eg_id", "GRPS");
 
 		deleteDuplicateRowsNoId("ELEMENTS_FILES", "ELEMENTS_ID", "files_FILE_ID");
 		createUniqueConstraint("ELEMENTS_FILES", "UC_ELEMENTS_FILES", "ELEMENTS_ID", "files_FILE_ID");
@@ -1771,7 +1768,7 @@ public class SchemaService extends BasicService {
 
 		status.setDbversion(44);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1789,26 +1786,25 @@ public class SchemaService extends BasicService {
 
 		status.setDbversion(43);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
 	public void step42() {
-		final String checkIndexExists = "show index from ANSWERS where Key_name = 'v_ft_idx'";
-		Status status = getStatus();
 		Session session = sessionFactory.getCurrentSession();
-		NativeQuery<?> query = session.createNativeQuery(checkIndexExists);
+		Status status = getStatus();
 
+		final String checkIndexExists = "show index from ANSWERS where Key_name = 'v_ft_idx'";
+		final String createIndex = "ALTER TABLE ANSWERS ADD FULLTEXT INDEX v_ft_idx (VALUE);";
+
+		NativeQuery query = session.createNativeQuery(checkIndexExists);
 		if (query.list().isEmpty()) {
-			logger.debug("STEP 42 - STARTING UPDATE FULL TEXT INDEX FOR ANSWER");
-			final String createIndex = "ALTER TABLE ANSWERS ADD FULLTEXT INDEX v_ft_idx (VALUE);";
 			session.createNativeQuery(createIndex).executeUpdate();
-			logger.debug("STEP 42 - DONE");
 		}
 
 		status.setDbversion(42);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1826,7 +1822,7 @@ public class SchemaService extends BasicService {
 
 		status.setDbversion(41);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1844,7 +1840,7 @@ public class SchemaService extends BasicService {
 
 		status.setDbversion(40);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1866,7 +1862,7 @@ public class SchemaService extends BasicService {
 		session.doWork(con -> con.createStatement().execute(event));
 
 		status.setDbversion(39);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1882,7 +1878,7 @@ public class SchemaService extends BasicService {
 		}
 
 		status.setDbversion(38);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1894,7 +1890,7 @@ public class SchemaService extends BasicService {
 				.createNativeQuery("ALTER TABLE ANSWERS_SET ADD INDEX INX_ANSWER_SET_INVID (ANSWER_SET_INVID)");
 		queryCreateIndex.executeUpdate();
 		status.setDbversion(37);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1905,7 +1901,7 @@ public class SchemaService extends BasicService {
 		ensureActivity(ActivityRegistry.ID_TRANSLATION_MODIFIED, session);
 
 		status.setDbversion(36);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1927,7 +1923,7 @@ public class SchemaService extends BasicService {
 			skinService.add(copy);
 		}
 		status.setDbversion(35);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1939,14 +1935,14 @@ public class SchemaService extends BasicService {
 		enabled.setKey(Setting.ActivityLoggingEnabled);
 		enabled.setValue("false");
 		enabled.setFormat("true / false");
-		session.saveOrUpdate(enabled);
+		session.merge(enabled);
 
 		for (Integer i : ActivityRegistry.getAllActivityIds()) {
 			ensureActivity(i, session);
 		}
 
 		status.setDbversion(34);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1971,7 +1967,7 @@ public class SchemaService extends BasicService {
 		// put constraint
 
 		status.setDbversion(33);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1979,15 +1975,15 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		NativeQuery query = session.createNativeQuery("ALTER TABLE Statistics_totalsPercent MODIFY totalsPercent DOUBLE");
+		NativeQuery query = session.createNativeQuery("ALTER TABLE STATISTICS_TOTAL_PERCENTAGES MODIFY totalsPercent DOUBLE");
 		query.executeUpdate();
 
 		query = session
-				.createNativeQuery("ALTER TABLE Statistics_requestedRecordsPercent MODIFY requestedRecordsPercent DOUBLE");
+				.createNativeQuery("ALTER TABLE STATISTICS_REQUESTED_RECORD_PARENT MODIFY requestedRecordsPercent DOUBLE");
 		query.executeUpdate();
 
 		status.setDbversion(32);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -1999,28 +1995,28 @@ public class SchemaService extends BasicService {
 		enabled.setKey(Setting.LDAPsync2Enabled);
 		enabled.setValue("true");
 		enabled.setFormat("true / false");
-		session.saveOrUpdate(enabled);
+		session.merge(enabled);
 
 		Setting frequency = new Setting();
 		frequency.setKey(Setting.LDAPsync2Frequency);
 		frequency.setValue("1w");
 		frequency.setFormat("number followed by 'd' or 'w' (days or weeks)");
-		session.saveOrUpdate(frequency);
+		session.merge(frequency);
 
 		Setting start = new Setting();
 		start.setKey(Setting.LDAPsync2Start);
 		start.setValue("01/01/2014 23:30:00");
 		start.setFormat("dd/MM/yyyy HH:mm:ss");
-		session.saveOrUpdate(start);
+		session.merge(start);
 
 		Setting time = new Setting();
 		time.setKey(Setting.LDAPsync2Time);
 		time.setValue("23:30");
 		time.setFormat("HH:mm");
-		session.saveOrUpdate(time);
+		session.merge(time);
 
 		status.setDbversion(31);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2041,7 +2037,7 @@ public class SchemaService extends BasicService {
 		});
 
 		status.setDbversion(30);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2049,11 +2045,11 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		NativeQuery query = session.createNativeQuery("ALTER TABLE ResultFilter_filterValues MODIFY filterValues LONGTEXT");
+		NativeQuery query = session.createNativeQuery("ALTER TABLE RESULT_FILTER_FILTER_VALUES MODIFY filterValues LONGTEXT");
 		query.executeUpdate();
 
 		status.setDbversion(29);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2068,7 +2064,7 @@ public class SchemaService extends BasicService {
 		IOUtils.copy(is, fos);
 
 		status.setDbversion(28);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2081,7 +2077,7 @@ public class SchemaService extends BasicService {
 		IOUtils.copy(is, fos);
 
 		status.setDbversion(27);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2096,7 +2092,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(26);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2108,7 +2104,7 @@ public class SchemaService extends BasicService {
 		session.doWork(con -> con.createStatement().execute(index));
 
 		status.setDbversion(25);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2120,28 +2116,28 @@ public class SchemaService extends BasicService {
 		enabled.setKey(Setting.LDAPsyncEnabled);
 		enabled.setValue("true");
 		enabled.setFormat("true / false");
-		session.saveOrUpdate(enabled);
+		session.merge(enabled);
 
 		Setting frequency = new Setting();
 		frequency.setKey(Setting.LDAPsyncFrequency);
 		frequency.setValue("1d");
 		frequency.setFormat("number followed by 'd' or 'w' (days or weeks)");
-		session.saveOrUpdate(frequency);
+		session.merge(frequency);
 
 		Setting start = new Setting();
 		start.setKey(Setting.LDAPsyncStart);
 		start.setValue("01/01/2014 23:00:00");
 		start.setFormat("dd/MM/yyyy HH:mm:ss");
-		session.saveOrUpdate(start);
+		session.merge(start);
 
 		Setting time = new Setting();
 		time.setKey(Setting.LDAPsyncTime);
 		time.setValue("23:00");
 		time.setFormat("HH:mm");
-		session.saveOrUpdate(time);
+		session.merge(time);
 
 		status.setDbversion(24);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2155,7 +2151,7 @@ public class SchemaService extends BasicService {
 		confirmation.setIcon("check.png");
 		confirmation.setLabel("Confirmation");
 		confirmation.setCss("alert-success");
-		session.saveOrUpdate(confirmation);
+		session.merge(confirmation);
 
 		MessageType information = new MessageType();
 		information.setCriticality(2);
@@ -2163,7 +2159,7 @@ public class SchemaService extends BasicService {
 		information.setIcon("info.png");
 		information.setLabel("Information");
 		information.setCss("alert-info");
-		session.saveOrUpdate(information);
+		session.merge(information);
 
 		MessageType warning = new MessageType();
 		warning.setCriticality(3);
@@ -2171,10 +2167,10 @@ public class SchemaService extends BasicService {
 		warning.setIcon("warning.png");
 		warning.setLabel("Warning");
 		warning.setCss("alert-danger");
-		session.saveOrUpdate(warning);
+		session.merge(warning);
 
 		status.setDbversion(23);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	/* Redundant
@@ -2187,7 +2183,7 @@ public class SchemaService extends BasicService {
 		session.doWork(con -> con.createStatement().execute(index));
 
 		status.setDbversion(22);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	} */
 
 	@Transactional
@@ -2214,7 +2210,7 @@ public class SchemaService extends BasicService {
 		});
 
 		status.setDbversion(21);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2237,7 +2233,7 @@ public class SchemaService extends BasicService {
 			session.doWork(con -> con.createStatement().execute(event));
 
 			status.setDbversion(20);
-			session.saveOrUpdate(status);
+			session.merge(status);
 
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage(), e);
@@ -2257,7 +2253,7 @@ public class SchemaService extends BasicService {
 		session.doWork(con -> con.createStatement().execute(view));
 
 		status.setDbversion(19);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 	
 	@Transactional
@@ -2272,7 +2268,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(17);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2293,7 +2289,7 @@ public class SchemaService extends BasicService {
 		});
 
 		status.setDbversion(16);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2306,7 +2302,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(15);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2319,7 +2315,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(12);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2336,7 +2332,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(11);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2344,11 +2340,11 @@ public class SchemaService extends BasicService {
 		Session session = sessionFactory.getCurrentSession();
 		Status status = getStatus();
 
-		NativeQuery query = session.createNativeQuery("UPDATE WEBSERVICETASK SET WST_COUNTER = 0 WHERE WST_COUNTER IS NULL");
+		NativeQuery query = session.createNativeQuery("UPDATE WEBSERVICE_TASKS SET WST_COUNTER = 0 WHERE WST_COUNTER IS NULL");
 		query.executeUpdate();
 
 		status.setDbversion(10);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2363,7 +2359,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(8);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2375,7 +2371,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(7);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2387,7 +2383,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(6);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2399,7 +2395,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(5);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2414,7 +2410,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(4);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2432,7 +2428,7 @@ public class SchemaService extends BasicService {
 		query.executeUpdate();
 
 		status.setDbversion(2);
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional
@@ -2457,7 +2453,7 @@ public class SchemaService extends BasicService {
 		Status status = new Status();
 		status.setDbversion(1);
 		status.setUpdateDate(new Date());
-		session.saveOrUpdate(status);
+		session.merge(status);
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -2483,8 +2479,8 @@ public class SchemaService extends BasicService {
 				.createQuery("update Department d  set  d.domainCode = :domainCode where  d.name = :department");
 		for (String department : existingdepartments) {
 			if (deparmentDomainMap.containsKey(department)) {
-				updateQuery.setParameter("department", (String) department);
-				updateQuery.setParameter("domainCode", (String) deparmentDomainMap.get(department));
+				updateQuery.setParameter("department", department);
+				updateQuery.setParameter("domainCode", deparmentDomainMap.get(department));
 				updateQuery.executeUpdate();
 			}
 
@@ -2495,7 +2491,7 @@ public class SchemaService extends BasicService {
 		deleteQuery.executeUpdate();
 
 		NativeQuery insertEcasGroupQuery = session.createNativeQuery(
-				"INSERT INTO  ECASGROUPS SELECT ECASUSERS.USER_ID, REPLACE(ECASUSERS.USER_ORGANISATION,'eu.europa.','') FROM ECASUSERS WHERE ECASUSERS.USER_ORGANISATION <> 'external'");
+				"INSERT INTO  ECAS_GROUPS SELECT ECASUSERS.USER_ID, REPLACE(ECASUSERS.USER_ORGANISATION,'eu.europa.','') FROM ECASUSERS WHERE ECASUSERS.USER_ORGANISATION <> 'external'");
 		insertEcasGroupQuery.executeUpdate();
 
 	}
@@ -2527,7 +2523,7 @@ public class SchemaService extends BasicService {
 			Status status = states.get(0);
 			session.setReadOnly(status, false);
 			status.setLastLDAPSynchronizationDate(syncDate);
-			session.saveOrUpdate(status);
+			session.merge(status);
 		}
 	}
 
@@ -2558,7 +2554,7 @@ public class SchemaService extends BasicService {
 			Status status = states.get(0);
 			session.setReadOnly(status, false);
 			status.setLastLDAPSynchronization2Date(syncDate);
-			session.saveOrUpdate(status);
+			session.merge(status);
 		}
 	}
 
@@ -2774,20 +2770,18 @@ public class SchemaService extends BasicService {
 	public void createAnswerFullTextForOss() {
 
 		if (!showecas.equalsIgnoreCase("true")) {
-			final String checkIndexExists = "show index from ANSWERS where Key_name = 'v_ft_idx'";
-
+			logger.error("STARTING UPDATE FULL TEXT INDEX FOR ANSWER");
 			Session session = sessionFactory.getCurrentSession();
-			NativeQuery<?> query = session.createNativeQuery(checkIndexExists);
 
+			final String checkIndexExists = "show index from ANSWERS where Key_name = 'v_ft_idx'";
+			final String createIndex = "ALTER TABLE ANSWERS ADD FULLTEXT INDEX v_ft_idx (VALUE);";
+
+			NativeQuery query = session.createNativeQuery(checkIndexExists);
 			if (query.list().isEmpty()) {
-				final String createIndex = "ALTER TABLE ANSWERS ADD FULLTEXT INDEX v_ft_idx (VALUE);";
-				logger.error("STARTING UPDATE FULL TEXT INDEX FOR ANSWER");
-
-				session.createNativeQuery(createIndex).executeUpdate();
 				logger.error("Special update full text not existing create them");
-				logger.error("By the above message, I think the dev meant to say - 'Since FULLTEXT INDEX was inexistent, we just have created them");
-				logger.error("I still have no idea why we need FULLTEXT Indexing for OSS and not for OSSDocker");
+				session.createNativeQuery(createIndex).executeUpdate();
 			}
+
 		}
 	}
 
@@ -2813,7 +2807,7 @@ public class SchemaService extends BasicService {
 			s.setKey(key);
 			s.setValue("true");
 			s.setFormat("true / false");
-			session.saveOrUpdate(s);
+			session.merge(s);
 		}
 	}
 

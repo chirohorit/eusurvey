@@ -1,6 +1,6 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page session="true" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -338,7 +338,7 @@
 	
 		<%@ include file="../menu.jsp" %>	
 		
-		<form:form modelAttribute="paging" id="load-attendees" method="POST" action="${contextpath}/addressbook" >		
+		<form:form modelAttribute="paging" id="load-attendees" method="POST" action="${contextpath}/addressbook" >
 			<input type="hidden" id="operation" name="operation" value=""></input>
 			<div class="fixedtitle" style="padding: 0; padding-bottom: 15px;">
 				<div class="fixedtitleinner" style="width: 100%">

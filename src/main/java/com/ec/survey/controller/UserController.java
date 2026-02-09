@@ -11,10 +11,10 @@ import com.ec.survey.model.administration.User;
 import com.ec.survey.service.mapping.PaginationMapper;
 import com.ec.survey.tools.Constants;
 import com.ec.survey.tools.ConversionTools;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
 import com.ec.survey.tools.Tools;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.exception.WeakAuthenticationException;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -35,8 +35,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 @Controller
 @RequestMapping("/administration/users")
 public class UserController extends BasicController {
-    
-    @Autowired
+
+	@Autowired
 	protected PaginationMapper paginationMapper;    
 	
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})

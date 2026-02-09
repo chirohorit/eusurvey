@@ -4,16 +4,16 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.cache.annotation.Cacheable;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @SuppressWarnings("rawtypes")
 @Entity
 @Table(name = "TRANSLATION")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Translation implements java.io.Serializable, Comparable {
 	
-	private static final long serialVersionUID = 1L;
+	
 	private Integer id;
 	private Integer surveyId;
 	private Translations translations;

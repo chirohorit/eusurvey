@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:security="http://www.springframework.org/schema/security"
 	xmlns:p="http://www.springframework.org/schema/p"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
      	 http://www.springframework.org/schema/beans/spring-beans.xsd
    		http://www.springframework.org/schema/security 
    		http://www.springframework.org/schema/security/spring-security.xsd">
 
-    <security:access-denied-handler error-page="/auth/denied"/>
-
 	<!-- This is where we configure Spring-Security -->
-	<security:http auto-config="false" use-expressions="true" entry-point-ref="authenticationEntryPoint" disable-url-rewriting="true">
+	<security:http auto-config="false" use-expressions="true"
+		access-denied-page="/auth/denied" entry-point-ref="authenticationEntryPoint" disable-url-rewriting="true">
 
 		<!--  The user is always redirected to the maintenance page since authentication is impossible.  -->
 		<security:intercept-url pattern="/info/maintenance" access="permitAll" />
@@ -26,7 +24,7 @@
 			before="FILTER_SECURITY_INTERCEPTOR" />
 		<security:custom-filter ref="authenticationFilter"
 			position="FORM_LOGIN_FILTER" />
-
+		
 	</security:http>
 
 	<!-- Custom filter to deny unwanted users even though registered -->

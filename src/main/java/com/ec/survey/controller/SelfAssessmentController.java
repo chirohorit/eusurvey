@@ -1,7 +1,7 @@
 package com.ec.survey.controller;
 
 import com.ec.survey.exception.ForbiddenURLException;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.model.attendees.Attendee;
 import com.ec.survey.model.selfassessment.SACriterion;
@@ -25,8 +25,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 @Controller
@@ -36,8 +36,8 @@ public class SelfAssessmentController extends BasicController {
 	@Resource(name = "sessionService")
 	protected SessionService sessionService;
 	
-	@Resource(name = "selfassessmentService")
-	protected SelfAssessmentService selfassessmentService;
+	@Resource(name = "selfAssessmentService")
+	protected SelfAssessmentService selfAssessmentService;
 	
 	@GetMapping("/criteria")
 	public ResponseEntity<List<SACriterion>> criteria(@PathVariable String shortname, HttpServletRequest request, Locale locale) {
@@ -45,7 +45,7 @@ public class SelfAssessmentController extends BasicController {
 			final User user = sessionService.getCurrentUser(request, false, false);
 			Survey survey = surveyService.getSurveyByShortname(shortname, true, user, request, false, true, true, false);
 						
-			List<SACriterion> result = selfassessmentService.getCriteria(survey.getUniqueId());
+			List<SACriterion> result = selfAssessmentService.getCriteria(survey.getUniqueId());
 			
 			return new ResponseEntity<>(result, HttpStatus.OK);
 		} catch (Exception e) {
@@ -73,7 +73,7 @@ public class SelfAssessmentController extends BasicController {
 			c.setSurveyUID(survey.getUniqueId());
 			c.setAcronym("XX");
 			c.setType("Standard");
-			selfassessmentService.addCriterion(c);
+			selfAssessmentService.addCriterion(c);
 			
 			return "OK";
 		} catch (ConstraintViolationException ce) {
@@ -111,7 +111,7 @@ public class SelfAssessmentController extends BasicController {
 			String acronym = request.getParameter("acronym");
 			String type = request.getParameter("type");
 		
-			selfassessmentService.updateCriterion(Integer.parseInt(id), survey.getUniqueId(), name, acronym, type);
+			selfAssessmentService.updateCriterion(Integer.parseInt(id), survey.getUniqueId(), name, acronym, type);
 			
 			return "OK";
 		} catch (ConstraintViolationException ce) {
@@ -150,7 +150,7 @@ public class SelfAssessmentController extends BasicController {
 				throw new ForbiddenURLException();
 			}
 			
-			selfassessmentService.deleteCriterion(Integer.parseInt(id), survey.getUniqueId());
+			selfAssessmentService.deleteCriterion(Integer.parseInt(id), survey.getUniqueId());
 			
 			return true;
 		} catch (Exception e) {
@@ -165,7 +165,7 @@ public class SelfAssessmentController extends BasicController {
 			
 			//the shortname is actually the uid of the survey in this call		
 			String term = request.getParameter("term");
-			return selfassessmentService.getTypesForSurvey(shortname, term);
+			return selfAssessmentService.getTypesForSurvey(shortname, term);
 			
 		} catch (Exception e) {
 			logger.error(e.getLocalizedMessage(), e);
@@ -179,7 +179,7 @@ public class SelfAssessmentController extends BasicController {
 			final User user = sessionService.getCurrentUser(request, false, false);
 			Survey survey = surveyService.getSurveyByShortname(shortname, true, user, request, false, true, true, false);
 				
-			List<SATargetDataset> result = selfassessmentService.getTargetDatasets(survey.getUniqueId());
+			List<SATargetDataset> result = selfAssessmentService.getTargetDatasets(survey.getUniqueId());
 			
 			return new ResponseEntity<>(result, HttpStatus.OK);
 		} catch (Exception e) {
@@ -205,7 +205,7 @@ public class SelfAssessmentController extends BasicController {
 			SATargetDataset t = new SATargetDataset();
 			t.setName(name);
 			t.setSurveyUID(survey.getUniqueId());
-			selfassessmentService.addTargetDataset(t);
+			selfAssessmentService.addTargetDataset(t);
 			
 			return "OK";
 		} catch (ConstraintViolationException ce) {
@@ -241,7 +241,7 @@ public class SelfAssessmentController extends BasicController {
 			String id = request.getParameter("id");
 			String name = request.getParameter("name");
 		
-			selfassessmentService.updateTargetDataset(Integer.parseInt(id), survey.getUniqueId(), name);
+			selfAssessmentService.updateTargetDataset(Integer.parseInt(id), survey.getUniqueId(), name);
 			
 			return "OK";
 		} catch (ConstraintViolationException ce) {
@@ -280,7 +280,7 @@ public class SelfAssessmentController extends BasicController {
 				throw new ForbiddenURLException();
 			}
 			
-			selfassessmentService.deleteTargetDataset(Integer.parseInt(id), survey.getUniqueId());
+			selfAssessmentService.deleteTargetDataset(Integer.parseInt(id), survey.getUniqueId());
 			
 			return true;
 		} catch (Exception e) {
@@ -303,8 +303,8 @@ public class SelfAssessmentController extends BasicController {
 			
 			int datasetId = Integer.parseInt(request.getParameter("dataset"));
 			
-			SAScoreCard result = selfassessmentService.getScoreCard(datasetId);
-			List<SACriterion> criteria = selfassessmentService.getCriteria(survey.getUniqueId());
+			SAScoreCard result = selfAssessmentService.getScoreCard(datasetId);
+			List<SACriterion> criteria = selfAssessmentService.getCriteria(survey.getUniqueId());
 			if (result == null) {
 				result = new SAScoreCard();
 				result.setScores(new ArrayList<SAScore>());
@@ -342,7 +342,7 @@ public class SelfAssessmentController extends BasicController {
 					}					
 				}				
 				
-				selfassessmentService.updateScoreCard(result, datasetId);
+				selfAssessmentService.updateScoreCard(result, datasetId);
 			}
 			
 			return new ResponseEntity<>(result, HttpStatus.OK);
@@ -365,7 +365,7 @@ public class SelfAssessmentController extends BasicController {
 			}	
 				
 			int datasetId = Integer.parseInt(request.getParameter("dataset"));
-			selfassessmentService.updateScoreCard(card, datasetId);
+			selfAssessmentService.updateScoreCard(card, datasetId);
 			
 			return "OK";
 		} catch (Exception e) {
@@ -381,7 +381,7 @@ public class SelfAssessmentController extends BasicController {
 			final User user = sessionService.getCurrentUser(request, false, false);
 			Survey survey = surveyService.getSurveyByShortname(shortname, true, user, request, false, true, true, false);					
 			
-			SAReportConfiguration result = selfassessmentService.getReportConfiguration(survey.getUniqueId());
+			SAReportConfiguration result = selfAssessmentService.getReportConfiguration(survey.getUniqueId());
 			
 			return new ResponseEntity<>(result, HttpStatus.OK);
 		} catch (Exception e) {
@@ -402,7 +402,7 @@ public class SelfAssessmentController extends BasicController {
 				throw new ForbiddenURLException();
 			}	
 			
-			selfassessmentService.updateReportConfiguration(configuration, survey.getUniqueId());
+			selfAssessmentService.updateReportConfiguration(configuration, survey.getUniqueId());
 			
 			return "OK";
 		} catch (ConstraintViolationException ce) {
@@ -436,7 +436,7 @@ public class SelfAssessmentController extends BasicController {
 		String contributionuid = request.getParameter("contribution");		
 		//TODO check
 		
-		SAResult result = selfassessmentService.getSAResult(dataset, contributionuid);
+		SAResult result = selfAssessmentService.getSAResult(dataset, contributionuid);
 		return result;
 	}
 	

@@ -4,15 +4,15 @@ import com.ec.survey.exception.MessageException;
 import com.ec.survey.model.Activity;
 import com.ec.survey.model.Message;
 import com.ec.survey.model.Setting;
-import com.ec.survey.model.administration.ComplexityParameters;
-import com.ec.survey.model.administration.GlobalPrivilege;
+import com.ec.survey.enumerator.ComplexityParameters;
+import com.ec.survey.enumerator.GlobalPrivilege;
 import com.ec.survey.model.administration.User;
 import com.ec.survey.service.MailService;
 import com.ec.survey.tools.Constants;
-import com.ec.survey.tools.NotAgreedToPsException;
-import com.ec.survey.tools.NotAgreedToTosException;
+import com.ec.survey.exception.NotAgreedToPsException;
+import com.ec.survey.exception.NotAgreedToTosException;
 import com.ec.survey.tools.Tools;
-import com.ec.survey.tools.WeakAuthenticationException;
+import com.ec.survey.exception.WeakAuthenticationException;
 
 import com.ec.survey.tools.activity.ActivityRegistry;
 import org.springframework.stereotype.Controller;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.Map.Entry;
@@ -34,12 +34,10 @@ import java.util.Map.Entry;
 public class SystemController extends BasicController {
 
 	@RequestMapping(value = "/message", method = { RequestMethod.GET, RequestMethod.HEAD })
-
 	public @ResponseBody Message getSystemMessage(HttpServletRequest request)
 			throws NotAgreedToTosException, WeakAuthenticationException, NotAgreedToPsException {
 
 		User user = sessionService.getCurrentUser(request, false, false);
-
 		Message message;
 
 		if (user != null && user.getGlobalPrivileges().get(GlobalPrivilege.SystemManagement) > 0) {
@@ -191,7 +189,7 @@ public class SystemController extends BasicController {
 		}
 
 		String[] emails = request.getParameterValues("messageEmail");
-		String recipients = "";
+		StringBuilder recipients = new StringBuilder();
 		if (emails != null) {
 			for (String email : emails) {
 				if (email.trim().length() > 0) {
@@ -199,15 +197,15 @@ public class SystemController extends BasicController {
 						throw new MessageException("invalid email address:" + email);
 					}
 
-					if (recipients.length() > 0) {
-						recipients += ";";
+					if (!recipients.isEmpty()) {
+						recipients.append(";");
 					}
-					recipients += email;
+					recipients.append(email);
 				}
 			}
 		}
 
-		settingsService.update(Setting.BannedUserRecipients, recipients);
+		settingsService.update(Setting.BannedUserRecipients, recipients.toString());
 		settingsService.update(Setting.FreezeUserTextAdminBan, banUserMessageText);
 		settingsService.update(Setting.FreezeUserTextAdminUnban, unbanUserMessageText);
 		settingsService.update(Setting.FreezeUserTextBan, bannedUserMessageText);
@@ -287,7 +285,7 @@ public class SystemController extends BasicController {
 		}
 
 		String[] emails = request.getParameterValues("messageEmail");
-		String recipients = "";
+		StringBuilder recipients = new StringBuilder();
 		if (emails != null) {
 			for (String email : emails) {
 				if (email.trim().length() > 0) {
@@ -295,17 +293,17 @@ public class SystemController extends BasicController {
 						throw new MessageException("invalid email address:" + email);
 					}
 
-					if (recipients.length() > 0) {
-						recipients += ";";
+					if (!recipients.isEmpty()) {
+						recipients.append(";");
 					}
-					recipients += email;
+					recipients.append(email);
 				}
 			}
 		}
 
 		settingsService.update(Setting.MaxReports, number);
 		settingsService.update(Setting.ReportText, text);
-		settingsService.update(Setting.ReportRecipients, recipients);
+		settingsService.update(Setting.ReportRecipients, recipients.toString());
 
 		return new ModelAndView("redirect:/administration/system");
 	}
@@ -348,7 +346,7 @@ public class SystemController extends BasicController {
 			message.setText(text);
 			message.setTime(Integer.parseInt(time));
 			message.setType(Integer.parseInt(type));
-			message.setActive(Boolean.valueOf(active));
+			message.setActive(Boolean.parseBoolean(active));
 			message.setVersion(message.getVersion() + 1);
 
 			if (autodeactivate != null && autodeactivate.length() > 0) {
@@ -383,7 +381,7 @@ public class SystemController extends BasicController {
 	@PostMapping(value = "/configureComplexity")
 	public ModelAndView configureComplexity(@RequestParam Map<String, String> allRequestParams,
 			HttpServletRequest request, Model model, Locale locale) {
-		ModelAndView m = null;
+		ModelAndView m;
 
 		try {
 			for (Entry<String, String> e : allRequestParams.entrySet()) {

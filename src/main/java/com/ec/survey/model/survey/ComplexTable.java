@@ -1,7 +1,7 @@
 package com.ec.survey.model.survey;
 
 import java.util.*;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -15,6 +15,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @Entity
 @DiscriminatorValue("COMPLEXTABLE")
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ComplexTable extends Question {
 	
 	public enum SizeType {
@@ -27,7 +29,7 @@ public class ComplexTable extends Question {
 	    }
 	}
 
-	private static final long serialVersionUID = 1L;
+	
 	private int rows;
 	private int columns;
 	private boolean showHeadersAndBorders;
@@ -43,8 +45,8 @@ public class ComplexTable extends Question {
 
 	@OneToMany(targetEntity=ComplexTableItem.class, cascade = CascadeType.ALL)
 	@Fetch(value = FetchMode.SELECT)
-	@JoinColumn(nullable=true, foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT))
-
+	@JoinColumn(nullable=true, foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<ComplexTableItem> getChildElements() {
 		return childElements;
 	}

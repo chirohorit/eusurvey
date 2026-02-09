@@ -1,9 +1,10 @@
 package com.ec.survey.model.administration;
 
+import com.ec.survey.enumerator.GlobalPrivilege;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
@@ -11,11 +12,8 @@ import java.util.TreeSet;
 @Entity
 @Table(name = "GLOBALROLES")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Role implements java.io.Serializable {
-	
-	private static final long serialVersionUID = 1L;
-
 	private Integer id;	
 	private String name;	
 	private Map<GlobalPrivilege, Integer> globalPrivileges;
@@ -27,7 +25,7 @@ public class Role implements java.io.Serializable {
 		globalPrivileges.put(GlobalPrivilege.FormManagement, 0);
 		globalPrivileges.put(GlobalPrivilege.ContactManagement, 0);
 		globalPrivileges.put(GlobalPrivilege.RightManagement, 0);	
-		globalPrivileges.put(GlobalPrivilege.ECAccess, 0);	
+		globalPrivileges.put(GlobalPrivilege.ECAccess, 0);
 		globalPrivileges.put(GlobalPrivilege.SystemManagement, 0);	
 	}
 

@@ -2,7 +2,7 @@ package com.ec.survey.model;
 
 import java.util.Date;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "VALIDCODE", uniqueConstraints = {@UniqueConstraint(columnNames={"VALIDCODE_CODE"},name="VALIDCODE_CODE")})

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import com.ec.survey.tools.SurveyHelper;
+import com.ec.survey.handler.SurveyHelper;
 import com.ec.survey.tools.Tools;
 
 import java.util.Set;
@@ -33,7 +33,7 @@ import com.ec.survey.model.survey.DraftIDElement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 import com.ec.survey.model.survey.Element;
 import com.ec.survey.model.survey.EmptyElement;
 import com.ec.survey.model.survey.FreeTextQuestion;
@@ -55,7 +55,7 @@ import com.ec.survey.model.survey.Text;
 import com.ec.survey.model.survey.base.File;
 import com.ec.survey.tools.ConversionTools;
 import com.ec.survey.tools.Numbering;
-import com.ec.survey.tools.SurveyHelper;
+import com.ec.survey.handler.SurveyHelper;
 import com.ec.survey.tools.Tools;
 
 @Configurable
@@ -964,7 +964,7 @@ public class Form implements java.io.Serializable {
 	/**
 	 * Given an Element e, the answers from the user get returned in the correct format from the saved answerset.
 	 * @param e the survey element we retrieve the answer from.
-	 * //@param f the form we retrieve the answers from.
+	 * @param f the form we retrieve the answers from.
 	 * @param isMatrix Element is a Matrix?
 	 * @return Result for a given Question Element in the correct format for the contribution page.
 	 */

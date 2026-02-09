@@ -5,8 +5,8 @@
                    https://logging.apache.org/xml/ns
                    https://logging.apache.org/xml/ns/log4j-config-2.xsd">
     <Properties>
-        <Property name="LOG_PATTERN" value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %p %m%n" />
-        <Property name="APP_LOG_ROOT" value="../logs" />
+        <Property name="LOG_PATTERN" value="%d{yyyy-MM-dd'T'HH:mm:ss} %p [%t] %m%n" />
+        <Property name="APP_LOG_ROOT" value="./logs" />
     </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT" follow="true">
@@ -15,7 +15,6 @@
         <Console name="ConsoleErr" target="SYSTEM_ERR" follow="true">
             <PatternLayout pattern="${LOG_PATTERN}" />
         </Console>
-
         <RollingFile name="appLog"
                      fileName="${APP_LOG_ROOT}/eusurvey.log"
                      filePattern="${APP_LOG_ROOT}/eusurvey-%d{yyyy-MM-dd}-%i.log">
@@ -25,16 +24,22 @@
             </Policies>
             <!--<DefaultRolloverStrategy max="1" />-->
         </RollingFile>
-
+        <RollingFile name="debugLog"
+                     fileName="${APP_LOG_ROOT}/debugLog.log"
+                     filePattern="${APP_LOG_ROOT}/debugLog-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${LOG_PATTERN}" />
+            <Policies>
+                <SizeBasedTriggeringPolicy size="19500KB" />
+            </Policies>
+            <!--<DefaultRolloverStrategy max="1" />-->
+        </RollingFile>
     </Appenders>
     <Loggers>
-
-        <Logger name="com.ec.survey" level="ALL">
-            <AppenderRef ref="appLog" />
-            <AppenderRef ref="ConsoleErr" />
-        </Logger>
-        <Root level="INFO">
-            <AppenderRef ref="Console" />
+        <Root level="DEBUG">
+            <AppenderRef ref="Console" level="WARN" />
+            <AppenderRef ref="appLog" level="INFO" />
+            <AppenderRef ref="debugLog" />
         </Root>
+
     </Loggers>
 </Configuration>

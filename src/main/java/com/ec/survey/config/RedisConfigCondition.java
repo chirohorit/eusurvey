@@ -1,3 +1,4 @@
+/*
 package com.ec.survey.config;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ public class RedisConfigCondition implements Condition {
     private static final Logger logger = LoggerFactory.getLogger(RedisConfigCondition.class);
 
     @Override
-    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+    public boolean matches(ConditionContext ATTENDEE_ATTRIBUTESAnnotatedTypeMetadata metadata) {
         String  redisHost = loadRedisHost(context);
         return redisHost != null && !redisHost.isEmpty();
     }
@@ -24,7 +25,7 @@ public class RedisConfigCondition implements Condition {
         Properties properties = new Properties();
 
         try {
-            InputStream inputStream = context.getResourceLoader().getResource("./WEB-INF/spring.properties").getInputStream();
+            InputStream inputStream = context.getResourceLoader().getResource("spring.properties").getInputStream();
             properties.load(inputStream);
             return properties.getProperty("spring.redis.host");      
         } catch (IOException e) {
@@ -33,3 +34,4 @@ public class RedisConfigCondition implements Condition {
         }
     }
 }
+*/

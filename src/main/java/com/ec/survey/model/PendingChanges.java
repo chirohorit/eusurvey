@@ -3,9 +3,9 @@ package com.ec.survey.model;
 import org.hibernate.annotations.*;
 import org.hibernate.annotations.CascadeType;
 
-import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.util.*;
 
 @Entity
@@ -13,7 +13,7 @@ import java.util.*;
 		@UniqueConstraint(columnNames = { "SURVEY_UID" }, name = "SURVEY_UID") })
 public class PendingChanges implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+	
 	private Integer id;
 	private String surveyUid;
 	private Set<String> newElements = new HashSet<>();

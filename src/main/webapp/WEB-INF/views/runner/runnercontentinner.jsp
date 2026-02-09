@@ -2,10 +2,10 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="com.ec.survey.model.Form" %>
 <%@ page trimDirectiveWhitespaces="true" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 
 <script type="text/javascript" src="${contextpath}/resources/js/d3.v3.min.js?version=<%@include file="../version.txt" %>"></script>
 <script type="text/javascript" src="${contextpath}/resources/js/d3.layout.cloud.min.js?version=<%@include file="../version.txt" %>"></script>
@@ -59,7 +59,7 @@
 				</c:when>
 			</c:choose>
 
-				<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+				<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 				<div class="left-area">
 					<c:if test="${form.survey.motivationPopup}">
 						<div class="modal motivation-popup-modal not-shown" id="motivationPopup" style="padding-top: 50px;" role="dialog" data-popup="${form.survey.motivationPopup}" data-type="${form.survey.motivationType}" data-progress="${form.survey.motivationTriggerProgress}" data-timer="${form.survey.motivationTriggerProgress}">

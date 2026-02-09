@@ -9,20 +9,20 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Represents a number question in a survey
  */
 @Entity
 @DiscriminatorValue("NUMBER")
-
-
+@Cacheable
+////@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class NumberQuestion extends Question {
 	public static final String MAXLABEL = "MAXLABEL";
 	public static final String MINLABEL = "MINLABEL";
 	public static final String UNIT = "UNIT";
-	private static final long serialVersionUID = 1L;
+	
 
 	public NumberQuestion() {}
 	

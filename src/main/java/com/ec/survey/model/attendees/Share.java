@@ -2,7 +2,7 @@ package com.ec.survey.model.attendees;
 
 import java.util.List;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -14,7 +14,7 @@ import com.ec.survey.model.administration.User;
 @Entity
 @Table(name = "SHARES")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Share {
 	
 	private Integer id;	
@@ -60,18 +60,18 @@ public class Share {
 	}
 	
 	@ManyToMany()
-	@JoinTable(foreignKey = @ForeignKey(javax.persistence.ConstraintMode.NO_CONSTRAINT),
+	@JoinTable(name="shares_attendee",
 			inverseJoinColumns = @JoinColumn(name = "attendees_ATTENDEE_ID"),
 			joinColumns = @JoinColumn(name = "SHARES_SHARE_ID"))
 	@Fetch(value = FetchMode.SELECT)
-	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+	//@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public List<Attendee> getAttendees() {
 		return attendees;
 	}	
 	public void setAttendees(List<Attendee> attendees) {
 		this.attendees = attendees;
 	}
-	
+
 	@ManyToOne  
 	@JoinColumn(name="RECIPIENT", nullable = false)
 	public User getRecipient() {

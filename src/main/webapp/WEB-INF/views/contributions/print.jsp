@@ -1,7 +1,7 @@
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<%@ taglib prefix="esapi" uri="http://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
+<%@ taglib prefix="esapi" uri="https://www.owasp.org/index.php/Category:OWASP_Enterprise_Security_API" %>
 <%@ page contentType="text/html; charset=UTF-8" session="false" %>
 <!DOCTYPE html>
 <html lang="${pageContext.response.locale.language}">
@@ -240,7 +240,7 @@
 													<esapi:encodeForHTML>${file.name.replace("%20"," ")}</esapi:encodeForHTML>
 												</div>
 												<a href="" target="_blank">
-													<img class="gallery-image" src="${contextpath}/files/${form.survey.uniqueId}/${file.uid}" data-width="${file.width}" width="150px" />								
+													<img class="gallery-image" src="${contextpath}/files/${form.survey.uniqueId}/${file.uid}" data-width="${file.width}" width="150px" />
 												</a>
 												<div class="comment"><esapi:encodeForHTML>${file.comment}</esapi:encodeForHTML></div>	
 											</td>
